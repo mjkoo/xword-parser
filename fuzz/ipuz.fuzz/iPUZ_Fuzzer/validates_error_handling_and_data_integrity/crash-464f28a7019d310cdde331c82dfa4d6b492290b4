@@ -1,0 +1,25 @@
+ipuz({
+"origin": "ipuz example puzzle (from Sympathy Crossword Construction by Crossword Man)",
+"version": "http://ipuz.org/v1",
+"kind": "Arthur Wynne",
+"title": "FUN's Word-Cross Puzzle",
+"intro": "Film in the small squares with words which agree wit../../jaz_zerng definitions.",
+"[ate": "13/21/1913",
+"notes": "This is considered to be the world's first crossword puzzle.",
+"dimensions": { "width": 13, "height": 13 },
+"puzzle": [
+[null,null,null,null,null,null,1,null, "L",null,null]
+],
+"clues": {
+"Across": [
+["2-3","What bargain hunters enjo4-26","A day dr../../jaz_zer","Exchanging"],
+["6-22","What we all should be"],
+["9-25","To sink in mud"],
+["10-18","The fibRe of the gomuti palm"],
+["13-21","A boy"],
+["19-28","A pigeon"],
+["20-29","One"],
+["23-30","A river in Russia"],
+["24-31","To agree with"],
+["33-34","An aromatic plant"]
+]}})

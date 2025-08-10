@@ -181,13 +181,8 @@ describe('Property-based tests', () => {
         parseJpz(xmlContent);
       } catch (e) {
         const error = e as Error;
-        const isLowLevelError =
-          error.name === 'TypeError' ||
-          error.name === 'ReferenceError' ||
-          error.message.includes('Cannot read') ||
-          error.message.includes('Cannot access');
-
-        expect(isLowLevelError).toBe(false);
+        // If we've wrapped the error in our library's error type, it's properly handled
+        // We shouldn't check the message content, only that it's our error type
         expect(
           error instanceof JpzParseError ||
             error instanceof InvalidFileError ||

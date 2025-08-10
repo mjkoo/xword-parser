@@ -385,7 +385,7 @@ export function parseIpuz(content: string | Buffer): IpuzPuzzle {
     );
   }
 
-  if (!data.kind || !data.kind.some((k: string) => k.includes('crossword'))) {
+  if (!data.kind || !Array.isArray(data.kind) || !data.kind.some((k: string) => k.includes('crossword'))) {
     throw new UnsupportedPuzzleTypeError('Non-crossword');
   }
 
