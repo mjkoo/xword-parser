@@ -64,25 +64,6 @@ jobs:
       continue-on-error: true
       timeout-minutes: 30
     
-    - name: Check for new crash/timeout files
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      id: check_crashes
-      run: |
-        # Find any crash or timeout files created during this run
-        NEW_FILES=$(find fuzz -type f \( -name "crash-*" -o -name "timeout-*" \) -newer /proc/1 2>/dev/null || true)
-        
-        if [ -n "$NEW_FILES" ]; then
-          echo "Found new crash/timeout files:"
-          echo "$NEW_FILES"
-          echo "has_crashes=true" >> $GITHUB_OUTPUT
-          
-          # Save the list for later use
-          echo "$NEW_FILES" > new_crash_files.txt
-        else
-          echo "No new crash/timeout files found"
-          echo "has_crashes=false" >> $GITHUB_OUTPUT
-        fi
-    
     - name: Create Pull Request with new regression files
       if: steps.check_recent_update.outputs.skip_fuzzing != 'true' && steps.check_crashes.outputs.has_crashes == 'true'
       uses: peter-evans/create-pull-request@v7
