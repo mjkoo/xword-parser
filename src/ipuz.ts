@@ -70,7 +70,7 @@ export interface IpuzPuzzle {
   publisher?: string;
   publication?: string;
   url?: string;
-  uniqueid?: string;
+  uniqueId?: string;
   intro?: string;
   explanation?: string;
   annotation?: string;
@@ -105,8 +105,8 @@ export interface IpuzPuzzle {
   
   block?: string;
   
-  showenumerations?: boolean;
-  clueplacement?: string;
+  showEnumerations?: boolean;
+  cluePlacement?: string;
   
   answer?: string;
   answers?: string[];
@@ -361,9 +361,9 @@ export function parseIpuz(content: string): IpuzPuzzle {
   
   const simpleFields = [
     'title', 'author', 'copyright', 'publisher', 'publication',
-    'url', 'uniqueid', 'intro', 'explanation', 'annotation',
+    'url', 'intro', 'explanation', 'annotation',
     'notes', 'difficulty', 'origin', 'date', 'empty', 'charset',
-    'block', 'showenumerations', 'clueplacement', 'answer'
+    'block', 'answer'
   ] as const;
   
   for (const field of simpleFields) {
@@ -371,6 +371,17 @@ export function parseIpuz(content: string): IpuzPuzzle {
       // Use type assertion for known fields
       (puzzle as unknown as Record<string, unknown>)[field] = data[field];
     }
+  }
+  
+  // Handle fields that need renaming from spec format to camelCase
+  if ('uniqueid' in data && data.uniqueid !== undefined) {
+    puzzle.uniqueId = data.uniqueid;
+  }
+  if ('showenumerations' in data && data.showenumerations !== undefined) {
+    puzzle.showEnumerations = data.showenumerations;
+  }
+  if ('clueplacement' in data && data.clueplacement !== undefined) {
+    puzzle.cluePlacement = data.clueplacement;
   }
   
   if ('answers' in data && data.answers) {

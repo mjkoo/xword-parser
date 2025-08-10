@@ -34,3 +34,4 @@ export interface Clue {
 
 export * from './types';
 export * from './ipuz';
+export * from './xd';
