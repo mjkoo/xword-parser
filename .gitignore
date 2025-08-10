@@ -16,6 +16,8 @@ pnpm-debug.log*
 coverage*/
 *.lcov
 .nyc_output/
+bench-results.json
+benchmark-report.md
 
 # Test data (contains copyrighted puzzle files)
 testdata/

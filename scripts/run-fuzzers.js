@@ -54,10 +54,10 @@ function log(message, color = 'reset') {
 /**
  * Find fuzz test names in a file
  */
-async function findFuzzTestNamesInFile(file) {
+async function findFuzzTestNamesInFile(filePath) {
   const fuzzTestNames = [];
-  if (file.endsWith(fuzzTestFileExtension)) {
-    const content = await readFile(join(__dirname, file));
+  if (filePath.endsWith(fuzzTestFileExtension)) {
+    const content = await readFile(filePath);
     for (let match of content.toString().matchAll(fuzzTestNameRegex)) {
       fuzzTestNames.push(match[1]);
     }
@@ -117,16 +117,18 @@ function executeFuzzTest(file, testName, testFile) {
 }
 
 /**
- * Find all fuzz tests in directory
+ * Find all fuzz tests in fuzz directory
  */
 async function findFuzzTestsInDir() {
-  const files = await readdir(__dirname);
+  const fuzzDir = join(__dirname, '..', 'fuzz');
+  const files = await readdir(fuzzDir);
   const fuzzTests = {};
 
   for (const file of files) {
-    const testNames = await findFuzzTestNamesInFile(file);
+    const filePath = join(fuzzDir, file);
+    const testNames = await findFuzzTestNamesInFile(filePath);
     if (testNames.length) {
-      fuzzTests[file] = testNames;
+      fuzzTests[filePath] = testNames;
     }
   }
 
@@ -158,17 +160,19 @@ async function main() {
       // Run all fuzzers concurrently
       log('Starting all fuzzers concurrently...\n');
       const promises = [];
-      for (const [file, testNames] of Object.entries(fuzzTests)) {
+      for (const [filePath, testNames] of Object.entries(fuzzTests)) {
         for (const testName of testNames) {
-          promises.push(executeFuzzTest(file, testName, join(__dirname, file)));
+          const file = basename(filePath);
+          promises.push(executeFuzzTest(file, testName, filePath));
         }
       }
       results = await Promise.all(promises);
     } else {
       // Run fuzzers sequentially
-      for (const [file, testNames] of Object.entries(fuzzTests)) {
+      for (const [filePath, testNames] of Object.entries(fuzzTests)) {
         for (const testName of testNames) {
-          const result = await executeFuzzTest(file, testName, join(__dirname, file));
+          const file = basename(filePath);
+          const result = await executeFuzzTest(file, testName, filePath);
           results.push(result);
         }
       }
@@ -187,7 +191,7 @@ async function main() {
 
     // Check for crashes
     const { existsSync, readdirSync } = await import('fs');
-    const findingsDir = join(__dirname, '.cifuzz-findings');
+    const findingsDir = join(__dirname, '..', '.cifuzz-findings');
     if (existsSync(findingsDir)) {
       const findings = readdirSync(findingsDir);
       if (findings.length > 0) {
