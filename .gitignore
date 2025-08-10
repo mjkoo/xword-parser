@@ -17,6 +17,9 @@ coverage/
 *.lcov
 .nyc_output/
 
+# Test data (contains copyrighted puzzle files)
+testdata/
+
 # IDE
 .vscode/
 .idea/

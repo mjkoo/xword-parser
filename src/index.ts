@@ -1,4 +1,4 @@
-export function parseXword(_data: string): XwordPuzzle {
+export function parse(_data: string | Buffer | ArrayBuffer): XwordPuzzle {
   throw new Error('Not implemented yet');
 }
 
@@ -33,3 +33,4 @@ export interface Clue {
 }
 
 export * from './types';
+export * from './ipuz';

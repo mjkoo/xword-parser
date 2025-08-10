@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { parseXword, XwordParseError } from '../src';
+import { parse, XwordParseError } from './index';
 
-describe('parseXword', () => {
+describe('parse', () => {
   it('should throw an error for not implemented functionality', () => {
-    expect(() => parseXword('test data')).toThrow('Not implemented yet');
+    expect(() => parse('test data')).toThrow('Not implemented yet');
   });
 });
 
