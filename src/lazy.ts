@@ -4,13 +4,16 @@
  */
 
 import { FormatDetectionError } from './errors';
-import type { XwordPuzzle, ParseOptions } from './types';
+import type { Puzzle, ParseOptions } from './types';
 
 /**
  * Parse crossword puzzle data with lazy loading of format parsers
  * This reduces bundle size when only specific formats are used
  */
-export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: ParseOptions): Promise<XwordPuzzle> {
+export async function parseLazy(
+  data: string | Buffer | ArrayBuffer,
+  options?: ParseOptions,
+): Promise<Puzzle> {
   // Convert ArrayBuffer to Buffer if needed
   let content: string | Buffer;
   if (data instanceof ArrayBuffer) {
@@ -18,12 +21,12 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
   } else {
     content = data;
   }
-  
+
   // Try detection based on filename hint first
   if (options?.filename) {
     const lowerName = options.filename.toLowerCase();
     const ext = lowerName.split('.').pop();
-    
+
     if (ext === 'ipuz') {
       try {
         const textContent = typeof content === 'string' ? content : content.toString('utf-8');
@@ -62,14 +65,17 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
       }
     }
   }
-  
+
   // Auto-detect format based on content
   if (typeof content === 'string') {
     // Try text-based formats
-    
+
     // Check for iPUZ (starts with ipuz({ or is JSON with version field)
     const trimmed = content.trim();
-    if (trimmed.startsWith('ipuz({') || (trimmed.startsWith('{') && trimmed.includes('"version"'))) {
+    if (
+      trimmed.startsWith('ipuz({') ||
+      (trimmed.startsWith('{') && trimmed.includes('"version"'))
+    ) {
       try {
         const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
         const puzzle = parseIpuz(content);
@@ -78,9 +84,13 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
         // Not iPUZ, continue checking
       }
     }
-    
+
     // Check for JPZ (XML with crossword elements)
-    if (content.includes('<?xml') || content.includes('<crossword') || content.includes('<puzzle')) {
+    if (
+      content.includes('<?xml') ||
+      content.includes('<crossword') ||
+      content.includes('<puzzle')
+    ) {
       try {
         const { parseJpz, convertJpzToUnified } = await import('./jpz');
         const puzzle = parseJpz(content);
@@ -89,11 +99,11 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
         // Not JPZ, continue checking
       }
     }
-    
+
     // Check for XD (has Title: or other metadata headers)
     const lines = content.split('\n');
-    const hasXdHeaders = lines.some(line => 
-      /^(Title|Author|Editor|Copyright|Date|Rebus|Notepad|Notes?):/i.test(line)
+    const hasXdHeaders = lines.some((line) =>
+      /^(Title|Author|Editor|Copyright|Date|Rebus|Notepad|Notes?):/i.test(line),
     );
     if (hasXdHeaders) {
       try {
@@ -104,7 +114,7 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
         // Not XD, continue checking
       }
     }
-    
+
     // Try parsing as PUZ binary (might be base64 encoded or similar)
     try {
       const buffer = Buffer.from(content, 'base64');
@@ -123,10 +133,13 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
     } catch (e) {
       // Not PUZ, try converting to string for text formats
       const textContent = content.toString('utf-8');
-      
+
       // Try text formats with string version
       const trimmed = textContent.trim();
-      if (trimmed.startsWith('ipuz({') || (trimmed.startsWith('{') && trimmed.includes('"version"'))) {
+      if (
+        trimmed.startsWith('ipuz({') ||
+        (trimmed.startsWith('{') && trimmed.includes('"version"'))
+      ) {
         try {
           const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
           const puzzle = parseIpuz(textContent);
@@ -135,7 +148,7 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
           // Not iPUZ
         }
       }
-      
+
       if (textContent.includes('<?xml') || textContent.includes('<crossword')) {
         try {
           const { parseJpz, convertJpzToUnified } = await import('./jpz');
@@ -147,7 +160,8 @@ export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: P
       }
     }
   }
-  
-  throw new FormatDetectionError('Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD');
-}
 
+  throw new FormatDetectionError(
+    'Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD',
+  );
+}

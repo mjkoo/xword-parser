@@ -4,7 +4,7 @@
  */
 
 import { InvalidFileError } from './errors';
-import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface PuzMetadata {
   title?: string;
@@ -127,7 +127,7 @@ class PuzBinaryReader {
   get length(): number {
     return this._buffer.length;
   }
-  
+
   get buffer(): Buffer {
     return this._buffer;
   }
@@ -141,7 +141,7 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
   // Search for the magic string "ACROSS&DOWN" in the file
   const magicBytes = Buffer.from(MAGIC_STRING, 'latin1');
   let magicOffset = -1;
-  
+
   // Search for the magic string in the buffer
   for (let i = 0; i <= reader.length - magicBytes.length; i++) {
     let found = true;
@@ -156,35 +156,35 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
       break;
     }
   }
-  
+
   if (magicOffset === -1) {
     throw new InvalidFileError('PUZ', `magic string "${MAGIC_STRING}" not found`);
   }
-  
+
   // Position reader at the start of the actual PUZ data (2 bytes before magic string)
   const headerStart = magicOffset - 2;
   if (headerStart < 0) {
     throw new InvalidFileError('PUZ', 'magic string found too early in file');
   }
-  
+
   reader.seek(headerStart);
-  
+
   // Read header fields according to PUZ specification
-  const checksum = reader.readUInt16LE();           // 0x00-0x01
-  const magic = reader.readString(12);              // 0x02-0x0D
-  const cibChecksum = reader.readUInt16LE();        // 0x0E-0x0F
-  const maskedLowChecksum = reader.readUInt16LE();  // 0x10-0x11
+  const checksum = reader.readUInt16LE(); // 0x00-0x01
+  const magic = reader.readString(12); // 0x02-0x0D
+  const cibChecksum = reader.readUInt16LE(); // 0x0E-0x0F
+  const maskedLowChecksum = reader.readUInt16LE(); // 0x10-0x11
   const maskedHighChecksum = reader.readUInt16LE(); // 0x12-0x13
-  const version = reader.readString(4);             // 0x14-0x17
-  const reserved1 = reader.readUInt16LE();          // 0x18-0x19
-  const scrambledChecksum = reader.readUInt16LE();  // 0x1A-0x1B
-  const reserved2 = reader.readBytes(12);           // 0x1C-0x27
-  reader.readBytes(4);                              // 0x28-0x2B (skip unknown bytes)
-  const width = reader.readUInt8();                 // 0x2C
-  const height = reader.readUInt8();                // 0x2D
-  const numClues = reader.readUInt16LE();           // 0x2E-0x2F
-  const puzzleType = reader.readUInt16LE();         // 0x30-0x31
-  const scrambledTag = reader.readUInt16LE();       // 0x32-0x33
+  const version = reader.readString(4); // 0x14-0x17
+  const reserved1 = reader.readUInt16LE(); // 0x18-0x19
+  const scrambledChecksum = reader.readUInt16LE(); // 0x1A-0x1B
+  const reserved2 = reader.readBytes(12); // 0x1C-0x27
+  reader.readBytes(4); // 0x28-0x2B (skip unknown bytes)
+  const width = reader.readUInt8(); // 0x2C
+  const height = reader.readUInt8(); // 0x2D
+  const numClues = reader.readUInt16LE(); // 0x2E-0x2F
+  const puzzleType = reader.readUInt16LE(); // 0x30-0x31
+  const scrambledTag = reader.readUInt16LE(); // 0x32-0x33
 
   const header: PuzHeader = {
     checksum,
@@ -200,36 +200,44 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
     height,
     numClues,
     puzzleType,
-    scrambledTag
+    scrambledTag,
   };
 
   // Verify we read the magic string correctly
   if (header.magic !== MAGIC_STRING) {
-    throw new InvalidFileError('PUZ', `magic string mismatch after positioning. Expected "${MAGIC_STRING}", got "${header.magic}"`);
+    throw new InvalidFileError(
+      'PUZ',
+      `magic string mismatch after positioning. Expected "${MAGIC_STRING}", got "${header.magic}"`,
+    );
   }
 
   return header;
 }
 
-function parseGrid(solution: string, playerState: string, width: number, height: number): PuzCell[][] {
+function parseGrid(
+  solution: string,
+  playerState: string,
+  width: number,
+  height: number,
+): PuzCell[][] {
   const grid: PuzCell[][] = [];
-  
+
   for (let row = 0; row < height; row++) {
     const cells: PuzCell[] = [];
     for (let col = 0; col < width; col++) {
       const index = row * width + col;
       const solutionChar = solution[index];
       const playerChar = playerState[index];
-      
+
       cells.push({
         solution: solutionChar === '.' ? undefined : solutionChar,
         playerState: playerChar === '-' || playerChar === '.' ? undefined : playerChar,
-        isBlack: solutionChar === '.'
+        isBlack: solutionChar === '.',
       });
     }
     grid.push(cells);
   }
-  
+
   return grid;
 }
 
@@ -243,11 +251,15 @@ function assignClueNumbers(grid: PuzCell[][]): Map<string, number> {
     for (let col = 0; col < width; col++) {
       if (grid[row]?.[col]?.isBlack) continue;
 
-      const hasAcross = (col === 0 || grid[row]?.[col - 1]?.isBlack) &&
-                        col < width - 1 && !grid[row]?.[col + 1]?.isBlack;
-      
-      const hasDown = (row === 0 || grid[row - 1]?.[col]?.isBlack) &&
-                      row < height - 1 && !grid[row + 1]?.[col]?.isBlack;
+      const hasAcross =
+        (col === 0 || grid[row]?.[col - 1]?.isBlack) &&
+        col < width - 1 &&
+        !grid[row]?.[col + 1]?.isBlack;
+
+      const hasDown =
+        (row === 0 || grid[row - 1]?.[col]?.isBlack) &&
+        row < height - 1 &&
+        !grid[row + 1]?.[col]?.isBlack;
 
       if (hasAcross || hasDown) {
         if (hasAcross) {
@@ -264,7 +276,10 @@ function assignClueNumbers(grid: PuzCell[][]): Map<string, number> {
   return cluePositions;
 }
 
-function parseClues(clueStrings: string[], cluePositions: Map<string, number>): { across: PuzClue[], down: PuzClue[] } {
+function parseClues(
+  clueStrings: string[],
+  cluePositions: Map<string, number>,
+): { across: PuzClue[]; down: PuzClue[] } {
   const across: PuzClue[] = [];
   const down: PuzClue[] = [];
   let clueIndex = 0;
@@ -277,7 +292,7 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
     const bRow = parseInt(bType?.substring(1) || '0');
     const aCol = parseInt(aPos || '0');
     const bCol = parseInt(bPos || '0');
-    
+
     if (aRow !== bRow) return aRow - bRow;
     return aCol - bCol;
   });
@@ -287,7 +302,7 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
     if (key.startsWith('A') && clueIndex < clueStrings.length) {
       across.push({
         number,
-        text: clueStrings[clueIndex++] || ''
+        text: clueStrings[clueIndex++] || '',
       });
     }
   }
@@ -297,7 +312,7 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
     if (key.startsWith('D') && clueIndex < clueStrings.length) {
       down.push({
         number,
-        text: clueStrings[clueIndex++] || ''
+        text: clueStrings[clueIndex++] || '',
       });
     }
   }
@@ -305,7 +320,10 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
   return { across, down };
 }
 
-function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
+function parseExtraSections(
+  reader: PuzBinaryReader,
+  grid: PuzCell[][],
+): {
   rebusTable?: Map<number, string>;
   timer?: { elapsed: number; running: boolean };
 } {
@@ -322,7 +340,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
     while (reader.hasMore() && reader.buffer[reader.position] === 0) {
       reader.readUInt8();
     }
-    
+
     // Check again after skipping padding
     if (reader.position + 8 > reader.length) break;
 
@@ -360,7 +378,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
         const tableStr = sectionData.toString('latin1');
         const entries = tableStr.split(';');
         result.rebusTable = new Map();
-        
+
         for (const entry of entries) {
           if (entry.includes(':')) {
             const [key, value] = entry.split(':');
@@ -382,7 +400,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
             const index = row * width + col;
             if (index < sectionData.length && grid[row]?.[col]) {
               const flags = sectionData[index];
-              if (flags && (flags & 0x80)) {
+              if (flags && flags & 0x80) {
                 grid[row]![col]!.isCircled = true;
               }
             }
@@ -397,7 +415,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
         const [elapsed, running] = timerStr.split(',');
         result.timer = {
           elapsed: parseInt(elapsed || '0') || 0,
-          running: running === '0' ? false : true
+          running: running === '0' ? false : true,
         };
         break;
       }
@@ -409,7 +427,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
 
 export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzPuzzle {
   let buffer: Buffer;
-  
+
   if (typeof data === 'string') {
     // If string is passed, assume it's base64 encoded
     buffer = Buffer.from(data, 'base64');
@@ -457,74 +475,111 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
       title: title || undefined,
       author: author || undefined,
       copyright: copyright || undefined,
-      notes: notes || undefined
+      notes: notes || undefined,
     },
     grid,
     across,
     down,
     rebusTable: extras.rebusTable,
     isScrambled: header.scrambledTag !== 0,
-    timer: extras.timer
+    timer: extras.timer,
   };
 }
 
 // Convert PUZ puzzle to unified format
-export function convertPuzToUnified(puzzle: PuzPuzzle): XwordPuzzle {
+export function convertPuzToUnified(puzzle: PuzPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.width,
     height: puzzle.height,
-    cells: []
+    cells: [],
   };
-  
+
   // Convert grid and assign numbers
   let cellNumber = 1;
   for (let y = 0; y < puzzle.height; y++) {
     const row: UnifiedCell[] = [];
     for (let x = 0; x < puzzle.width; x++) {
       const puzCell = puzzle.grid[y]?.[x];
-      
+
       // Determine if this cell should have a number
       let number: number | undefined;
       if (puzCell && !puzCell.isBlack) {
-        const needsNumber = 
+        const needsNumber =
           // Start of across word
-          ((x === 0 || puzzle.grid[y]?.[x-1]?.isBlack) && 
-           x < puzzle.width - 1 && !puzzle.grid[y]?.[x+1]?.isBlack) ||
+          ((x === 0 || puzzle.grid[y]?.[x - 1]?.isBlack) &&
+            x < puzzle.width - 1 &&
+            !puzzle.grid[y]?.[x + 1]?.isBlack) ||
           // Start of down word
-          ((y === 0 || puzzle.grid[y-1]?.[x]?.isBlack) && 
-           y < puzzle.height - 1 && !puzzle.grid[y+1]?.[x]?.isBlack);
-        
+          ((y === 0 || puzzle.grid[y - 1]?.[x]?.isBlack) &&
+            y < puzzle.height - 1 &&
+            !puzzle.grid[y + 1]?.[x]?.isBlack);
+
         if (needsNumber) {
           number = cellNumber++;
         }
       }
-      
-      row.push({
+
+      const cell: UnifiedCell = {
         solution: puzCell?.solution,
         number,
-        isBlack: puzCell?.isBlack || false
-      });
+        isBlack: puzCell?.isBlack || false,
+      };
+
+      // Add cell-specific metadata if present
+      if (puzCell?.isCircled || puzCell?.hasRebus) {
+        cell.additionalProperties = {};
+        if (puzCell.isCircled) {
+          cell.additionalProperties.isCircled = true;
+        }
+        if (puzCell.hasRebus && puzCell.rebusKey !== undefined) {
+          cell.additionalProperties.hasRebus = true;
+          cell.additionalProperties.rebusKey = puzCell.rebusKey;
+        }
+      }
+
+      row.push(cell);
     }
     grid.cells.push(row);
   }
-  
+
   // Convert clues
   const clues: Clues = {
-    across: puzzle.across.map(c => ({
+    across: puzzle.across.map((c) => ({
       number: c.number,
-      text: c.text
+      text: c.text,
     })),
-    down: puzzle.down.map(c => ({
+    down: puzzle.down.map((c) => ({
       number: c.number,
-      text: c.text
-    }))
+      text: c.text,
+    })),
   };
-  
-  return {
+
+  const result: Puzzle = {
     title: puzzle.metadata.title,
     author: puzzle.metadata.author,
     copyright: puzzle.metadata.copyright,
     grid,
-    clues
+    clues,
   };
+
+  // Add puzzle-level metadata if present
+  const additionalProps: Record<string, unknown> = {};
+  if (puzzle.metadata.notes) {
+    additionalProps.notes = puzzle.metadata.notes;
+  }
+  if (puzzle.isScrambled) {
+    additionalProps.isScrambled = puzzle.isScrambled;
+  }
+  if (puzzle.timer) {
+    additionalProps.timer = puzzle.timer;
+  }
+  if (puzzle.rebusTable && Object.keys(puzzle.rebusTable).length > 0) {
+    additionalProps.rebusTable = puzzle.rebusTable;
+  }
+
+  if (Object.keys(additionalProps).length > 0) {
+    result.additionalProperties = additionalProps;
+  }
+
+  return result;
 }

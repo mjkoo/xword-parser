@@ -1,5 +1,5 @@
 import { InvalidFileError } from './errors';
-import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface XdMetadata {
   title?: string;
@@ -28,26 +28,26 @@ export interface XdPuzzle {
 
 function parseMetadata(lines: string[]): XdMetadata {
   const metadata: XdMetadata = {};
-  
+
   for (const line of lines) {
     const colonIndex = line.indexOf(':');
     if (colonIndex === -1) continue;
-    
+
     const key = line.substring(0, colonIndex).trim();
     const value = line.substring(colonIndex + 1).trim();
-    
+
     if (key && value) {
       // Convert first character to lowercase to match TypeScript conventions
       const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
       metadata[normalizedKey] = value;
     }
   }
-  
+
   return metadata;
 }
 
 function parseGrid(lines: string[]): string[][] {
-  return lines.map(line => {
+  return lines.map((line) => {
     const cells: string[] = [];
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
@@ -59,23 +59,23 @@ function parseGrid(lines: string[]): string[][] {
   });
 }
 
-function parseClues(lines: string[]): { across: XdClue[], down: XdClue[] } {
+function parseClues(lines: string[]): { across: XdClue[]; down: XdClue[] } {
   const across: XdClue[] = [];
   const down: XdClue[] = [];
-  
+
   for (const line of lines) {
     if (line.length === 0) continue;
-    
+
     const match = line.match(/^([AD])(\d+)\.\s+(.+?)(?:\s+~\s+(.+))?$/);
     if (match) {
       const [, direction, number, clue, answer] = match;
-      
+
       const clueObj: XdClue = {
         number: number ?? '',
         clue: clue?.trim() ?? '',
-        answer: answer?.trim() ?? ''
+        answer: answer?.trim() ?? '',
       };
-      
+
       if (direction === 'A') {
         across.push(clueObj);
       } else {
@@ -83,17 +83,21 @@ function parseClues(lines: string[]): { across: XdClue[], down: XdClue[] } {
       }
     }
   }
-  
+
   return { across, down };
 }
 
-
-function splitIntoSections(content: string): { metadata: string[], grid: string[], clues: string[], notes: string[] } {
+function splitIntoSections(content: string): {
+  metadata: string[];
+  grid: string[];
+  clues: string[];
+  notes: string[];
+} {
   const lines = content.split('\n');
   const sections: string[][] = [];
   let currentSection: string[] = [];
   let blankLineCount = 0;
-  
+
   for (const line of lines) {
     if (line.trim() === '') {
       blankLineCount++;
@@ -111,48 +115,46 @@ function splitIntoSections(content: string): { metadata: string[], grid: string[
       currentSection.push(line);
     }
   }
-  
+
   if (currentSection.length > 0) {
     sections.push(currentSection);
   }
-  
+
   const result = {
     metadata: [] as string[],
     grid: [] as string[],
     clues: [] as string[],
-    notes: [] as string[]
+    notes: [] as string[],
   };
-  
+
   let sectionIndex = 0;
-  
+
   if (sections.length > sectionIndex) {
     const section = sections[sectionIndex];
-    if (section && section.some(line => line.includes(':'))) {
+    if (section && section.some((line) => line.includes(':'))) {
       result.metadata = section;
       sectionIndex++;
     }
   }
-  
+
   if (sections.length > sectionIndex) {
     const section = sections[sectionIndex];
-    if (section && section.every(line => 
-      /^[A-Za-z0-9#._]+$/.test(line) && line.length > 0
-    )) {
+    if (section && section.every((line) => /^[A-Za-z0-9#._]+$/.test(line) && line.length > 0)) {
       result.grid = section;
       sectionIndex++;
     }
   }
-  
+
   while (sections.length > sectionIndex) {
     const section = sections[sectionIndex];
-    if (section && section.some(line => /^[AD]\d+\./.test(line))) {
+    if (section && section.some((line) => /^[AD]\d+\./.test(line))) {
       result.clues.push(...section);
       sectionIndex++;
     } else {
       break;
     }
   }
-  
+
   if (sections.length > sectionIndex) {
     for (let i = sectionIndex; i < sections.length; i++) {
       const section = sections[i];
@@ -161,97 +163,115 @@ function splitIntoSections(content: string): { metadata: string[], grid: string[
       }
     }
   }
-  
+
   return result;
 }
 
 export function parseXd(content: string): XdPuzzle {
   const sections = splitIntoSections(content);
-  
+
   if (sections.grid.length === 0) {
     throw new InvalidFileError('XD', 'no grid section found');
   }
-  
+
   const metadata = parseMetadata(sections.metadata);
   const grid = parseGrid(sections.grid);
   const { across, down } = parseClues(sections.clues);
-  
+
   const puzzle: XdPuzzle = {
     metadata,
     grid,
     across,
-    down
+    down,
   };
-  
+
   if (sections.notes.length > 0) {
     puzzle.notes = sections.notes.join('\n').trim();
   }
-  
+
   return puzzle;
 }
 
 // Convert XD puzzle to unified format
-export function convertXdToUnified(puzzle: XdPuzzle): XwordPuzzle {
+export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.grid[0]?.length || 0,
     height: puzzle.grid.length,
-    cells: []
+    cells: [],
   };
-  
+
   // Convert grid - XD grid is string[][], we need to determine cell properties
   let cellNumber = 1;
   for (let y = 0; y < puzzle.grid.length; y++) {
     const row = puzzle.grid[y];
     if (!row) continue;
-    
+
     const cellRow: UnifiedCell[] = [];
     for (let x = 0; x < row.length; x++) {
       const cellValue = row[x];
       const isBlack = cellValue === '#';
-      
+
       // Determine if this cell should have a number
       let number: number | undefined;
       if (!isBlack) {
-        const needsNumber = 
+        const needsNumber =
           // Start of across word
-          ((x === 0 || puzzle.grid[y]?.[x-1] === '#') && 
-           x < row.length - 1 && puzzle.grid[y]?.[x+1] !== '#') ||
+          ((x === 0 || puzzle.grid[y]?.[x - 1] === '#') &&
+            x < row.length - 1 &&
+            puzzle.grid[y]?.[x + 1] !== '#') ||
           // Start of down word
-          ((y === 0 || puzzle.grid[y-1]?.[x] === '#') && 
-           y < puzzle.grid.length - 1 && puzzle.grid[y+1]?.[x] !== '#');
-        
+          ((y === 0 || puzzle.grid[y - 1]?.[x] === '#') &&
+            y < puzzle.grid.length - 1 &&
+            puzzle.grid[y + 1]?.[x] !== '#');
+
         if (needsNumber) {
           number = cellNumber++;
         }
       }
-      
+
       cellRow.push({
         solution: isBlack ? undefined : cellValue,
         number,
-        isBlack
+        isBlack,
       });
     }
     grid.cells.push(cellRow);
   }
-  
+
   // Convert clues
   const clues: Clues = {
-    across: puzzle.across.map(c => ({
+    across: puzzle.across.map((c) => ({
       number: parseInt(c.number),
-      text: c.clue
+      text: c.clue,
     })),
-    down: puzzle.down.map(c => ({
+    down: puzzle.down.map((c) => ({
       number: parseInt(c.number),
-      text: c.clue
-    }))
+      text: c.clue,
+    })),
   };
-  
-  return {
+
+  const result: Puzzle = {
     title: puzzle.metadata.title,
     author: puzzle.metadata.author,
     copyright: puzzle.metadata.copyright,
     grid,
-    clues
+    clues,
   };
-}
 
+  // Add puzzle-level metadata if present
+  const additionalProps: Record<string, unknown> = {};
+
+  if (puzzle.metadata.editor) additionalProps.editor = puzzle.metadata.editor;
+  if (puzzle.metadata.date) additionalProps.date = puzzle.metadata.date;
+  if (puzzle.notes) additionalProps.notes = puzzle.notes;
+
+  // XD format also supports rebus and notepad metadata
+  if (puzzle.metadata.rebus) additionalProps.rebus = puzzle.metadata.rebus;
+  if (puzzle.metadata.notepad) additionalProps.notepad = puzzle.metadata.notepad;
+
+  if (Object.keys(additionalProps).length > 0) {
+    result.additionalProperties = additionalProps;
+  }
+
+  return result;
+}

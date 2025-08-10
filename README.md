@@ -74,14 +74,14 @@ const xdPuzzle = parse(xdData);
 
 ### Main Functions
 
-#### `parse(data: string | Buffer | ArrayBuffer): XwordPuzzle`
+#### `parse(data: string | Buffer | ArrayBuffer): Puzzle`
 
 Parses crossword puzzle data from various formats. This is a pure, synchronous function.
 
 **Parameters:**
 - `data`: The puzzle data as a string (for text formats) or binary data (for PUZ format)
 
-**Returns:** An `XwordPuzzle` object
+**Returns:** An `Puzzle` object
 
 **Throws:** `XwordParseError` if the data cannot be parsed
 
@@ -118,7 +118,7 @@ The `.xd` format is a simple text-based format that's human-readable and include
 
 ## Data Model Design
 
-The unified `XwordPuzzle` format represents the intersection of critical fields across all supported formats:
+The unified `Puzzle` format represents the intersection of critical fields across all supported formats:
 
 - **Metadata**: Common fields like title, author, and copyright that appear in most formats
 - **Grid Structure**: A normalized 2D grid representation that can accommodate various puzzle sizes

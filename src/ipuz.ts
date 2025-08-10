@@ -4,7 +4,7 @@
  */
 
 import { UnsupportedPuzzleTypeError } from './errors';
-import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export enum CellType {
   NORMAL = 'normal',
@@ -59,14 +59,14 @@ export interface IpuzClue {
 export interface IpuzPuzzle {
   version: string;
   kind: string[];
-  
+
   dimensions: {
     width: number;
     height: number;
   };
-  
+
   puzzle: IpuzCell[][];
-  
+
   title?: string;
   author?: string;
   copyright?: string;
@@ -81,36 +81,36 @@ export interface IpuzPuzzle {
   difficulty?: string;
   origin?: string;
   date?: string;
-  
+
   empty?: string;
   charset?: string;
-  
+
   clues: Record<string, IpuzClue[]>;
-  
+
   solution?: Array<Array<string | null>>;
-  
+
   zones?: Array<Record<string, unknown>>;
-  
+
   styles?: Record<string, unknown>;
-  
+
   extensions: Record<string, unknown>;
-  
+
   volatile?: Record<string, boolean>;
-  
+
   checksum?: string[];
-  
+
   saved?: Array<Array<string | null>>;
-  
+
   enumeration?: boolean;
   enumerations?: string[];
-  
+
   misses?: Record<string, unknown>;
-  
+
   block?: string;
-  
+
   showEnumerations?: boolean;
   cluePlacement?: string;
-  
+
   answer?: string;
   answers?: string[];
 }
@@ -178,22 +178,22 @@ interface IpuzData {
 
 function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell {
   const cell: IpuzCell = {
-    type: CellType.NORMAL
+    type: CellType.NORMAL,
   };
-  
+
   if (cellData === null || cellData === 'null') {
     cell.type = CellType.NULL;
     return cell;
   }
-  
+
   if (cellData === '#') {
     cell.type = CellType.BLOCK;
     return cell;
   }
-  
+
   if (typeof cellData === 'object' && cellData !== null) {
     const cellObj = cellData as IpuzCellData;
-    
+
     if ('cell' in cellObj && cellObj.cell !== undefined) {
       const baseValue = cellObj.cell;
       if (baseValue === '#') {
@@ -206,16 +206,32 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
         }
       }
     }
-    
+
     if ('style' in cellObj && cellObj.style) {
       cell.style = {};
       const styleFields: (keyof CellStyle)[] = [
-        'shapebg', 'highlight', 'named', 'border', 'divided', 'label',
-        'mark', 'imagebg', 'color', 'colortext', 'colorborder', 'colorbar',
-        'barred', 'dotted', 'dashed', 'lessthan', 'greaterthan', 'equal',
-        'handler', 'handlerdata'
+        'shapebg',
+        'highlight',
+        'named',
+        'border',
+        'divided',
+        'label',
+        'mark',
+        'imagebg',
+        'color',
+        'colortext',
+        'colorborder',
+        'colorbar',
+        'barred',
+        'dotted',
+        'dashed',
+        'lessthan',
+        'greaterthan',
+        'equal',
+        'handler',
+        'handlerdata',
       ];
-      
+
       for (const field of styleFields) {
         if (field in cellObj.style) {
           const value = cellObj.style[field];
@@ -225,19 +241,19 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
         }
       }
     }
-    
+
     if ('value' in cellObj && cellObj.value !== undefined) {
       cell.value = cellObj.value;
     }
-    
+
     if ('continued' in cellObj && cellObj.continued !== undefined) {
       cell.continued = cellObj.continued;
     }
-    
+
     if ('directions' in cellObj && cellObj.directions !== undefined) {
       cell.directions = cellObj.directions;
     }
-    
+
     if ('given' in cellObj && cellObj.given !== undefined) {
       cell.given = cellObj.given;
     }
@@ -262,31 +278,36 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
       }
     }
   }
-  
+
   if (solutionData) {
-    if (typeof solutionData === 'string' && solutionData !== '#' && solutionData !== 'null' && solutionData !== null) {
+    if (
+      typeof solutionData === 'string' &&
+      solutionData !== '#' &&
+      solutionData !== 'null' &&
+      solutionData !== null
+    ) {
       cell.solution = solutionData;
     }
   }
-  
+
   return cell;
 }
 
 function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string, IpuzClue[]> {
   const clues: Record<string, IpuzClue[]> = {};
-  
+
   for (const [direction, clueList] of Object.entries(cluesData)) {
     clues[direction] = [];
-    
+
     for (const clueItem of clueList) {
       let clue: IpuzClue | null = null;
-      
+
       if (Array.isArray(clueItem) && clueItem.length >= 2) {
         clue = {
           number: clueItem[0] as number | string,
-          text: clueItem[1] as string
+          text: clueItem[1] as string,
         };
-        
+
         if (clueItem.length > 2) {
           for (let i = 2; i < clueItem.length; i++) {
             const extra = clueItem[i] as unknown;
@@ -313,7 +334,7 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
           number: clueObj.number || '',
           text: clueObj.clue || '',
         };
-        
+
         if (clueObj.cells) {
           clue.cells = clueObj.cells;
         }
@@ -330,52 +351,65 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
           clue.image = clueObj.image;
         }
       }
-      
+
       if (clue) {
         clues[direction].push(clue);
       }
     }
   }
-  
+
   return clues;
 }
 
 export function parseIpuz(content: string): IpuzPuzzle {
   let jsonContent = content.trim();
-  
+
   if (jsonContent.startsWith('ipuz(') && jsonContent.endsWith(')')) {
     jsonContent = jsonContent.slice(5, -1);
   }
-  
+
   const data = JSON.parse(jsonContent) as IpuzData;
-  
+
   if (!data.kind || !data.kind.some((k: string) => k.includes('crossword'))) {
     throw new UnsupportedPuzzleTypeError('Non-crossword');
   }
-  
+
   const puzzle: IpuzPuzzle = {
     version: data.version || '',
     kind: data.kind || [],
     dimensions: data.dimensions || { width: 0, height: 0 },
     puzzle: [],
     clues: {},
-    extensions: {}
+    extensions: {},
   };
-  
+
   const simpleFields = [
-    'title', 'author', 'copyright', 'publisher', 'publication',
-    'url', 'intro', 'explanation', 'annotation',
-    'notes', 'difficulty', 'origin', 'date', 'empty', 'charset',
-    'block', 'answer'
+    'title',
+    'author',
+    'copyright',
+    'publisher',
+    'publication',
+    'url',
+    'intro',
+    'explanation',
+    'annotation',
+    'notes',
+    'difficulty',
+    'origin',
+    'date',
+    'empty',
+    'charset',
+    'block',
+    'answer',
   ] as const;
-  
+
   for (const field of simpleFields) {
     if (field in data && data[field] !== undefined) {
       // Use type assertion for known fields
       (puzzle as unknown as Record<string, unknown>)[field] = data[field];
     }
   }
-  
+
   // Handle fields that need renaming from spec format to camelCase
   if ('uniqueid' in data && data.uniqueid !== undefined) {
     puzzle.uniqueId = data.uniqueid;
@@ -386,148 +420,207 @@ export function parseIpuz(content: string): IpuzPuzzle {
   if ('clueplacement' in data && data.clueplacement !== undefined) {
     puzzle.cluePlacement = data.clueplacement;
   }
-  
+
   if ('answers' in data && data.answers) {
     puzzle.answers = data.answers;
   }
-  
+
   if ('enumeration' in data && data.enumeration !== undefined) {
     puzzle.enumeration = data.enumeration;
   }
-  
+
   if ('enumerations' in data && data.enumerations) {
     puzzle.enumerations = data.enumerations;
   }
-  
+
   if ('volatile' in data && data.volatile) {
     puzzle.volatile = data.volatile;
   }
-  
+
   if ('checksum' in data && data.checksum) {
     puzzle.checksum = data.checksum;
   }
-  
+
   if ('zones' in data && data.zones) {
     puzzle.zones = data.zones;
   }
-  
+
   if ('styles' in data && data.styles) {
     puzzle.styles = data.styles;
   }
-  
+
   if ('misses' in data && data.misses) {
     puzzle.misses = data.misses;
   }
-  
+
   const solutionGrid = data.solution || [];
   if (solutionGrid.length > 0) {
     puzzle.solution = solutionGrid;
   }
-  
+
   if ('saved' in data && data.saved) {
     puzzle.saved = data.saved;
   }
-  
+
   const puzzleGrid = data.puzzle || [];
   for (let rowIdx = 0; rowIdx < puzzleGrid.length; rowIdx++) {
     const row = puzzleGrid[rowIdx];
     if (!row) continue;
-    
+
     const cellRow: IpuzCell[] = [];
-    
+
     for (let colIdx = 0; colIdx < row.length; colIdx++) {
       const cellData = row[colIdx];
       let solutionVal = undefined;
-      
-      if (solutionGrid.length > rowIdx && solutionGrid[rowIdx] && solutionGrid[rowIdx]!.length > colIdx) {
+
+      if (
+        solutionGrid.length > rowIdx &&
+        solutionGrid[rowIdx] &&
+        solutionGrid[rowIdx]!.length > colIdx
+      ) {
         solutionVal = solutionGrid[rowIdx]![colIdx];
       }
-      
+
       const cell = parseCellFromIpuz(cellData, solutionVal);
       cellRow.push(cell);
     }
-    
+
     puzzle.puzzle.push(cellRow);
   }
-  
+
   if ('clues' in data && data.clues) {
     puzzle.clues = parseCluesFromIpuz(data.clues);
   }
-  
+
   for (const [key, value] of Object.entries(data)) {
     if (key.startsWith('http://') || key.startsWith('https://') || key.includes(':')) {
       puzzle.extensions[key] = value;
     }
   }
-  
+
   return puzzle;
 }
 
 // Convert iPUZ puzzle to unified format
-export function convertIpuzToUnified(puzzle: IpuzPuzzle): XwordPuzzle {
+export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.dimensions.width,
     height: puzzle.dimensions.height,
-    cells: []
+    cells: [],
   };
-  
+
   // Convert grid
   for (let y = 0; y < puzzle.dimensions.height; y++) {
     const row: UnifiedCell[] = [];
     for (let x = 0; x < puzzle.dimensions.width; x++) {
       const ipuzCell = puzzle.puzzle[y]?.[x];
       const solutionCell = puzzle.solution?.[y]?.[x];
-      
+
       // iPUZ cells are already Cell objects from our parser
-      const cellNumber = ipuzCell?.number ? 
-        (typeof ipuzCell.number === 'string' ? parseInt(ipuzCell.number) : ipuzCell.number) : 
-        undefined;
-      
+      const cellNumber = ipuzCell?.number
+        ? typeof ipuzCell.number === 'string'
+          ? parseInt(ipuzCell.number)
+          : ipuzCell.number
+        : undefined;
+
       const isBlack = ipuzCell?.type === CellType.BLOCK;
-      
-      const solution = typeof solutionCell === 'string' ? solutionCell : 
-                      ipuzCell?.value || undefined;
-      
-      row.push({
+
+      const solution =
+        typeof solutionCell === 'string' ? solutionCell : ipuzCell?.value || undefined;
+
+      const cell: UnifiedCell = {
         solution,
         number: cellNumber,
-        isBlack
-      });
+        isBlack,
+      };
+
+      // Add cell-specific metadata if present
+      if (ipuzCell?.style || ipuzCell?.continued || ipuzCell?.directions || ipuzCell?.given) {
+        cell.additionalProperties = {};
+        if (ipuzCell.style) {
+          cell.additionalProperties.style = ipuzCell.style;
+        }
+        if (ipuzCell.continued) {
+          cell.additionalProperties.continued = ipuzCell.continued;
+        }
+        if (ipuzCell.directions) {
+          cell.additionalProperties.directions = ipuzCell.directions;
+        }
+        if (ipuzCell.given !== undefined) {
+          cell.additionalProperties.given = ipuzCell.given;
+        }
+      }
+
+      row.push(cell);
     }
     grid.cells.push(row);
   }
-  
+
   // Convert clues
   const clues: Clues = {
     across: [],
-    down: []
+    down: [],
   };
-  
+
   if (puzzle.clues?.Across) {
     for (const clue of puzzle.clues.Across) {
       clues.across.push({
         number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
-        text: clue.text
+        text: clue.text,
       });
     }
   }
-  
+
   if (puzzle.clues?.Down) {
     for (const clue of puzzle.clues.Down) {
       clues.down.push({
         number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
-        text: clue.text
+        text: clue.text,
       });
     }
   }
-  
-  return {
+
+  const result: Puzzle = {
     title: puzzle.title,
     author: puzzle.author,
     copyright: puzzle.copyright,
     grid,
-    clues
+    clues,
   };
+
+  // Add puzzle-level metadata if present
+  const additionalProps: Record<string, unknown> = {};
+
+  // Add extra metadata
+  if (puzzle.notes) additionalProps.notes = puzzle.notes;
+  if (puzzle.date) additionalProps.date = puzzle.date;
+  if (puzzle.difficulty) additionalProps.difficulty = puzzle.difficulty;
+  if (puzzle.publisher) additionalProps.publisher = puzzle.publisher;
+  if (puzzle.publication) additionalProps.publication = puzzle.publication;
+  if (puzzle.url) additionalProps.url = puzzle.url;
+  if (puzzle.uniqueId) additionalProps.uniqueId = puzzle.uniqueId;
+  if (puzzle.intro) additionalProps.intro = puzzle.intro;
+  if (puzzle.explanation) additionalProps.explanation = puzzle.explanation;
+  if (puzzle.annotation) additionalProps.annotation = puzzle.annotation;
+
+  // Add styles if present
+  if (puzzle.styles && Object.keys(puzzle.styles).length > 0) {
+    additionalProps.styles = puzzle.styles;
+  }
+
+  // Add zones if present
+  if (puzzle.zones && puzzle.zones.length > 0) {
+    additionalProps.zones = puzzle.zones;
+  }
+
+  // Add extensions if present
+  if (Object.keys(puzzle.extensions).length > 0) {
+    additionalProps.extensions = puzzle.extensions;
+  }
+
+  if (Object.keys(additionalProps).length > 0) {
+    result.additionalProperties = additionalProps;
+  }
+
+  return result;
 }
-
-

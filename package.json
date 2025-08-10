@@ -41,6 +41,7 @@
   "license": "MIT",
   "type": "module",
   "devDependencies": {
+    "@fast-check/vitest": "^0.2.2",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
