@@ -213,10 +213,26 @@ describe('Format Hint Performance', () => {
 
 describe('Direct vs Auto-detect Comparison', () => {
   describe.each([
-    { name: 'iPUZ', data: testData.ipuz.small, directParse: (d: string | Buffer) => parseIpuz(d as string) },
-    { name: 'PUZ', data: testData.puz.av110622, directParse: (d: string | Buffer) => parsePuz(d as Buffer) },
-    { name: 'JPZ', data: testData.jpz.fm, directParse: (d: string | Buffer) => parseJpz(d as string) },
-    { name: 'XD', data: testData.xd.usa, directParse: (d: string | Buffer) => parseXd(d as string) },
+    {
+      name: 'iPUZ',
+      data: testData.ipuz.small,
+      directParse: (d: string | Buffer) => parseIpuz(d as string),
+    },
+    {
+      name: 'PUZ',
+      data: testData.puz.av110622,
+      directParse: (d: string | Buffer) => parsePuz(d as Buffer),
+    },
+    {
+      name: 'JPZ',
+      data: testData.jpz.fm,
+      directParse: (d: string | Buffer) => parseJpz(d as string),
+    },
+    {
+      name: 'XD',
+      data: testData.xd.usa,
+      directParse: (d: string | Buffer) => parseXd(d as string),
+    },
   ])('$name format', ({ name, data, directParse }) => {
     bench(
       `${name} direct parse`,
