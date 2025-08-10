@@ -5,6 +5,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import { InvalidFileError, UnsupportedPuzzleTypeError } from './errors';
+import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 // Type definitions for XML parser output
 interface JpzXmlNode {
@@ -426,5 +427,47 @@ export function parseJpz(content: string): JpzPuzzle {
     across,
     down,
     words
+  };
+}
+
+// Convert JPZ puzzle to unified format
+export function convertJpzToUnified(puzzle: JpzPuzzle): XwordPuzzle {
+  const grid: Grid = {
+    width: puzzle.width,
+    height: puzzle.height,
+    cells: []
+  };
+  
+  // Convert grid
+  for (const row of puzzle.grid) {
+    const cellRow: UnifiedCell[] = [];
+    for (const cell of row) {
+      cellRow.push({
+        solution: cell.solution,
+        number: cell.number,
+        isBlack: cell.type === 'block'
+      });
+    }
+    grid.cells.push(cellRow);
+  }
+  
+  // Convert clues
+  const clues: Clues = {
+    across: puzzle.across.map(c => ({
+      number: typeof c.number === 'string' ? parseInt(c.number) : c.number,
+      text: c.text
+    })),
+    down: puzzle.down.map(c => ({
+      number: typeof c.number === 'string' ? parseInt(c.number) : c.number,
+      text: c.text
+    }))
+  };
+  
+  return {
+    title: puzzle.metadata.title,
+    author: puzzle.metadata.creator,
+    copyright: puzzle.metadata.copyright,
+    grid,
+    clues
   };
 }

@@ -1,11 +1,16 @@
-import { parseIpuz, convertIpuzToUnified } from './ipuz';
-import { parseXd, convertXdToUnified } from './xd';
-import { parsePuz, convertPuzToUnified } from './puz';
-import { parseJpz, convertJpzToUnified } from './jpz';
+/**
+ * Lazy-loading version of the main parse function
+ * Dynamically imports parsers only when needed
+ */
+
 import { FormatDetectionError } from './errors';
 import type { XwordPuzzle, ParseOptions } from './types';
 
-export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOptions): XwordPuzzle {
+/**
+ * Parse crossword puzzle data with lazy loading of format parsers
+ * This reduces bundle size when only specific formats are used
+ */
+export async function parseLazy(data: string | Buffer | ArrayBuffer, options?: ParseOptions): Promise<XwordPuzzle> {
   // Convert ArrayBuffer to Buffer if needed
   let content: string | Buffer;
   if (data instanceof ArrayBuffer) {
@@ -22,6 +27,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     if (ext === 'ipuz') {
       try {
         const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
         const puzzle = parseIpuz(textContent);
         return convertIpuzToUnified(puzzle);
       } catch (e) {
@@ -30,6 +36,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     } else if (ext === 'puz') {
       try {
         const buffer = typeof content === 'string' ? Buffer.from(content, 'base64') : content;
+        const { parsePuz, convertPuzToUnified } = await import('./puz');
         const puzzle = parsePuz(buffer);
         return convertPuzToUnified(puzzle);
       } catch (e) {
@@ -38,6 +45,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     } else if (ext === 'jpz') {
       try {
         const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const { parseJpz, convertJpzToUnified } = await import('./jpz');
         const puzzle = parseJpz(textContent);
         return convertJpzToUnified(puzzle);
       } catch (e) {
@@ -46,6 +54,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     } else if (ext === 'xd') {
       try {
         const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const { parseXd, convertXdToUnified } = await import('./xd');
         const puzzle = parseXd(textContent);
         return convertXdToUnified(puzzle);
       } catch (e) {
@@ -62,6 +71,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     const trimmed = content.trim();
     if (trimmed.startsWith('ipuz({') || (trimmed.startsWith('{') && trimmed.includes('"version"'))) {
       try {
+        const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
         const puzzle = parseIpuz(content);
         return convertIpuzToUnified(puzzle);
       } catch (e) {
@@ -72,6 +82,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     // Check for JPZ (XML with crossword elements)
     if (content.includes('<?xml') || content.includes('<crossword') || content.includes('<puzzle')) {
       try {
+        const { parseJpz, convertJpzToUnified } = await import('./jpz');
         const puzzle = parseJpz(content);
         return convertJpzToUnified(puzzle);
       } catch (e) {
@@ -86,6 +97,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     );
     if (hasXdHeaders) {
       try {
+        const { parseXd, convertXdToUnified } = await import('./xd');
         const puzzle = parseXd(content);
         return convertXdToUnified(puzzle);
       } catch (e) {
@@ -96,6 +108,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     // Try parsing as PUZ binary (might be base64 encoded or similar)
     try {
       const buffer = Buffer.from(content, 'base64');
+      const { parsePuz, convertPuzToUnified } = await import('./puz');
       const puzzle = parsePuz(buffer);
       return convertPuzToUnified(puzzle);
     } catch (e) {
@@ -104,6 +117,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
   } else {
     // Binary data - try PUZ format
     try {
+      const { parsePuz, convertPuzToUnified } = await import('./puz');
       const puzzle = parsePuz(content);
       return convertPuzToUnified(puzzle);
     } catch (e) {
@@ -114,6 +128,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
       const trimmed = textContent.trim();
       if (trimmed.startsWith('ipuz({') || (trimmed.startsWith('{') && trimmed.includes('"version"'))) {
         try {
+          const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
           const puzzle = parseIpuz(textContent);
           return convertIpuzToUnified(puzzle);
         } catch (e) {
@@ -123,6 +138,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
       
       if (textContent.includes('<?xml') || textContent.includes('<crossword')) {
         try {
+          const { parseJpz, convertJpzToUnified } = await import('./jpz');
           const puzzle = parseJpz(textContent);
           return convertJpzToUnified(puzzle);
         } catch (e) {
@@ -135,24 +151,3 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
   throw new FormatDetectionError('Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD');
 }
 
-
-// Re-export all public types
-export * from './types';
-
-// Re-export error classes
-export { 
-  XwordParseError,
-  FormatDetectionError,
-  InvalidFileError,
-  UnsupportedPuzzleTypeError,
-  IpuzParseError,
-  PuzParseError,
-  JpzParseError,
-  XdParseError
-} from './errors';
-
-// Re-export parsers and types
-export * from './ipuz';
-export * from './xd';
-export * from './puz';
-export * from './jpz';

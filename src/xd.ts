@@ -1,4 +1,5 @@
 import { InvalidFileError } from './errors';
+import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface XdMetadata {
   title?: string;
@@ -188,3 +189,69 @@ export function parseXd(content: string): XdPuzzle {
   
   return puzzle;
 }
+
+// Convert XD puzzle to unified format
+export function convertXdToUnified(puzzle: XdPuzzle): XwordPuzzle {
+  const grid: Grid = {
+    width: puzzle.grid[0]?.length || 0,
+    height: puzzle.grid.length,
+    cells: []
+  };
+  
+  // Convert grid - XD grid is string[][], we need to determine cell properties
+  let cellNumber = 1;
+  for (let y = 0; y < puzzle.grid.length; y++) {
+    const row = puzzle.grid[y];
+    if (!row) continue;
+    
+    const cellRow: UnifiedCell[] = [];
+    for (let x = 0; x < row.length; x++) {
+      const cellValue = row[x];
+      const isBlack = cellValue === '#';
+      
+      // Determine if this cell should have a number
+      let number: number | undefined;
+      if (!isBlack) {
+        const needsNumber = 
+          // Start of across word
+          ((x === 0 || puzzle.grid[y]?.[x-1] === '#') && 
+           x < row.length - 1 && puzzle.grid[y]?.[x+1] !== '#') ||
+          // Start of down word
+          ((y === 0 || puzzle.grid[y-1]?.[x] === '#') && 
+           y < puzzle.grid.length - 1 && puzzle.grid[y+1]?.[x] !== '#');
+        
+        if (needsNumber) {
+          number = cellNumber++;
+        }
+      }
+      
+      cellRow.push({
+        solution: isBlack ? undefined : cellValue,
+        number,
+        isBlack
+      });
+    }
+    grid.cells.push(cellRow);
+  }
+  
+  // Convert clues
+  const clues: Clues = {
+    across: puzzle.across.map(c => ({
+      number: parseInt(c.number),
+      text: c.clue
+    })),
+    down: puzzle.down.map(c => ({
+      number: parseInt(c.number),
+      text: c.clue
+    }))
+  };
+  
+  return {
+    title: puzzle.metadata.title,
+    author: puzzle.metadata.author,
+    copyright: puzzle.metadata.copyright,
+    grid,
+    clues
+  };
+}
+

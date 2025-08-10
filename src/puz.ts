@@ -4,6 +4,7 @@
  */
 
 import { InvalidFileError } from './errors';
+import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface PuzMetadata {
   title?: string;
@@ -464,5 +465,66 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
     rebusTable: extras.rebusTable,
     isScrambled: header.scrambledTag !== 0,
     timer: extras.timer
+  };
+}
+
+// Convert PUZ puzzle to unified format
+export function convertPuzToUnified(puzzle: PuzPuzzle): XwordPuzzle {
+  const grid: Grid = {
+    width: puzzle.width,
+    height: puzzle.height,
+    cells: []
+  };
+  
+  // Convert grid and assign numbers
+  let cellNumber = 1;
+  for (let y = 0; y < puzzle.height; y++) {
+    const row: UnifiedCell[] = [];
+    for (let x = 0; x < puzzle.width; x++) {
+      const puzCell = puzzle.grid[y]?.[x];
+      
+      // Determine if this cell should have a number
+      let number: number | undefined;
+      if (puzCell && !puzCell.isBlack) {
+        const needsNumber = 
+          // Start of across word
+          ((x === 0 || puzzle.grid[y]?.[x-1]?.isBlack) && 
+           x < puzzle.width - 1 && !puzzle.grid[y]?.[x+1]?.isBlack) ||
+          // Start of down word
+          ((y === 0 || puzzle.grid[y-1]?.[x]?.isBlack) && 
+           y < puzzle.height - 1 && !puzzle.grid[y+1]?.[x]?.isBlack);
+        
+        if (needsNumber) {
+          number = cellNumber++;
+        }
+      }
+      
+      row.push({
+        solution: puzCell?.solution,
+        number,
+        isBlack: puzCell?.isBlack || false
+      });
+    }
+    grid.cells.push(row);
+  }
+  
+  // Convert clues
+  const clues: Clues = {
+    across: puzzle.across.map(c => ({
+      number: c.number,
+      text: c.text
+    })),
+    down: puzzle.down.map(c => ({
+      number: c.number,
+      text: c.text
+    }))
+  };
+  
+  return {
+    title: puzzle.metadata.title,
+    author: puzzle.metadata.author,
+    copyright: puzzle.metadata.copyright,
+    grid,
+    clues
   };
 }

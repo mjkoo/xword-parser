@@ -4,6 +4,7 @@
  */
 
 import { UnsupportedPuzzleTypeError } from './errors';
+import type { XwordPuzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export enum CellType {
   NORMAL = 'normal',
@@ -34,7 +35,7 @@ export interface CellStyle {
   handlerdata?: unknown;
 }
 
-export interface Cell {
+export interface IpuzCell {
   type: CellType;
   number?: number | string;
   value?: string;
@@ -45,7 +46,7 @@ export interface Cell {
   given?: boolean;
 }
 
-export interface Clue {
+export interface IpuzClue {
   number: number | string;
   text: string;
   cells?: Array<[number, number]>;
@@ -64,7 +65,7 @@ export interface IpuzPuzzle {
     height: number;
   };
   
-  puzzle: Cell[][];
+  puzzle: IpuzCell[][];
   
   title?: string;
   author?: string;
@@ -84,7 +85,7 @@ export interface IpuzPuzzle {
   empty?: string;
   charset?: string;
   
-  clues: Record<string, Clue[]>;
+  clues: Record<string, IpuzClue[]>;
   
   solution?: Array<Array<string | null>>;
   
@@ -175,8 +176,8 @@ interface IpuzData {
   [key: string]: unknown;
 }
 
-function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): Cell {
-  const cell: Cell = {
+function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell {
+  const cell: IpuzCell = {
     type: CellType.NORMAL
   };
   
@@ -271,14 +272,14 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): Cell {
   return cell;
 }
 
-function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string, Clue[]> {
-  const clues: Record<string, Clue[]> = {};
+function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string, IpuzClue[]> {
+  const clues: Record<string, IpuzClue[]> = {};
   
   for (const [direction, clueList] of Object.entries(cluesData)) {
     clues[direction] = [];
     
     for (const clueItem of clueList) {
-      let clue: Clue | null = null;
+      let clue: IpuzClue | null = null;
       
       if (Array.isArray(clueItem) && clueItem.length >= 2) {
         clue = {
@@ -432,7 +433,7 @@ export function parseIpuz(content: string): IpuzPuzzle {
     const row = puzzleGrid[rowIdx];
     if (!row) continue;
     
-    const cellRow: Cell[] = [];
+    const cellRow: IpuzCell[] = [];
     
     for (let colIdx = 0; colIdx < row.length; colIdx++) {
       const cellData = row[colIdx];
@@ -461,4 +462,72 @@ export function parseIpuz(content: string): IpuzPuzzle {
   
   return puzzle;
 }
+
+// Convert iPUZ puzzle to unified format
+export function convertIpuzToUnified(puzzle: IpuzPuzzle): XwordPuzzle {
+  const grid: Grid = {
+    width: puzzle.dimensions.width,
+    height: puzzle.dimensions.height,
+    cells: []
+  };
+  
+  // Convert grid
+  for (let y = 0; y < puzzle.dimensions.height; y++) {
+    const row: UnifiedCell[] = [];
+    for (let x = 0; x < puzzle.dimensions.width; x++) {
+      const ipuzCell = puzzle.puzzle[y]?.[x];
+      const solutionCell = puzzle.solution?.[y]?.[x];
+      
+      // iPUZ cells are already Cell objects from our parser
+      const cellNumber = ipuzCell?.number ? 
+        (typeof ipuzCell.number === 'string' ? parseInt(ipuzCell.number) : ipuzCell.number) : 
+        undefined;
+      
+      const isBlack = ipuzCell?.type === CellType.BLOCK;
+      
+      const solution = typeof solutionCell === 'string' ? solutionCell : 
+                      ipuzCell?.value || undefined;
+      
+      row.push({
+        solution,
+        number: cellNumber,
+        isBlack
+      });
+    }
+    grid.cells.push(row);
+  }
+  
+  // Convert clues
+  const clues: Clues = {
+    across: [],
+    down: []
+  };
+  
+  if (puzzle.clues?.Across) {
+    for (const clue of puzzle.clues.Across) {
+      clues.across.push({
+        number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
+        text: clue.text
+      });
+    }
+  }
+  
+  if (puzzle.clues?.Down) {
+    for (const clue of puzzle.clues.Down) {
+      clues.down.push({
+        number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
+        text: clue.text
+      });
+    }
+  }
+  
+  return {
+    title: puzzle.title,
+    author: puzzle.author,
+    copyright: puzzle.copyright,
+    grid,
+    clues
+  };
+}
+
 
