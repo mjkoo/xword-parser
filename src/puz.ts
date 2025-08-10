@@ -131,7 +131,7 @@ class PuzBinaryReader {
 }
 
 function readHeader(reader: PuzBinaryReader): PuzHeader {
-  const startPos = reader.position;
+  // startPos was unused, removed
   
   // Read header fields according to PUZ specification
   const checksum = reader.readUInt16LE();           // 0x00-0x01
@@ -236,10 +236,10 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
   const sortedPositions = Array.from(cluePositions.entries()).sort((a, b) => {
     const [aType, aPos] = a[0].split(',');
     const [bType, bPos] = b[0].split(',');
-    const aRow = parseInt(aType.substring(1));
-    const bRow = parseInt(bType.substring(1));
-    const aCol = parseInt(aPos);
-    const bCol = parseInt(bPos);
+    const aRow = parseInt(aType?.substring(1) || '0');
+    const bRow = parseInt(bType?.substring(1) || '0');
+    const aCol = parseInt(aPos || '0');
+    const bCol = parseInt(bPos || '0');
     
     if (aRow !== bRow) return aRow - bRow;
     return aCol - bCol;
@@ -250,7 +250,7 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
     if (key.startsWith('A') && clueIndex < clueStrings.length) {
       across.push({
         number,
-        text: clueStrings[clueIndex++]
+        text: clueStrings[clueIndex++] || ''
       });
     }
   }
@@ -260,7 +260,7 @@ function parseClues(clueStrings: string[], cluePositions: Map<string, number>): 
     if (key.startsWith('D') && clueIndex < clueStrings.length) {
       down.push({
         number,
-        text: clueStrings[clueIndex++]
+        text: clueStrings[clueIndex++] || ''
       });
     }
   }
@@ -283,7 +283,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
 
     const sectionTitle = reader.readString(4);
     const dataLength = reader.readUInt16LE();
-    const checksum = reader.readUInt16LE();
+    reader.readUInt16LE(); // checksum (unused)
 
     // Skip if not a valid section
     if (dataLength > reader.length - reader.position) break;
@@ -301,8 +301,8 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
             if (index < sectionData.length) {
               const rebusKey = sectionData[index];
               if (rebusKey && rebusKey > 0 && grid[row]?.[col]) {
-                grid[row][col].hasRebus = true;
-                grid[row][col].rebusKey = rebusKey - 1;
+                grid[row]![col]!.hasRebus = true;
+                grid[row]![col]!.rebusKey = rebusKey - 1;
               }
             }
           }
@@ -319,9 +319,9 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
         for (const entry of entries) {
           if (entry.includes(':')) {
             const [key, value] = entry.split(':');
-            const keyNum = parseInt(key);
+            const keyNum = parseInt(key || '0');
             if (!isNaN(keyNum)) {
-              result.rebusTable.set(keyNum, value);
+              result.rebusTable.set(keyNum, value || '');
             }
           }
         }
@@ -338,7 +338,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
             if (index < sectionData.length && grid[row]?.[col]) {
               const flags = sectionData[index];
               if (flags && flags & 0x80) {
-                grid[row][col].isCircled = true;
+                grid[row]![col]!.isCircled = true;
               }
             }
           }
@@ -351,7 +351,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
         const timerStr = sectionData.toString('latin1');
         const [elapsed, running] = timerStr.split(',');
         result.timer = {
-          elapsed: parseInt(elapsed) || 0,
+          elapsed: parseInt(elapsed || '0') || 0,
           running: running === '0' ? false : true
         };
         break;
@@ -371,7 +371,7 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
   } else if (data instanceof Buffer) {
     buffer = data;
   } else {
-    buffer = Buffer.from(data);
+    buffer = Buffer.from(data as ArrayBuffer);
   }
 
   const reader = new PuzBinaryReader(buffer);

@@ -162,8 +162,8 @@ function parseClues(cluesNode: any): { across: JpzClue[], down: JpzClue[] } {
           const match = clue.match(/^(\d+)\.\s*(.+)$/);
           if (match) {
             targetArray.push({
-              number: match[1],
-              text: match[2]
+              number: match[1] || '',
+              text: match[2] || ''
             });
           }
         } else if (typeof clue === 'object') {
