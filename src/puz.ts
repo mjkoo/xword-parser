@@ -6,6 +6,7 @@
 import { InvalidFileError, PuzParseError } from './errors';
 import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
 export interface PuzMetadata {
   title?: string;
@@ -454,9 +455,9 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
       ErrorCode.PUZ_INVALID_GRID,
     );
   }
-  if (header.width > 255 || header.height > 255) {
+  if (header.width > MAX_GRID_WIDTH || header.height > MAX_GRID_HEIGHT) {
     throw new PuzParseError(
-      `Puzzle dimensions too large: width=${header.width}, height=${header.height}`,
+      `Puzzle dimensions too large: width=${header.width}, height=${header.height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
       ErrorCode.PUZ_INVALID_GRID,
     );
   }
