@@ -8,6 +8,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/xword-parser.browser.min.js",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
@@ -15,11 +16,19 @@
       "types": "./dist/lazy.d.ts",
       "import": "./dist/lazy.mjs",
       "require": "./dist/lazy.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -38,19 +47,26 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"{fuzz,src}/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepack": "npm run lint && npm run typecheck && npm run build",
+    "prepublishOnly": "npm run prepack",
+    "size": "npm pack --dry-run && tar -tvf $(npm pack 2>/dev/null | tail -1) | awk '{sum+=$3} END {print \"Package size: \" sum/1024 \"KB\"}'"
   },
   "keywords": [
     "crossword",
+    "crossword-puzzle",
     "puzzle",
     "parser",
     "puz",
     "ipuz",
     "jpz",
     "xd",
-    "typescript"
+    "typescript",
+    "converter",
+    "puzzle-parser",
+    "file-parser",
+    "acrosslite"
   ],
-  "author": "",
+  "author": "Xwordly Team",
   "license": "MIT",
   "repository": {
     "type": "git",

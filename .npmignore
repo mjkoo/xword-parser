@@ -1,0 +1,69 @@
+# Source files
+src/
+testdata/
+fuzz/
+scripts/
+
+# Test files
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+**/__tests__/
+coverage/
+.nyc_output/
+
+# Development files
+*.log
+*.tsbuildinfo
+.eslintrc.*
+.prettierrc.*
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+jest.config.*
+.editorconfig
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation source
+docs/
+*.md
+!README.md
+!LICENSE
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Development dependencies config
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Benchmarks
+bench-results.json
+benchmark.test.ts
+
+# Property tests
+property.test.ts
+
+# Fuzzing
+.cifuzz-corpus/
