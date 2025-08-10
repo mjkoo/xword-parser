@@ -447,6 +447,20 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
   const reader = new PuzBinaryReader(buffer);
   const header = readHeader(reader);
 
+  // Validate dimensions
+  if (header.width <= 0 || header.height <= 0) {
+    throw new PuzParseError(
+      `Invalid puzzle dimensions: width=${header.width}, height=${header.height}`,
+      ErrorCode.PUZ_INVALID_GRID,
+    );
+  }
+  if (header.width > 255 || header.height > 255) {
+    throw new PuzParseError(
+      `Puzzle dimensions too large: width=${header.width}, height=${header.height}`,
+      ErrorCode.PUZ_INVALID_GRID,
+    );
+  }
+
   // Read puzzle data
   const gridSize = header.width * header.height;
   const solution = reader.readString(gridSize);

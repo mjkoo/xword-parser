@@ -208,7 +208,7 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
       }
     }
 
-    if ('style' in cellObj && cellObj.style) {
+    if ('style' in cellObj && cellObj.style && typeof cellObj.style === 'object') {
       cell.style = {};
       const styleFields: (keyof CellStyle)[] = [
         'shapebg',
@@ -385,7 +385,11 @@ export function parseIpuz(content: string | Buffer): IpuzPuzzle {
     );
   }
 
-  if (!data.kind || !Array.isArray(data.kind) || !data.kind.some((k: string) => k.includes('crossword'))) {
+  if (
+    !data.kind ||
+    !Array.isArray(data.kind) ||
+    !data.kind.some((k: string) => k.includes('crossword'))
+  ) {
     throw new UnsupportedPuzzleTypeError('Non-crossword');
   }
 
@@ -583,7 +587,11 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
       };
 
       // Check for circle style (common in iPUZ)
-      if (ipuzCell?.style?.shapebg === 'circle') {
+      if (
+        ipuzCell?.style &&
+        typeof ipuzCell.style === 'object' &&
+        ipuzCell.style.shapebg === 'circle'
+      ) {
         cell.isCircled = true;
       }
 
@@ -593,6 +601,7 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
         // Only add style if it has more than just shapebg='circle'
         if (
           ipuzCell.style &&
+          typeof ipuzCell.style === 'object' &&
           (Object.keys(ipuzCell.style).length > 1 || ipuzCell.style.shapebg !== 'circle')
         ) {
           cell.additionalProperties.style = ipuzCell.style;
