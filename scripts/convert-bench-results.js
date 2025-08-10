@@ -2,7 +2,7 @@
 
 /**
  * Convert Vitest benchmark JSON output to github-action-benchmark format
- * 
+ *
  * Vitest outputs a complex nested structure, but github-action-benchmark
  * expects a simple array of objects with name, unit, and value.
  */
@@ -42,8 +42,10 @@ try {
                   `Max: ${benchmark.max?.toFixed(4)}ms`,
                   `P75: ${benchmark.p75?.toFixed(4)}ms`,
                   `P99: ${benchmark.p99?.toFixed(4)}ms`,
-                  `Samples: ${benchmark.samples?.length || benchmark.sampleCount || 0}`
-                ].filter(Boolean).join('\n')
+                  `Samples: ${benchmark.samples?.length || benchmark.sampleCount || 0}`,
+                ]
+                  .filter(Boolean)
+                  .join('\n'),
               });
             }
           }
@@ -56,7 +58,6 @@ try {
   fs.writeFileSync(outputFile, JSON.stringify(convertedResults, null, 2));
   console.log(`Converted ${convertedResults.length} benchmark results`);
   console.log(`Output written to ${outputFile}`);
-
 } catch (error) {
   console.error('Error converting benchmark results:', error);
   process.exit(1);

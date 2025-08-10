@@ -20,6 +20,9 @@ const __dirname = dirname(__filename);
 const fuzzTestFileExtension = '.fuzz.ts';
 const fuzzTestNameRegex = /it\.fuzz\s*\(\s*['"](.*)['"], /g;
 
+// Track running processes for cleanup on script termination
+const runningProcesses = new Set();
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 let concurrent = false;
@@ -66,6 +69,18 @@ async function findFuzzTestNamesInFile(filePath) {
 }
 
 /**
+ * Kill process tree on Unix-like systems
+ */
+function killProcessTree(pid, signal = 'SIGTERM') {
+  try {
+    // On Unix, kill the process group
+    process.kill(-pid, signal);
+  } catch (e) {
+    // Process might already be dead
+  }
+}
+
+/**
  * Execute a single fuzz test with optional timeout
  */
 function executeFuzzTest(file, testName, testFile) {
@@ -81,11 +96,16 @@ function executeFuzzTest(file, testName, testFile) {
       {
         env,
         stdio: ['inherit', 'pipe', 'pipe'],
-        shell: true,
+        // Use detached to create a new process group on Unix
+        detached: process.platform !== 'win32',
+        // Don't use shell to avoid extra process layer
+        shell: false,
       },
     );
 
+    runningProcesses.add(child);
     const shortName = basename(file, fuzzTestFileExtension);
+    let killed = false;
 
     child.stdout.on('data', (data) => {
       process.stdout.write(`[${shortName}] ${data}`);
@@ -99,19 +119,35 @@ function executeFuzzTest(file, testName, testFile) {
     let timeout;
     if (duration > 0) {
       timeout = setTimeout(() => {
-        child.kill('SIGKILL');
-        log(`✓ ${file} > ${testName} completed (${duration} seconds)`, 'green');
+        killed = true;
+        log(`Stopping ${file} > ${testName} (timeout after ${duration} seconds)`, 'yellow');
+
+        // Try graceful shutdown first
+        killProcessTree(child.pid, 'SIGTERM');
+
+        // Force kill after 5 seconds if still running
+        setTimeout(() => {
+          if (child.killed === false) {
+            killProcessTree(child.pid, 'SIGKILL');
+          }
+        }, 5000);
       }, duration * 1000);
     }
 
-    child.on('exit', (code) => {
+    child.on('exit', (code, signal) => {
       if (timeout) clearTimeout(timeout);
-      if (code === 0) {
+      runningProcesses.delete(child);
+
+      if (killed) {
+        log(`✓ ${file} > ${testName} completed (${duration} seconds timeout)`, 'green');
+      } else if (code === 0) {
         log(`✓ ${file} > ${testName} completed successfully`, 'green');
       } else if (code !== null) {
         log(`✗ ${file} > ${testName} failed with exit code ${code}`, 'red');
+      } else if (signal) {
+        log(`✗ ${file} > ${testName} terminated by signal ${signal}`, 'red');
       }
-      resolve({ file, testName, code });
+      resolve({ file, testName, code: killed ? 0 : code });
     });
   });
 }
@@ -128,7 +164,7 @@ async function findFuzzTestsInDir() {
   for (const file of files) {
     const filePath = join(fuzzDir, file);
     const stats = await stat(filePath);
-    
+
     // Only process files, not directories
     if (stats.isFile() && file.endsWith(fuzzTestFileExtension)) {
       const testNames = await findFuzzTestNamesInFile(filePath);
@@ -140,6 +176,14 @@ async function findFuzzTestsInDir() {
 
   return fuzzTests;
 }
+
+// Simple cleanup handler for script termination
+process.on('SIGINT', () => {
+  for (const child of runningProcesses) {
+    killProcessTree(child.pid, 'SIGKILL');
+  }
+  process.exit(130);
+});
 
 /**
  * Main function

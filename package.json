@@ -45,7 +45,7 @@
     "fuzz:quick": "node scripts/run-fuzzers.js --duration 60",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write \"{fuzz,src}/**/*.{ts,tsx,json,md}\"",
+    "format": "prettier --write \"{fuzz,scripts,src}/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
     "prepack": "npm run lint && npm run typecheck && npm run build",
     "prepublishOnly": "npm run prepack",
