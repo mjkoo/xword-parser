@@ -7,6 +7,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { InvalidFileError, UnsupportedPuzzleTypeError, JpzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 import { ErrorCode } from './types';
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
 // Type definitions for XML parser output
 interface JpzXmlNode {
@@ -161,6 +162,15 @@ function parseCells(gridNode: unknown): {
 
   const width = parseIntAttribute(gridNode['@_width']) || 15;
   const height = parseIntAttribute(gridNode['@_height']) || 15;
+
+  // Validate grid dimensions to prevent excessive memory usage
+  if (width <= 0 || width > MAX_GRID_WIDTH || height <= 0 || height > MAX_GRID_HEIGHT) {
+    throw new JpzParseError(
+      `Invalid grid dimensions: ${width}x${height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      ErrorCode.JPZ_INVALID_GRID,
+      { details: { width, height } },
+    );
+  }
 
   // Handle cells - can be a single cell or array
   const cellNodes = gridNode.cell;

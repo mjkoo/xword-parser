@@ -6,6 +6,7 @@
 import { UnsupportedPuzzleTypeError, IpuzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 import { ErrorCode } from './types';
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
 export enum CellType {
   NORMAL = 'normal',
@@ -415,6 +416,12 @@ export function parseIpuz(content: string | Buffer): IpuzPuzzle {
   if (data.dimensions.width <= 0 || data.dimensions.height <= 0) {
     throw new IpuzParseError(
       'Width and height must be positive numbers',
+      ErrorCode.IPUZ_INVALID_GRID_SIZE,
+    );
+  }
+  if (data.dimensions.width > MAX_GRID_WIDTH || data.dimensions.height > MAX_GRID_HEIGHT) {
+    throw new IpuzParseError(
+      `Grid dimensions too large: ${data.dimensions.width}x${data.dimensions.height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
       ErrorCode.IPUZ_INVALID_GRID_SIZE,
     );
   }

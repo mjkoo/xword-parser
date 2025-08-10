@@ -1,6 +1,7 @@
 import { InvalidFileError, XdParseError } from './errors';
 import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
 export interface XdMetadata {
   title?: string;
@@ -188,6 +189,16 @@ export function parseXd(content: string): XdPuzzle {
   const width = grid[0]?.length || 0;
   if (width === 0) {
     throw new XdParseError('Grid has no columns', ErrorCode.XD_INVALID_GRID);
+  }
+
+  const height = grid.length;
+
+  // Validate grid dimensions are within limits
+  if (width > MAX_GRID_WIDTH || height > MAX_GRID_HEIGHT) {
+    throw new XdParseError(
+      `Grid dimensions too large: ${width}x${height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      ErrorCode.XD_INVALID_GRID,
+    );
   }
 
   for (let i = 0; i < grid.length; i++) {
