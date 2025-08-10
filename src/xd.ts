@@ -1,4 +1,5 @@
-import { InvalidFileError } from './errors';
+import { InvalidFileError, XdParseError } from './errors';
+import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface XdMetadata {
@@ -178,6 +179,31 @@ export function parseXd(content: string): XdPuzzle {
   const grid = parseGrid(sections.grid);
   const { across, down } = parseClues(sections.clues);
 
+  // Validate grid is not empty
+  if (grid.length === 0) {
+    throw new XdParseError('Grid is empty', ErrorCode.XD_INVALID_GRID);
+  }
+
+  // Validate grid has consistent row lengths
+  const width = grid[0]?.length || 0;
+  if (width === 0) {
+    throw new XdParseError('Grid has no columns', ErrorCode.XD_INVALID_GRID);
+  }
+
+  for (let i = 0; i < grid.length; i++) {
+    if (!grid[i] || grid[i]?.length !== width) {
+      throw new XdParseError(
+        `Grid row ${i} has inconsistent width (expected ${width}, got ${grid[i]?.length || 0})`,
+        ErrorCode.XD_INVALID_GRID,
+      );
+    }
+  }
+
+  // Validate clues exist
+  if (across.length === 0 && down.length === 0) {
+    throw new XdParseError('No clues found', ErrorCode.XD_MISSING_CLUES);
+  }
+
   const puzzle: XdPuzzle = {
     metadata,
     grid,
@@ -194,8 +220,15 @@ export function parseXd(content: string): XdPuzzle {
 
 // Convert XD puzzle to unified format
 export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
+  // Parser guarantees grid is not empty and has consistent width
+  const firstRow = puzzle.grid[0];
+  if (!firstRow) {
+    // This should never happen as parser validates grid is not empty
+    throw new Error('Invalid state: grid is empty');
+  }
+
   const grid: Grid = {
-    width: puzzle.grid[0]?.length || 0,
+    width: firstRow.length,
     height: puzzle.grid.length,
     cells: [],
   };
@@ -203,12 +236,11 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
   // Convert grid - XD grid is string[][], we need to determine cell properties
   let cellNumber = 1;
   for (let y = 0; y < puzzle.grid.length; y++) {
-    const row = puzzle.grid[y];
-    if (!row) continue;
+    const row = puzzle.grid[y]!; // Parser guarantees all rows exist
 
     const cellRow: UnifiedCell[] = [];
     for (let x = 0; x < row.length; x++) {
-      const cellValue = row[x];
+      const cellValue = row[x]!; // Parser guarantees consistent width
       const isBlack = cellValue === '#';
 
       // Determine if this cell should have a number
@@ -216,9 +248,9 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
       if (!isBlack) {
         const needsNumber =
           // Start of across word
-          ((x === 0 || puzzle.grid[y]?.[x - 1] === '#') &&
+          ((x === 0 || puzzle.grid[y]![x - 1] === '#') &&
             x < row.length - 1 &&
-            puzzle.grid[y]?.[x + 1] !== '#') ||
+            puzzle.grid[y]![x + 1] !== '#') ||
           // Start of down word
           ((y === 0 || puzzle.grid[y - 1]?.[x] === '#') &&
             y < puzzle.grid.length - 1 &&

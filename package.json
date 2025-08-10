@@ -1,7 +1,7 @@
 {
-  "name": "xword-parser",
+  "name": "@xwordly/xword-parser",
   "version": "0.1.0",
-  "description": "A TypeScript library for parsing crossword puzzles",
+  "description": "A TypeScript library for parsing popular crossword puzzle file formats (PUZ, iPUZ, JPZ, XD) into a unified data structure",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -26,29 +26,51 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
+    "test:fuzz": "jest --config jest.config.fuzz.js",
+    "fuzz:seed": "node fuzz/seed-corpus.js",
+    "fuzz": "node fuzz/run-fuzzers.js",
+    "fuzz:concurrent": "node fuzz/run-fuzzers.js --concurrent",
+    "fuzz:quick": "node fuzz/run-fuzzers.js --duration 60",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
+    "format": "prettier --write \"{fuzz,src}/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
     "crossword",
+    "puzzle",
     "parser",
+    "puz",
+    "ipuz",
+    "jpz",
+    "xd",
     "typescript"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xwordly/xword-parser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xwordly/xword-parser/issues"
+  },
+  "homepage": "https://github.com/xwordly/xword-parser#readme",
   "type": "module",
   "devDependencies": {
     "@fast-check/vitest": "^0.2.2",
+    "@jazzer.js/jest-runner": "^2.1.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "@vitest/coverage-v8": "^1.2.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
+    "jest": "^30.0.5",
     "prettier": "^3.2.4",
+    "ts-jest": "^29.4.1",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0"

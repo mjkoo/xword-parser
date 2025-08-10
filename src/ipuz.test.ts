@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseIpuz, CellType, type IpuzPuzzle, convertIpuzToUnified } from './ipuz';
+import { IpuzParseError } from './errors';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
@@ -432,16 +433,13 @@ describe('ipuz parser', () => {
       expect(() => parseIpuz('not json')).toThrow();
     });
 
-    it('should handle missing required fields gracefully', () => {
+    it('should reject missing required fields', () => {
       const minimal = JSON.stringify({
         kind: ['http://ipuz.org/crossword#1'],
       });
 
-      const puzzle = parseIpuz(minimal);
-      expect(puzzle.version).toBe('');
-      expect(puzzle.dimensions.width).toBe(0);
-      expect(puzzle.dimensions.height).toBe(0);
-      expect(puzzle.puzzle).toEqual([]);
+      expect(() => parseIpuz(minimal)).toThrow(IpuzParseError);
+      expect(() => parseIpuz(minimal)).toThrow('Missing or invalid dimensions field');
     });
   });
 

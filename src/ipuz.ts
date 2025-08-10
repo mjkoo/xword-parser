@@ -385,10 +385,43 @@ export function parseIpuz(content: string): IpuzPuzzle {
     throw new UnsupportedPuzzleTypeError('Non-crossword');
   }
 
+  // Validate required fields for crossword puzzles
+  if (!data.dimensions || typeof data.dimensions !== 'object') {
+    throw new IpuzParseError(
+      'Missing or invalid dimensions field',
+      ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
+    );
+  }
+
+  if (!data.dimensions.width || !data.dimensions.height) {
+    throw new IpuzParseError(
+      'Missing width or height in dimensions',
+      ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
+    );
+  }
+
+  if (typeof data.dimensions.width !== 'number' || typeof data.dimensions.height !== 'number') {
+    throw new IpuzParseError('Width and height must be numbers', ErrorCode.IPUZ_INVALID_DATA_TYPE);
+  }
+
+  if (data.dimensions.width <= 0 || data.dimensions.height <= 0) {
+    throw new IpuzParseError(
+      'Width and height must be positive numbers',
+      ErrorCode.IPUZ_INVALID_GRID_SIZE,
+    );
+  }
+
+  if (!data.puzzle || !Array.isArray(data.puzzle)) {
+    throw new IpuzParseError(
+      'Missing or invalid puzzle grid',
+      ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
+    );
+  }
+
   const puzzle: IpuzPuzzle = {
     version: data.version || '',
     kind: data.kind || [],
-    dimensions: data.dimensions || { width: 0, height: 0 },
+    dimensions: data.dimensions,
     puzzle: [],
     clues: {},
     extensions: {},

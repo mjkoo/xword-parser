@@ -1,0 +1,111 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-version:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.check.outputs.version_changed }}
+      new_version: ${{ steps.check.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check if version changed
+        id: check
+        run: |
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          git checkout HEAD~1 2>/dev/null || exit 0
+          OLD_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
+          git checkout - 2>/dev/null || exit 0
+          
+          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "Version bumped from $OLD_VERSION to $NEW_VERSION"
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged ($OLD_VERSION)"
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Clone test data
+      run: |
+        git clone https://${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
+    
+    - name: Check formatting
+      run: npm run lint
+    
+    - name: Type check
+      run: npm run typecheck
+    
+    - name: Run tests with coverage
+      run: npm test -- --coverage
+    
+    - name: Run fuzz tests with coverage
+      run: npm run test:fuzz
+    
+    - name: Merge coverage reports
+      run: |
+        npm install -g nyc
+        mkdir -p coverage-merged
+        nyc merge coverage coverage-merged/coverage-final.json
+        nyc merge coverage-fuzz coverage-merged/coverage-fuzz.json
+        nyc report --temp-dir coverage-merged --reporter=json --reporter=lcov --report-dir coverage-final
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/coverage-final.json,./coverage-fuzz/coverage-final.json
+        flags: unittests,fuzztests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  trigger-publish:
+    needs: [check-version, test]
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' && 
+      needs.check-version.outputs.version_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger publish workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'publish.yml',
+              ref: 'main',
+              inputs: {
+                version: '${{ needs.check-version.outputs.new_version }}'
+              }
+            })

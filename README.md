@@ -7,9 +7,11 @@ A TypeScript library for parsing popular crossword puzzle file formats into a un
 - **Universal Format Support**: Parse PUZ, iPUZ, JPZ, and XD crossword formats
 - **Unified Data Model**: All formats are converted to a common representation
 - **Type-Safe**: Full TypeScript support with comprehensive type definitions
-- **Lightweight**: Minimal runtime dependencies
-- **Error Handling**: Robust error handling with descriptive error messages
-- **Simple API**: Synchronous, pure function API for immediate results
+- **Lightweight**: Minimal runtime dependencies (only fast-xml-parser for JPZ support)
+- **Error Handling**: Robust error handling with format-specific error classes
+- **Lazy Loading**: Optional lazy-loading support to reduce bundle size
+- **Format Detection**: Automatic format detection with optional filename hints
+- **Encoding Support**: Configurable character encoding for text-based formats
 
 ## Installation
 
@@ -37,9 +39,62 @@ pnpm add xword-parser
 import { parse } from 'xword-parser';
 import { readFileSync } from 'fs';
 
-// Parse from file contents
+// Parse from file contents (auto-detects format)
 const fileContent = readFileSync('puzzle.puz');
 const puzzle = parse(fileContent);
+
+console.log(puzzle.title);
+console.log(puzzle.author);
+console.log(puzzle.grid.width, 'x', puzzle.grid.height);
+```
+
+### With Format Hints
+
+Providing a filename helps with faster and more accurate format detection:
+
+```typescript
+import { parse } from 'xword-parser';
+
+// Provide filename hint for better format detection
+const puzzle = parse(fileContent, { 
+  filename: 'crossword.puz' 
+});
+
+// Specify encoding for text-based formats
+const puzzle = parse(fileContent, { 
+  filename: 'puzzle.ipuz',
+  encoding: 'latin1' // default is 'utf-8'
+});
+```
+
+### Lazy Loading
+
+For smaller bundle sizes in web applications, use the lazy-loading version:
+
+```typescript
+import { parseLazy } from 'xword-parser/lazy';
+
+// Parsers are loaded dynamically only when needed
+const puzzle = await parseLazy(fileContent);
+```
+
+### Format-Specific Parsers
+
+If you know the format in advance, you can use format-specific parsers:
+
+```typescript
+import { 
+  parseIpuz, 
+  parsePuz, 
+  parseJpz, 
+  parseXd 
+} from 'xword-parser';
+
+// Use specific parser for known format
+const ipuzPuzzle = parseIpuz(jsonString);
+const puzPuzzle = parsePuz(binaryBuffer);
+const jpzPuzzle = parseJpz(xmlString);
+const xdPuzzle = parseXd(textString);
 ```
 
 ### Parsing Different Formats
@@ -74,16 +129,48 @@ const xdPuzzle = parse(xdData);
 
 ### Main Functions
 
-#### `parse(data: string | Buffer | ArrayBuffer): Puzzle`
+#### `parse(data: string | Buffer | ArrayBuffer, options?: ParseOptions): Puzzle`
 
 Parses crossword puzzle data from various formats. This is a pure, synchronous function.
 
 **Parameters:**
 - `data`: The puzzle data as a string (for text formats) or binary data (for PUZ format)
+- `options` (optional): 
+  - `filename`: Hint for format detection (e.g., "puzzle.puz")
+  - `encoding`: Character encoding for text formats (default: "utf-8")
 
-**Returns:** An `Puzzle` object
+**Returns:** A `Puzzle` object
 
-**Throws:** `XwordParseError` if the data cannot be parsed
+**Throws:** 
+- `FormatDetectionError` if the format cannot be detected
+- `IpuzParseError`, `PuzParseError`, `JpzParseError`, or `XdParseError` for format-specific errors
+- `UnsupportedPuzzleTypeError` if the puzzle type is not a crossword
+
+#### `parseLazy(data: string | Buffer | ArrayBuffer, options?: ParseOptions): Promise<Puzzle>`
+
+Lazy-loading version of `parse()` that loads parsers dynamically.
+
+**Parameters:** Same as `parse()`
+
+**Returns:** A Promise that resolves to a `Puzzle` object
+
+**Throws:** Same errors as `parse()`
+
+### Format-Specific Functions
+
+Each format has its own parse and convert functions:
+
+- `parseIpuz(content: string): IpuzPuzzle`
+- `parsePuz(buffer: Buffer): PuzPuzzle`
+- `parseJpz(content: string): JpzPuzzle`
+- `parseXd(content: string): XdPuzzle`
+
+And corresponding converters:
+
+- `convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle`
+- `convertPuzToUnified(puzzle: PuzPuzzle): Puzzle`
+- `convertJpzToUnified(puzzle: JpzPuzzle): Puzzle`
+- `convertXdToUnified(puzzle: XdPuzzle): Puzzle`
 
 ## Supported Formats
 
@@ -116,27 +203,99 @@ The `.xd` format is a simple text-based format that's human-readable and include
 - Basic metadata
 - Easy to create and edit manually
 
-## Data Model Design
+## Data Types
 
-The unified `Puzzle` format represents the intersection of critical fields across all supported formats:
+### Puzzle Interface
 
-- **Metadata**: Common fields like title, author, and copyright that appear in most formats
-- **Grid Structure**: A normalized 2D grid representation that can accommodate various puzzle sizes
-- **Cell Data**: Essential information including solutions, numbering, and black squares
-- **Clues**: Standardized across/down clue structure that works for traditional crosswords
+```typescript
+interface Puzzle {
+  title?: string;
+  author?: string;
+  copyright?: string;
+  notes?: string;
+  date?: string;
+  grid: Grid;
+  clues: Clues;
+  rebusTable?: Map<number, string>;
+  additionalProperties?: Record<string, unknown>;
+}
+```
 
-This design prioritizes:
-1. **Completeness**: Capturing all essential data needed to play a crossword
-2. **Simplicity**: Avoiding format-specific complexity in the common interface
-3. **Extensibility**: Easy to extend for additional formats or features
-4. **Type Safety**: Leveraging TypeScript for compile-time guarantees
+### Grid and Cell Types
+
+```typescript
+interface Grid {
+  width: number;
+  height: number;
+  cells: Cell[][];
+}
+
+interface Cell {
+  solution?: string;
+  number?: number;
+  isBlack: boolean;
+  isCircled?: boolean;
+  hasRebus?: boolean;
+  rebusKey?: number;
+}
+```
+
+### Clue Types
+
+```typescript
+interface Clues {
+  across: Clue[];
+  down: Clue[];
+}
+
+interface Clue {
+  number: number;
+  text: string;
+}
+```
+
+## Error Handling
+
+The library provides specific error classes for different scenarios:
+
+- `FormatDetectionError`: Unable to detect the puzzle format
+- `IpuzParseError`: iPUZ-specific parsing errors
+- `PuzParseError`: PUZ-specific parsing errors
+- `JpzParseError`: JPZ-specific parsing errors
+- `XdParseError`: XD-specific parsing errors
+- `UnsupportedPuzzleTypeError`: When a file contains a non-crossword puzzle
+- `InvalidFileError`: General file format issues
+
+All error classes extend `XwordParseError` and include error codes for programmatic handling:
+
+```typescript
+try {
+  const puzzle = parse(data);
+} catch (error) {
+  if (error instanceof IpuzParseError) {
+    console.error('iPUZ parsing failed:', error.message);
+    console.error('Error code:', error.code);
+  }
+}
+```
+
+## Library Architecture
+
+The library is designed with the following principles:
+
+1. **Pure Functions**: All parsers are pure functions with no side effects or file I/O
+2. **Format-First Parsing**: Each parser first captures all format-specific data, then converts to the unified format
+3. **Type Safety**: Comprehensive TypeScript types for both format-specific and unified structures
+4. **Error Recovery**: Smart error handling that distinguishes between format mismatches and real parsing errors
+5. **Extensibility**: Easy to add new formats by implementing the parser/converter pattern
 
 ## Development
 
 ### Building
 
 ```bash
-npm run build
+npm run build            # Build for production
+npm run dev              # Build with watch mode
 ```
 
 ### Testing
@@ -147,6 +306,12 @@ npm run test:watch       # Run tests in watch mode
 npm run test:coverage    # Generate coverage report
 ```
 
+The test suite includes:
+- Unit tests for each format parser
+- Property-based testing with fast-check
+- Performance benchmarks
+- Integration tests with real puzzle files
+
 ### Linting & Formatting
 
 ```bash
@@ -155,3 +320,50 @@ npm run lint:fix         # Fix linting errors
 npm run format           # Format code with Prettier
 npm run typecheck        # Type-check without building
 ```
+
+### Project Structure
+
+```
+src/
+├── index.ts           # Main entry point with auto-detection
+├── lazy.ts            # Lazy-loading entry point
+├── types.ts           # Shared TypeScript types
+├── errors.ts          # Error classes and codes
+├── ipuz.ts            # iPUZ parser and types
+├── puz.ts             # PUZ parser and types
+├── jpz.ts             # JPZ parser and types
+├── xd.ts              # XD parser and types
+└── *.test.ts          # Test files for each module
+```
+
+## Requirements
+
+- Node.js >= 18
+- TypeScript >= 5.3 (for development)
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Adding a New Format
+
+To add support for a new crossword format:
+
+1. Create a new parser file (e.g., `src/newformat.ts`)
+2. Implement the format-specific types and parser
+3. Implement a converter to the unified `Puzzle` type
+4. Add the format to the auto-detection in `src/index.ts`
+5. Add comprehensive tests
+6. Update this README
+
+## Acknowledgments
+
+This library supports puzzle formats from:
+- Across Lite (PUZ)
+- iPUZ Specification
+- Crossword Compiler (JPZ)
+- XWord Info (XD)

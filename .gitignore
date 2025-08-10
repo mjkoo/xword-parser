@@ -13,12 +13,13 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Testing
-coverage/
+coverage*/
 *.lcov
 .nyc_output/
 
 # Test data (contains copyrighted puzzle files)
 testdata/
+.cifuzz-corpus/
 
 # IDE
 .vscode/
