@@ -1,3 +1,5 @@
+import { InvalidFileError } from './errors';
+
 export interface XdMetadata {
   title?: string;
   author?: string;
@@ -166,7 +168,7 @@ export function parseXd(content: string): XdPuzzle {
   const sections = splitIntoSections(content);
   
   if (sections.grid.length === 0) {
-    throw new Error('No grid section found in XD file');
+    throw new InvalidFileError('XD', 'no grid section found');
   }
   
   const metadata = parseMetadata(sections.metadata);

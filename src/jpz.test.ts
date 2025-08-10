@@ -161,6 +161,6 @@ describe('parseJpz', () => {
     const filePath = join(testDataDir, 'kaidoku.jpz');
     const content = readFileSync(filePath, 'utf-8');
     
-    expect(() => parseJpz(content)).toThrow('Coded/cipher crosswords (Kaidoku) are not supported');
+    expect(() => parseJpz(content)).toThrow('Coded/cipher crosswords (Kaidoku) puzzles are not supported');
   });
 });

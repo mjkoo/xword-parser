@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parse, XwordParseError, type XwordPuzzle } from './index';
+import { parse, XwordParseError } from './index';
 
 describe('parse auto-detection', () => {
   const testDataDir = join(process.cwd(), 'testdata');

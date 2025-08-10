@@ -3,6 +3,8 @@
  * Based on specification at https://www.puzzazz.com/ipuz
  */
 
+import { UnsupportedPuzzleTypeError } from './errors';
+
 export enum CellType {
   NORMAL = 'normal',
   BLOCK = 'block',
@@ -347,7 +349,7 @@ export function parseIpuz(content: string): IpuzPuzzle {
   const data = JSON.parse(jsonContent) as IpuzData;
   
   if (!data.kind || !data.kind.some((k: string) => k.includes('crossword'))) {
-    throw new Error('Only crossword puzzles are supported');
+    throw new UnsupportedPuzzleTypeError('Non-crossword');
   }
   
   const puzzle: IpuzPuzzle = {

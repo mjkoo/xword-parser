@@ -7,7 +7,7 @@ A TypeScript library for parsing popular crossword puzzle file formats into a un
 - **Universal Format Support**: Parse PUZ, iPUZ, JPZ, and XD crossword formats
 - **Unified Data Model**: All formats are converted to a common representation
 - **Type-Safe**: Full TypeScript support with comprehensive type definitions
-- **Lightweight**: Zero runtime dependencies
+- **Lightweight**: Minimal runtime dependencies
 - **Error Handling**: Robust error handling with descriptive error messages
 - **Simple API**: Synchronous, pure function API for immediate results
 

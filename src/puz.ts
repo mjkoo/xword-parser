@@ -3,6 +3,8 @@
  * Based on reverse-engineered specification
  */
 
+import { InvalidFileError } from './errors';
+
 export interface PuzMetadata {
   title?: string;
   author?: string;
@@ -60,34 +62,34 @@ interface PuzHeader {
 const MAGIC_STRING = 'ACROSS&DOWN';
 
 class PuzBinaryReader {
-  private buffer: Buffer;
+  private _buffer: Buffer;
   private offset: number;
 
   constructor(data: Buffer | ArrayBuffer | Uint8Array) {
     if (data instanceof ArrayBuffer) {
-      this.buffer = Buffer.from(data);
+      this._buffer = Buffer.from(data);
     } else if (data instanceof Uint8Array) {
-      this.buffer = Buffer.from(data);
+      this._buffer = Buffer.from(data);
     } else {
-      this.buffer = data;
+      this._buffer = data;
     }
     this.offset = 0;
   }
 
   readUInt8(): number {
-    const value = this.buffer.readUInt8(this.offset);
+    const value = this._buffer.readUInt8(this.offset);
     this.offset += 1;
     return value;
   }
 
   readUInt16LE(): number {
-    const value = this.buffer.readUInt16LE(this.offset);
+    const value = this._buffer.readUInt16LE(this.offset);
     this.offset += 2;
     return value;
   }
 
   readBytes(length: number): Buffer {
-    const value = this.buffer.slice(this.offset, this.offset + length);
+    const value = this._buffer.slice(this.offset, this.offset + length);
     this.offset += length;
     return value;
   }
@@ -105,10 +107,10 @@ class PuzBinaryReader {
 
   readNullTerminatedString(): string {
     const start = this.offset;
-    while (this.offset < this.buffer.length && this.buffer[this.offset] !== 0) {
+    while (this.offset < this._buffer.length && this._buffer[this.offset] !== 0) {
       this.offset++;
     }
-    const str = this.buffer.toString('latin1', start, this.offset);
+    const str = this._buffer.toString('latin1', start, this.offset);
     this.offset++; // Skip null terminator
     return str;
   }
@@ -122,16 +124,49 @@ class PuzBinaryReader {
   }
 
   get length(): number {
-    return this.buffer.length;
+    return this._buffer.length;
+  }
+  
+  get buffer(): Buffer {
+    return this._buffer;
   }
 
   hasMore(): boolean {
-    return this.offset < this.buffer.length;
+    return this.offset < this._buffer.length;
   }
 }
 
 function readHeader(reader: PuzBinaryReader): PuzHeader {
-  // startPos was unused, removed
+  // Search for the magic string "ACROSS&DOWN" in the file
+  const magicBytes = Buffer.from(MAGIC_STRING, 'latin1');
+  let magicOffset = -1;
+  
+  // Search for the magic string in the buffer
+  for (let i = 0; i <= reader.length - magicBytes.length; i++) {
+    let found = true;
+    for (let j = 0; j < magicBytes.length; j++) {
+      if (reader.buffer[i + j] !== magicBytes[j]) {
+        found = false;
+        break;
+      }
+    }
+    if (found) {
+      magicOffset = i;
+      break;
+    }
+  }
+  
+  if (magicOffset === -1) {
+    throw new InvalidFileError('PUZ', `magic string "${MAGIC_STRING}" not found`);
+  }
+  
+  // Position reader at the start of the actual PUZ data (2 bytes before magic string)
+  const headerStart = magicOffset - 2;
+  if (headerStart < 0) {
+    throw new InvalidFileError('PUZ', 'magic string found too early in file');
+  }
+  
+  reader.seek(headerStart);
   
   // Read header fields according to PUZ specification
   const checksum = reader.readUInt16LE();           // 0x00-0x01
@@ -167,8 +202,9 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
     scrambledTag
   };
 
+  // Verify we read the magic string correctly
   if (header.magic !== MAGIC_STRING) {
-    throw new Error(`Invalid PUZ file: magic string mismatch. Expected "${MAGIC_STRING}", got "${header.magic}"`);
+    throw new InvalidFileError('PUZ', `magic string mismatch after positioning. Expected "${MAGIC_STRING}", got "${header.magic}"`);
   }
 
   return header;
@@ -281,6 +317,14 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
     // Check if we have enough bytes for a section header
     if (reader.position + 8 > reader.length) break;
 
+    // Skip null padding bytes between sections
+    while (reader.hasMore() && reader.buffer[reader.position] === 0) {
+      reader.readUInt8();
+    }
+    
+    // Check again after skipping padding
+    if (reader.position + 8 > reader.length) break;
+
     const sectionTitle = reader.readString(4);
     const dataLength = reader.readUInt16LE();
     reader.readUInt16LE(); // checksum (unused)
@@ -337,7 +381,7 @@ function parseExtraSections(reader: PuzBinaryReader, grid: PuzCell[][]): {
             const index = row * width + col;
             if (index < sectionData.length && grid[row]?.[col]) {
               const flags = sectionData[index];
-              if (flags && flags & 0x80) {
+              if (flags && (flags & 0x80)) {
                 grid[row]![col]!.isCircled = true;
               }
             }

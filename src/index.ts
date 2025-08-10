@@ -2,6 +2,7 @@ import { parseIpuz, type IpuzPuzzle, CellType } from './ipuz';
 import { parseXd, type XdPuzzle } from './xd';
 import { parsePuz, type PuzPuzzle } from './puz';
 import { parseJpz, type JpzPuzzle } from './jpz';
+import { FormatDetectionError } from './errors';
 
 export function parse(data: string | Buffer | ArrayBuffer): XwordPuzzle {
   // Convert ArrayBuffer to Buffer if needed
@@ -90,7 +91,7 @@ export function parse(data: string | Buffer | ArrayBuffer): XwordPuzzle {
     }
   }
   
-  throw new Error('Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD');
+  throw new FormatDetectionError('Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD');
 }
 
 // Converter functions (temporary implementations - will be moved to separate module)
@@ -356,6 +357,19 @@ export interface Clue {
 }
 
 export * from './types';
+// Re-export error classes
+export { 
+  XwordParseError,
+  FormatDetectionError,
+  InvalidFileError,
+  UnsupportedPuzzleTypeError,
+  IpuzParseError,
+  PuzParseError,
+  JpzParseError,
+  XdParseError
+} from './errors';
+
+// Re-export parsers and types
 export * from './ipuz';
 export * from './xd';
 export * from './puz';

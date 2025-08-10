@@ -118,7 +118,7 @@ It spans multiple lines.`;
   it('should throw error for invalid XD format', () => {
     const invalidContent = 'This is not a valid XD file';
     
-    expect(() => parseXd(invalidContent)).toThrow('No grid section found in XD file');
+    expect(() => parseXd(invalidContent)).toThrow('Invalid XD file: no grid section found');
   });
 
   it('should handle various metadata fields', () => {

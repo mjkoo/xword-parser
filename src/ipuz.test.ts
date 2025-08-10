@@ -392,7 +392,7 @@ describe('ipuz parser', () => {
         puzzle: []
       });
       
-      expect(() => parseIpuz(nonCrossword)).toThrow('Only crossword puzzles are supported');
+      expect(() => parseIpuz(nonCrossword)).toThrow('Non-crossword puzzles are not supported');
     });
 
     it('should handle malformed JSON', () => {
