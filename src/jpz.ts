@@ -4,7 +4,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { InvalidFileError, UnsupportedPuzzleTypeError } from './errors';
+import { InvalidFileError, UnsupportedPuzzleTypeError, JpzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 // Type definitions for XML parser output
@@ -350,7 +350,12 @@ export function parseJpz(content: string): JpzPuzzle {
     parseAttributeValue: false,
   });
 
-  const doc = parser.parse(content) as JpzXmlRoot;
+  let doc: JpzXmlRoot;
+  try {
+    doc = parser.parse(content) as JpzXmlRoot;
+  } catch (e) {
+    throw new JpzParseError(`Invalid XML: ${e instanceof Error ? e.message : 'Unknown error'}`);
+  }
 
   // Handle different JPZ root elements
   const puzzleRoot =

@@ -21,23 +21,25 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
 
     if (ext === 'ipuz') {
       try {
-        const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const textContent = typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
         const puzzle = parseIpuz(textContent);
         return convertIpuzToUnified(puzzle);
       } catch (e) {
         // Fall through to content-based detection
       }
     } else if (ext === 'puz') {
-      try {
-        const buffer = typeof content === 'string' ? Buffer.from(content, 'base64') : content;
-        const puzzle = parsePuz(buffer);
-        return convertPuzToUnified(puzzle);
-      } catch (e) {
-        // Fall through to content-based detection
+      // Only try PUZ if we have binary data
+      if (typeof content !== 'string') {
+        try {
+          const puzzle = parsePuz(content);
+          return convertPuzToUnified(puzzle);
+        } catch (e) {
+          // Fall through to content-based detection
+        }
       }
     } else if (ext === 'jpz') {
       try {
-        const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const textContent = typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
         const puzzle = parseJpz(textContent);
         return convertJpzToUnified(puzzle);
       } catch (e) {
@@ -45,7 +47,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
       }
     } else if (ext === 'xd') {
       try {
-        const textContent = typeof content === 'string' ? content : content.toString('utf-8');
+        const textContent = typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
         const puzzle = parseXd(textContent);
         return convertXdToUnified(puzzle);
       } catch (e) {
@@ -56,7 +58,8 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
 
   // Auto-detect format based on content
   if (typeof content === 'string') {
-    // Try text-based formats
+    // String input - only try text-based formats (iPUZ, JPZ, XD)
+    // Do NOT try to decode as base64 or treat as PUZ
 
     // Check for iPUZ (starts with ipuz({ or is JSON with version field)
     const trimmed = content.trim();
@@ -99,45 +102,59 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
         // Not XD, continue checking
       }
     }
-
-    // Try parsing as PUZ binary (might be base64 encoded or similar)
-    try {
-      const buffer = Buffer.from(content, 'base64');
-      const puzzle = parsePuz(buffer);
-      return convertPuzToUnified(puzzle);
-    } catch (e) {
-      // Not base64 PUZ
-    }
   } else {
-    // Binary data - try PUZ format
+    // Buffer input - try PUZ first, then convert to string and try text formats
+    
+    // Try PUZ format first (binary)
     try {
       const puzzle = parsePuz(content);
       return convertPuzToUnified(puzzle);
     } catch (e) {
       // Not PUZ, try converting to string for text formats
-      const textContent = content.toString('utf-8');
+    }
 
-      // Try text formats with string version
-      const trimmed = textContent.trim();
-      if (
-        trimmed.startsWith('ipuz({') ||
-        (trimmed.startsWith('{') && trimmed.includes('"version"'))
-      ) {
-        try {
-          const puzzle = parseIpuz(textContent);
-          return convertIpuzToUnified(puzzle);
-        } catch (e) {
-          // Not iPUZ
-        }
+    // Convert to string and try text formats
+    const textContent = content.toString(options?.encoding || 'utf-8');
+    const trimmed = textContent.trim();
+
+    // Check for iPUZ
+    if (
+      trimmed.startsWith('ipuz({') ||
+      (trimmed.startsWith('{') && trimmed.includes('"version"'))
+    ) {
+      try {
+        const puzzle = parseIpuz(textContent);
+        return convertIpuzToUnified(puzzle);
+      } catch (e) {
+        // Not iPUZ
       }
+    }
 
-      if (textContent.includes('<?xml') || textContent.includes('<crossword')) {
-        try {
-          const puzzle = parseJpz(textContent);
-          return convertJpzToUnified(puzzle);
-        } catch (e) {
-          // Not JPZ
-        }
+    // Check for JPZ
+    if (
+      textContent.includes('<?xml') ||
+      textContent.includes('<crossword') ||
+      textContent.includes('<puzzle')
+    ) {
+      try {
+        const puzzle = parseJpz(textContent);
+        return convertJpzToUnified(puzzle);
+      } catch (e) {
+        // Not JPZ
+      }
+    }
+
+    // Check for XD
+    const lines = textContent.split('\n');
+    const hasXdHeaders = lines.some((line) =>
+      /^(Title|Author|Editor|Copyright|Date|Rebus|Notepad|Notes?):/i.test(line),
+    );
+    if (hasXdHeaders) {
+      try {
+        const puzzle = parseXd(textContent);
+        return convertXdToUnified(puzzle);
+      } catch (e) {
+        // Not XD
       }
     }
   }

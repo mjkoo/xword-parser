@@ -45,6 +45,8 @@ export interface Clue {
 export interface ParseOptions {
   /** Optional filename hint for format detection (e.g., "puzzle.puz", "crossword.ipuz") */
   filename?: string;
+  /** Character encoding for text-based formats (default: "utf-8") */
+  encoding?: BufferEncoding;
 }
 
 /**

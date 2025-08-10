@@ -3,7 +3,7 @@
  * Based on specification at https://www.puzzazz.com/ipuz
  */
 
-import { UnsupportedPuzzleTypeError } from './errors';
+import { UnsupportedPuzzleTypeError, IpuzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export enum CellType {
@@ -368,7 +368,12 @@ export function parseIpuz(content: string): IpuzPuzzle {
     jsonContent = jsonContent.slice(5, -1);
   }
 
-  const data = JSON.parse(jsonContent) as IpuzData;
+  let data: IpuzData;
+  try {
+    data = JSON.parse(jsonContent) as IpuzData;
+  } catch (e) {
+    throw new IpuzParseError(`Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`);
+  }
 
   if (!data.kind || !data.kind.some((k: string) => k.includes('crossword'))) {
     throw new UnsupportedPuzzleTypeError('Non-crossword');
@@ -564,19 +569,27 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
 
   if (puzzle.clues?.Across) {
     for (const clue of puzzle.clues.Across) {
-      clues.across.push({
-        number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
-        text: clue.text,
-      });
+      const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
+      // Skip invalid clue numbers (NaN, 0, negative)
+      if (!isNaN(clueNumber) && clueNumber > 0) {
+        clues.across.push({
+          number: clueNumber,
+          text: clue.text || '',
+        });
+      }
     }
   }
 
   if (puzzle.clues?.Down) {
     for (const clue of puzzle.clues.Down) {
-      clues.down.push({
-        number: typeof clue.number === 'string' ? parseInt(clue.number) : clue.number,
-        text: clue.text,
-      });
+      const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
+      // Skip invalid clue numbers (NaN, 0, negative)
+      if (!isNaN(clueNumber) && clueNumber > 0) {
+        clues.down.push({
+          number: clueNumber,
+          text: clue.text || '',
+        });
+      }
     }
   }
 
