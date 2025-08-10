@@ -3,7 +3,8 @@
  * Based on reverse-engineered specification
  */
 
-import { InvalidFileError } from './errors';
+import { InvalidFileError, PuzParseError } from './errors';
+import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 
 export interface PuzMetadata {
@@ -158,13 +159,19 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
   }
 
   if (magicOffset === -1) {
-    throw new InvalidFileError('PUZ', `magic string "${MAGIC_STRING}" not found`);
+    throw new PuzParseError(
+      `Invalid PUZ file: magic string "${MAGIC_STRING}" not found`,
+      ErrorCode.PUZ_INVALID_HEADER,
+    );
   }
 
   // Position reader at the start of the actual PUZ data (2 bytes before magic string)
   const headerStart = magicOffset - 2;
   if (headerStart < 0) {
-    throw new InvalidFileError('PUZ', 'magic string found too early in file');
+    throw new PuzParseError(
+      'Invalid PUZ file: magic string found too early in file',
+      ErrorCode.PUZ_INVALID_HEADER,
+    );
   }
 
   reader.seek(headerStart);

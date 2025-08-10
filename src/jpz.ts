@@ -6,6 +6,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { InvalidFileError, UnsupportedPuzzleTypeError, JpzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import { ErrorCode } from './types';
 
 // Type definitions for XML parser output
 interface JpzXmlNode {
@@ -354,7 +355,12 @@ export function parseJpz(content: string): JpzPuzzle {
   try {
     doc = parser.parse(content) as JpzXmlRoot;
   } catch (e) {
-    throw new JpzParseError(`Invalid XML: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    throw new JpzParseError(
+      `Invalid XML: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      ErrorCode.JPZ_INVALID_XML,
+      undefined,
+      e,
+    );
   }
 
   // Handle different JPZ root elements

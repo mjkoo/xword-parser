@@ -5,6 +5,7 @@
 
 import { UnsupportedPuzzleTypeError, IpuzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import { ErrorCode } from './types';
 
 export enum CellType {
   NORMAL = 'normal',
@@ -372,7 +373,12 @@ export function parseIpuz(content: string): IpuzPuzzle {
   try {
     data = JSON.parse(jsonContent) as IpuzData;
   } catch (e) {
-    throw new IpuzParseError(`Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    throw new IpuzParseError(
+      `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      ErrorCode.IPUZ_INVALID_JSON,
+      undefined,
+      e,
+    );
   }
 
   if (!data.kind || !data.kind.some((k: string) => k.includes('crossword'))) {
@@ -548,7 +554,10 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
       if (ipuzCell?.style || ipuzCell?.continued || ipuzCell?.directions || ipuzCell?.given) {
         cell.additionalProperties = {};
         // Only add style if it has more than just shapebg='circle'
-        if (ipuzCell.style && (Object.keys(ipuzCell.style).length > 1 || ipuzCell.style.shapebg !== 'circle')) {
+        if (
+          ipuzCell.style &&
+          (Object.keys(ipuzCell.style).length > 1 || ipuzCell.style.shapebg !== 'circle')
+        ) {
           cell.additionalProperties.style = ipuzCell.style;
         }
         if (ipuzCell.continued) {
