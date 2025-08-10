@@ -48,7 +48,7 @@ jobs:
     
     - name: Install dependencies
       if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: npm ci
+      run: npm install
     
     - name: Clone test data
       if: steps.check_recent_update.outputs.skip_fuzzing != 'true'

@@ -30,7 +30,7 @@ jobs:
             exit 1
           fi
       
-      - run: npm ci
+      - run: npm install
       - run: npm run build
       
       - name: Create GitHub Release
