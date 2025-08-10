@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const fuzzTestFileExtension = '.fuzz.ts';
-const fuzzTestNameRegex = /it\.fuzz\s*\(\s*"(.*)"/g;
+const fuzzTestNameRegex = /it\.fuzz\s*\(\s*['"](.*)['"], /g;
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -121,14 +121,20 @@ function executeFuzzTest(file, testName, testFile) {
  */
 async function findFuzzTestsInDir() {
   const fuzzDir = join(__dirname, '..', 'fuzz');
+  const { stat } = await import('fs/promises');
   const files = await readdir(fuzzDir);
   const fuzzTests = {};
 
   for (const file of files) {
     const filePath = join(fuzzDir, file);
-    const testNames = await findFuzzTestNamesInFile(filePath);
-    if (testNames.length) {
-      fuzzTests[filePath] = testNames;
+    const stats = await stat(filePath);
+    
+    // Only process files, not directories
+    if (stats.isFile() && file.endsWith(fuzzTestFileExtension)) {
+      const testNames = await findFuzzTestNamesInFile(filePath);
+      if (testNames.length) {
+        fuzzTests[filePath] = testNames;
+      }
     }
   }
 
