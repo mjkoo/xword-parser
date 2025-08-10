@@ -298,6 +298,9 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
   const clues: Record<string, IpuzClue[]> = {};
 
   for (const [direction, clueList] of Object.entries(cluesData)) {
+    if (!Array.isArray(clueList)) {
+      continue;
+    }
     clues[direction] = [];
 
     for (const clueItem of clueList) {
@@ -362,8 +365,9 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
   return clues;
 }
 
-export function parseIpuz(content: string): IpuzPuzzle {
-  let jsonContent = content.trim();
+export function parseIpuz(content: string | Buffer): IpuzPuzzle {
+  const stringContent = typeof content === 'string' ? content : content.toString('utf-8');
+  let jsonContent = stringContent.trim();
 
   if (jsonContent.startsWith('ipuz(') && jsonContent.endsWith(')')) {
     jsonContent = jsonContent.slice(5, -1);
