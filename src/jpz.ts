@@ -456,6 +456,7 @@ export function convertJpzToUnified(puzzle: JpzPuzzle): Puzzle {
         solution: cell.solution,
         number: cell.number,
         isBlack: cell.type === 'block',
+        isCircled: cell.isCircled,
       };
 
       // Add cell-specific metadata if present

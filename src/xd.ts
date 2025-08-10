@@ -254,6 +254,8 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
     title: puzzle.metadata.title,
     author: puzzle.metadata.author,
     copyright: puzzle.metadata.copyright,
+    notes: puzzle.notes,
+    date: puzzle.metadata.date,
     grid,
     clues,
   };
@@ -262,10 +264,8 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
   const additionalProps: Record<string, unknown> = {};
 
   if (puzzle.metadata.editor) additionalProps.editor = puzzle.metadata.editor;
-  if (puzzle.metadata.date) additionalProps.date = puzzle.metadata.date;
-  if (puzzle.notes) additionalProps.notes = puzzle.notes;
 
-  // XD format also supports rebus and notepad metadata
+  // XD format also supports rebus metadata (different format than PUZ)
   if (puzzle.metadata.rebus) additionalProps.rebus = puzzle.metadata.rebus;
   if (puzzle.metadata.notepad) additionalProps.notepad = puzzle.metadata.notepad;
 

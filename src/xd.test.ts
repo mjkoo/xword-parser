@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { parseXd, type XdPuzzle } from './xd';
+import { parseXd, type XdPuzzle, convertXdToUnified } from './xd';
 
 describe('parseXd', () => {
   const testDataDir = join(process.cwd(), 'testdata', 'xd');
@@ -67,6 +67,10 @@ describe('parseXd', () => {
     expect(puzzle.metadata.author).toBe('C.C. Burnikel / Ed. Rich Norris');
     expect(puzzle.metadata.copyright).toBe('© 2020 Tribune Content Agency, LLC');
     expect(puzzle.metadata.date).toBe('2020-04-25');
+    
+    // Check that date is promoted to unified format
+    const unified = convertXdToUnified(puzzle);
+    expect(unified.date).toBe('2020-04-25');
     
     expect(puzzle.grid).toHaveLength(15);
     expect(puzzle.grid[0]).toHaveLength(15);

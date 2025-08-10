@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseIpuz, CellType, type IpuzPuzzle } from './ipuz';
+import { parseIpuz, CellType, type IpuzPuzzle, convertIpuzToUnified } from './ipuz';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
@@ -112,6 +112,11 @@ describe('ipuz parser', () => {
       // Check solution
       expect(puzzle.solution?.[2]?.[2]).toBe('XYZ');
       expect(puzzle.solution?.[4]?.[3]).toBe('$');
+      
+      // Check that circle style is promoted to isCircled in unified format
+      const unified = convertIpuzToUnified(puzzle);
+      expect(unified.grid.cells[2]?.[0]?.isCircled).toBe(true);
+      expect(unified.grid.cells[2]?.[4]?.isCircled).toBe(true);
       expect(puzzle.solution?.[4]?.[4]).toBe('@');
     },
     

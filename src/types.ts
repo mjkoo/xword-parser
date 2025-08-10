@@ -11,8 +11,14 @@ export interface Puzzle {
   title?: string;
   author?: string;
   copyright?: string;
+  /** Optional notes/notepad content */
+  notes?: string;
+  /** Publication or solve date */
+  date?: string;
   grid: Grid;
   clues: Clues;
+  /** Map of rebus keys to their multi-letter values */
+  rebusTable?: Map<number, string>;
   additionalProperties?: Record<string, unknown>;
 }
 
@@ -27,6 +33,12 @@ export interface Cell {
   solution?: string;
   number?: number;
   isBlack: boolean;
+  /** Whether this cell is circled (for theme/meta puzzles) */
+  isCircled?: boolean;
+  /** Whether this cell contains a rebus (multiple letters) */
+  hasRebus?: boolean;
+  /** Key for looking up rebus value in the puzzle's rebusTable */
+  rebusKey?: number;
   additionalProperties?: Record<string, unknown>;
 }
 

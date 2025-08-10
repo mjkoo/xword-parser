@@ -539,10 +539,16 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
         isBlack,
       };
 
-      // Add cell-specific metadata if present
+      // Check for circle style (common in iPUZ)
+      if (ipuzCell?.style?.shapebg === 'circle') {
+        cell.isCircled = true;
+      }
+
+      // Add remaining cell-specific metadata if present
       if (ipuzCell?.style || ipuzCell?.continued || ipuzCell?.directions || ipuzCell?.given) {
         cell.additionalProperties = {};
-        if (ipuzCell.style) {
+        // Only add style if it has more than just shapebg='circle'
+        if (ipuzCell.style && (Object.keys(ipuzCell.style).length > 1 || ipuzCell.style.shapebg !== 'circle')) {
           cell.additionalProperties.style = ipuzCell.style;
         }
         if (ipuzCell.continued) {
@@ -553,6 +559,10 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
         }
         if (ipuzCell.given !== undefined) {
           cell.additionalProperties.given = ipuzCell.given;
+        }
+        // Remove additionalProperties if it's empty
+        if (Object.keys(cell.additionalProperties).length === 0) {
+          delete cell.additionalProperties;
         }
       }
 
@@ -597,16 +607,14 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
     title: puzzle.title,
     author: puzzle.author,
     copyright: puzzle.copyright,
+    notes: puzzle.notes,
+    date: puzzle.date,
     grid,
     clues,
   };
 
   // Add puzzle-level metadata if present
   const additionalProps: Record<string, unknown> = {};
-
-  // Add extra metadata
-  if (puzzle.notes) additionalProps.notes = puzzle.notes;
-  if (puzzle.date) additionalProps.date = puzzle.date;
   if (puzzle.difficulty) additionalProps.difficulty = puzzle.difficulty;
   if (puzzle.publisher) additionalProps.publisher = puzzle.publisher;
   if (puzzle.publication) additionalProps.publication = puzzle.publication;

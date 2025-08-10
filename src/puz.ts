@@ -525,15 +525,14 @@ export function convertPuzToUnified(puzzle: PuzPuzzle): Puzzle {
         isBlack: puzCell?.isBlack || false,
       };
 
-      // Add cell-specific metadata if present
-      if (puzCell?.isCircled || puzCell?.hasRebus) {
-        cell.additionalProperties = {};
-        if (puzCell.isCircled) {
-          cell.additionalProperties.isCircled = true;
-        }
-        if (puzCell.hasRebus && puzCell.rebusKey !== undefined) {
-          cell.additionalProperties.hasRebus = true;
-          cell.additionalProperties.rebusKey = puzCell.rebusKey;
+      // Add cell-specific metadata
+      if (puzCell?.isCircled) {
+        cell.isCircled = true;
+      }
+      if (puzCell?.hasRebus) {
+        cell.hasRebus = true;
+        if (puzCell.rebusKey !== undefined) {
+          cell.rebusKey = puzCell.rebusKey;
         }
       }
 
@@ -558,23 +557,19 @@ export function convertPuzToUnified(puzzle: PuzPuzzle): Puzzle {
     title: puzzle.metadata.title,
     author: puzzle.metadata.author,
     copyright: puzzle.metadata.copyright,
+    notes: puzzle.metadata.notes,
     grid,
     clues,
+    rebusTable: puzzle.rebusTable,
   };
 
   // Add puzzle-level metadata if present
   const additionalProps: Record<string, unknown> = {};
-  if (puzzle.metadata.notes) {
-    additionalProps.notes = puzzle.metadata.notes;
-  }
   if (puzzle.isScrambled) {
     additionalProps.isScrambled = puzzle.isScrambled;
   }
   if (puzzle.timer) {
     additionalProps.timer = puzzle.timer;
-  }
-  if (puzzle.rebusTable && Object.keys(puzzle.rebusTable).length > 0) {
-    additionalProps.rebusTable = puzzle.rebusTable;
   }
 
   if (Object.keys(additionalProps).length > 0) {
