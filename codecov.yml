@@ -1,6 +1,23 @@
-codecov:
-  require_ci_to_pass: false
-
-fixes:
-  - "/home/runner/work/xword-parser/xword-parser/::"
-  - "::src/"  # Fallback to prepend src/ if no other prefix matches
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0%
+    patch:
+      default:
+        target: auto
+        threshold: 0%
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
+flag_management:
+  default_rules:
+    carryforward: true
+    paths:
+      - src/
+ignore:
+  - "**/*.test.ts"
+  - "**/testdata/**"
+  - "**/node_modules/**"

@@ -5,14 +5,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     exclude: ['fuzz/**', 'node_modules/**', 'dist/**', '**/*.bench.ts'],
-    reporters: process.env.CI ? ['junit', 'default'] : ['default'],
-    outputFile: {
-      junit: 'test-results.xml',
-    },
+    reporters: process.env.CI ? ['default'] : ['default'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'cobertura', 'html'],
-      reportsDirectory: './coverage',
+      reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
       exclude: [
         '**/*.bench.ts',
