@@ -7,7 +7,7 @@ import { ErrorCode, ErrorContext } from './types';
 /**
  * Base error class for all parsing errors
  */
-export class XwordParseError extends Error {
+export class ParseError extends Error {
   public readonly code: ErrorCode;
   public readonly context?: ErrorContext;
 
@@ -18,8 +18,6 @@ export class XwordParseError extends Error {
     cause?: unknown,
   ) {
     super(message, { cause });
-    Object.setPrototypeOf(this, XwordParseError.prototype);
-    this.name = 'XwordParseError';
     this.code = code;
     this.context = context;
   }
@@ -39,33 +37,29 @@ export class XwordParseError extends Error {
 /**
  * Error thrown when the input format cannot be detected
  */
-export class FormatDetectionError extends XwordParseError {
+export class FormatDetectionError extends ParseError {
   constructor(
     message: string = 'Unable to detect puzzle format',
     context?: ErrorContext,
     cause?: unknown,
   ) {
     super(message, ErrorCode.FORMAT_DETECTION_FAILED, context, cause);
-    Object.setPrototypeOf(this, FormatDetectionError.prototype);
-    this.name = 'FormatDetectionError';
   }
 }
 
 /**
  * Error thrown when a file is corrupted or invalid
  */
-export class InvalidFileError extends XwordParseError {
+export class InvalidFileError extends ParseError {
   constructor(format: string, message: string, context?: ErrorContext, cause?: unknown) {
     super(`Invalid ${format} file: ${message}`, ErrorCode.INVALID_FILE, context, cause);
-    Object.setPrototypeOf(this, InvalidFileError.prototype);
-    this.name = 'InvalidFileError';
   }
 }
 
 /**
  * Error thrown when a puzzle type is not supported
  */
-export class UnsupportedPuzzleTypeError extends XwordParseError {
+export class UnsupportedPuzzleTypeError extends ParseError {
   constructor(puzzleType: string, context?: ErrorContext, cause?: unknown) {
     super(
       `${puzzleType} puzzles are not supported`,
@@ -73,15 +67,13 @@ export class UnsupportedPuzzleTypeError extends XwordParseError {
       context,
       cause,
     );
-    Object.setPrototypeOf(this, UnsupportedPuzzleTypeError.prototype);
-    this.name = 'UnsupportedPuzzleTypeError';
   }
 }
 
 /**
  * Format-specific error classes
  */
-export class IpuzParseError extends XwordParseError {
+export class IpuzParseError extends ParseError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.IPUZ_PARSE_ERROR,
@@ -89,8 +81,6 @@ export class IpuzParseError extends XwordParseError {
     cause?: unknown,
   ) {
     super(message, code, context, cause);
-    Object.setPrototypeOf(this, IpuzParseError.prototype);
-    this.name = 'IpuzParseError';
   }
 
   override isFormatMismatch(): boolean {
@@ -105,7 +95,7 @@ export class IpuzParseError extends XwordParseError {
   }
 }
 
-export class PuzParseError extends XwordParseError {
+export class PuzParseError extends ParseError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.PUZ_PARSE_ERROR,
@@ -113,8 +103,6 @@ export class PuzParseError extends XwordParseError {
     cause?: unknown,
   ) {
     super(message, code, context, cause);
-    Object.setPrototypeOf(this, PuzParseError.prototype);
-    this.name = 'PuzParseError';
   }
 
   override isFormatMismatch(): boolean {
@@ -124,7 +112,7 @@ export class PuzParseError extends XwordParseError {
   }
 }
 
-export class JpzParseError extends XwordParseError {
+export class JpzParseError extends ParseError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.JPZ_PARSE_ERROR,
@@ -132,8 +120,6 @@ export class JpzParseError extends XwordParseError {
     cause?: unknown,
   ) {
     super(message, code, context, cause);
-    Object.setPrototypeOf(this, JpzParseError.prototype);
-    this.name = 'JpzParseError';
   }
 
   override isFormatMismatch(): boolean {
@@ -143,7 +129,7 @@ export class JpzParseError extends XwordParseError {
   }
 }
 
-export class XdParseError extends XwordParseError {
+export class XdParseError extends ParseError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.XD_PARSE_ERROR,
@@ -151,8 +137,6 @@ export class XdParseError extends XwordParseError {
     cause?: unknown,
   ) {
     super(message, code, context, cause);
-    Object.setPrototypeOf(this, XdParseError.prototype);
-    this.name = 'XdParseError';
   }
 
   override isFormatMismatch(): boolean {

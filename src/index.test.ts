@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parse, XwordParseError } from './index';
+import { parse, ParseError } from './index';
 
 describe('parse auto-detection', () => {
   const testDataDir = join(process.cwd(), 'testdata');
@@ -150,11 +150,13 @@ describe('parse auto-detection', () => {
   });
 });
 
-describe('XwordParseError', () => {
-  it('should create an error with the correct name', () => {
-    const error = new XwordParseError('Test error');
-    expect(error.name).toBe('XwordParseError');
+describe('ParseError', () => {
+  it('should create an error with the correct class name', () => {
+    const error = new ParseError('Test error');
+    expect(error.constructor.name).toBe('ParseError');
     expect(error.message).toBe('Test error');
+    expect(error instanceof ParseError).toBe(true);
+    expect(error instanceof Error).toBe(true);
   });
 });
 

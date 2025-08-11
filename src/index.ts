@@ -2,10 +2,33 @@ import { parseIpuz, convertIpuzToUnified } from './ipuz';
 import { parseXd, convertXdToUnified } from './xd';
 import { parsePuz, convertPuzToUnified } from './puz';
 import { parseJpz, convertJpzToUnified } from './jpz';
-import { FormatDetectionError, XwordParseError } from './errors';
+import { FormatDetectionError, ParseError } from './errors';
 import { getOrderedFormatsToTry } from './detect';
 import type { Puzzle, ParseOptions } from './types';
 
+/**
+ * Parse a crossword puzzle from various formats (iPUZ, PUZ, JPZ, XD).
+ * Automatically detects the format and returns a unified puzzle structure.
+ *
+ * @param data - The puzzle data as string, Buffer, or ArrayBuffer
+ * @param options - Optional parsing options
+ * @param options.filename - Filename hint to improve format detection
+ * @param options.encoding - Character encoding for text formats (default: 'utf-8')
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns A unified Puzzle object
+ * @throws {FormatDetectionError} When the format cannot be detected
+ * @throws {ParseError} When parsing fails for the detected format
+ *
+ * @example
+ * ```typescript
+ * import { parse } from 'xword-parser';
+ * import { readFileSync } from 'fs';
+ *
+ * const content = readFileSync('puzzle.puz');
+ * const puzzle = parse(content, { filename: 'puzzle.puz' });
+ * console.log(puzzle.title, puzzle.grid.width + 'x' + puzzle.grid.height);
+ * ```
+ */
 export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOptions): Puzzle {
   let content: string | Buffer;
   if (data instanceof ArrayBuffer) {
@@ -49,7 +72,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
     } catch (e) {
       lastError = e;
       // Only continue trying other formats if this is a format mismatch
-      if (e instanceof XwordParseError && !e.isFormatMismatch()) {
+      if (e instanceof ParseError && !e.isFormatMismatch()) {
         throw e;
       }
     }
@@ -57,7 +80,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
 
   // If we get here, no format worked
   // Only throw lastError if it was NOT a format mismatch (i.e., a real parse error)
-  if (lastError && !(lastError instanceof XwordParseError && lastError.isFormatMismatch())) {
+  if (lastError && !(lastError instanceof ParseError && lastError.isFormatMismatch())) {
     if (lastError instanceof Error) {
       throw lastError;
     }

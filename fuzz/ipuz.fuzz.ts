@@ -5,7 +5,7 @@ import {
   IpuzParseError,
   UnsupportedPuzzleTypeError,
   InvalidFileError,
-  XwordParseError,
+  ParseError,
 } from '../src/errors';
 
 describe('iPUZ Fuzzer', () => {
@@ -22,14 +22,14 @@ describe('iPUZ Fuzzer', () => {
     }
 
     if (parseError) {
-      expect(parseError).toBeInstanceOf(XwordParseError);
+      expect(parseError).toBeInstanceOf(ParseError);
       expect(
         parseError instanceof IpuzParseError ||
           parseError instanceof UnsupportedPuzzleTypeError ||
           parseError instanceof InvalidFileError,
       ).toBe(true);
 
-      if (parseError instanceof XwordParseError) {
+      if (parseError instanceof ParseError) {
         expect(parseError.code).toBeDefined();
         expect(typeof parseError.code).toBe('string');
         expect(typeof parseError.message).toBe('string');
@@ -73,14 +73,14 @@ describe('iPUZ Fuzzer', () => {
     }
 
     if (conversionError) {
-      expect(conversionError).toBeInstanceOf(XwordParseError);
+      expect(conversionError).toBeInstanceOf(ParseError);
       expect(
         conversionError instanceof IpuzParseError ||
           conversionError instanceof UnsupportedPuzzleTypeError ||
           conversionError instanceof InvalidFileError,
       ).toBe(true);
 
-      if (conversionError instanceof XwordParseError) {
+      if (conversionError instanceof ParseError) {
         expect(conversionError.code).toBeDefined();
         expect(typeof conversionError.code).toBe('string');
         expect(typeof conversionError.message).toBe('string');

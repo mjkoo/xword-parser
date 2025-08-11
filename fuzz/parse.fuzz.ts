@@ -2,7 +2,7 @@ import '@jazzer.js/jest-runner';
 import { parse } from '../src/index';
 import type { Puzzle } from '../src/types';
 import {
-  XwordParseError,
+  ParseError,
   FormatDetectionError,
   IpuzParseError,
   PuzParseError,
@@ -32,8 +32,8 @@ describe('Parse Auto-Detection Fuzzer', () => {
         }
 
         if (parseError) {
-          // Should only throw XwordParseError or its subclasses
-          expect(parseError).toBeInstanceOf(XwordParseError);
+          // Should only throw ParseError or its subclasses
+          expect(parseError).toBeInstanceOf(ParseError);
           expect(
             parseError instanceof FormatDetectionError ||
               parseError instanceof IpuzParseError ||
@@ -44,7 +44,7 @@ describe('Parse Auto-Detection Fuzzer', () => {
               parseError instanceof InvalidFileError,
           ).toBe(true);
 
-          if (parseError instanceof XwordParseError) {
+          if (parseError instanceof ParseError) {
             expect(parseError.code).toBeDefined();
             expect(typeof parseError.code).toBe('string');
             expect(typeof parseError.message).toBe('string');
@@ -140,8 +140,8 @@ describe('Parse Auto-Detection Fuzzer', () => {
       }
 
       if (parseError) {
-        expect(parseError).toBeInstanceOf(XwordParseError);
-        if (parseError instanceof XwordParseError) {
+        expect(parseError).toBeInstanceOf(ParseError);
+        if (parseError instanceof ParseError) {
           expect(parseError.code).toBeDefined();
           expect(typeof parseError.message).toBe('string');
         }

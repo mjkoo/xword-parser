@@ -40,7 +40,7 @@ function parseMetadata(lines: string[]): XdMetadata {
 
     if (key && value) {
       // Convert first character to lowercase to match TypeScript conventions
-      const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
+      const normalizedKey = (key[0] ?? '').toLowerCase() + key.slice(1);
       metadata[normalizedKey] = value;
     }
   }
@@ -169,6 +169,22 @@ function splitIntoSections(content: string): {
   return result;
 }
 
+/**
+ * Parse an XD format crossword puzzle.
+ *
+ * @param content - The XD text data as string
+ * @param options - Optional parsing options
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns An XdPuzzle object containing all puzzle data
+ * @throws {XdParseError} When the content is not valid XD format
+ *
+ * @example
+ * ```typescript
+ * import { parseXd } from 'xword-parser';
+ * const xdData = 'Title: Example\\nAuthor: John Doe\\n\\n## Grid\\n...';
+ * const puzzle = parseXd(xdData);
+ * ```
+ */
 export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
   const sections = splitIntoSections(content);
 
@@ -227,7 +243,19 @@ export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
   return puzzle;
 }
 
-// Convert XD puzzle to unified format
+/**
+ * Convert an XD puzzle to the unified Puzzle format.
+ *
+ * @param puzzle - The XdPuzzle object to convert
+ * @returns A unified Puzzle object
+ *
+ * @example
+ * ```typescript
+ * import { parseXd, convertXdToUnified } from 'xword-parser';
+ * const xdPuzzle = parseXd(xdData);
+ * const unifiedPuzzle = convertXdToUnified(xdPuzzle);
+ * ```
+ */
 export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
   // Parser guarantees grid is not empty and has consistent width
   const firstRow = puzzle.grid[0];

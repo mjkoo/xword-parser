@@ -1,7 +1,30 @@
-import { FormatDetectionError, XwordParseError } from './errors';
+import { FormatDetectionError, ParseError } from './errors';
 import { getOrderedFormatsToTry } from './detect';
 import type { Puzzle, ParseOptions } from './types';
 
+/**
+ * Parse a crossword puzzle asynchronously with dynamic imports for smaller bundle size.
+ * Parsers are loaded only when needed, reducing initial bundle size.
+ *
+ * @param data - The puzzle data as string, Buffer, or ArrayBuffer
+ * @param options - Optional parsing options
+ * @param options.filename - Filename hint to improve format detection
+ * @param options.encoding - Character encoding for text formats (default: 'utf-8')
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns A Promise that resolves to a unified Puzzle object
+ * @throws {FormatDetectionError} When the format cannot be detected
+ * @throws {ParseError} When parsing fails for the detected format
+ *
+ * @example
+ * ```typescript
+ * import { parseLazy } from 'xword-parser/lazy';
+ * import { readFileSync } from 'fs';
+ *
+ * const content = readFileSync('puzzle.ipuz');
+ * const puzzle = await parseLazy(content, { filename: 'puzzle.ipuz' });
+ * console.log(puzzle.title);
+ * ```
+ */
 export async function parseLazy(
   data: string | Buffer | ArrayBuffer,
   options?: ParseOptions,
@@ -29,7 +52,7 @@ export async function parseLazy(
         case 'puz': {
           if (typeof content !== 'string') {
             const { parsePuz, convertPuzToUnified } = await import('./puz');
-            const puzzle = parsePuz(content);
+            const puzzle = parsePuz(content, options);
             return convertPuzToUnified(puzzle);
           }
           break;
@@ -52,7 +75,7 @@ export async function parseLazy(
     } catch (e) {
       lastError = e;
       // Only continue trying other formats if this is a format mismatch
-      if (e instanceof XwordParseError && !e.isFormatMismatch()) {
+      if (e instanceof ParseError && !e.isFormatMismatch()) {
         throw e;
       }
     }
@@ -60,7 +83,7 @@ export async function parseLazy(
 
   // If we get here, no format worked
   // Only throw lastError if it was NOT a format mismatch (i.e., a real parse error)
-  if (lastError && !(lastError instanceof XwordParseError && lastError.isFormatMismatch())) {
+  if (lastError && !(lastError instanceof ParseError && lastError.isFormatMismatch())) {
     if (lastError instanceof Error) {
       throw lastError;
     }

@@ -65,6 +65,11 @@ const puzzle = parse(fileContent, {
   filename: 'puzzle.ipuz',
   encoding: 'latin1' // default is 'utf-8'
 });
+
+// Limit maximum grid size
+const puzzle = parse(fileContent, {
+  maxGridSize: { width: 50, height: 50 }
+});
 ```
 
 ### Lazy Loading
@@ -138,11 +143,13 @@ Parses crossword puzzle data from various formats. This is a pure, synchronous f
 - `options` (optional): 
   - `filename`: Hint for format detection (e.g., "puzzle.puz")
   - `encoding`: Character encoding for text formats (default: "utf-8")
+  - `maxGridSize`: Maximum allowed grid dimensions (e.g., `{width: 50, height: 50}`)
 
 **Returns:** A `Puzzle` object
 
 **Throws:** 
 - `FormatDetectionError` if the format cannot be detected
+- `ParseError` for general parsing errors
 - `IpuzParseError`, `PuzParseError`, `JpzParseError`, or `XdParseError` for format-specific errors
 - `UnsupportedPuzzleTypeError` if the puzzle type is not a crossword
 
@@ -160,10 +167,10 @@ Lazy-loading version of `parse()` that loads parsers dynamically.
 
 Each format has its own parse and convert functions:
 
-- `parseIpuz(content: string): IpuzPuzzle`
-- `parsePuz(buffer: Buffer): PuzPuzzle`
-- `parseJpz(content: string): JpzPuzzle`
-- `parseXd(content: string): XdPuzzle`
+- `parseIpuz(content: string | Buffer, options?: ParseOptions): IpuzPuzzle`
+- `parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string, options?: ParseOptions): PuzPuzzle`
+- `parseJpz(content: string, options?: ParseOptions): JpzPuzzle`
+- `parseXd(content: string, options?: ParseOptions): XdPuzzle`
 
 And corresponding converters:
 
@@ -258,6 +265,7 @@ interface Clue {
 
 The library provides specific error classes for different scenarios:
 
+- `ParseError`: Base class for all parsing errors
 - `FormatDetectionError`: Unable to detect the puzzle format
 - `IpuzParseError`: iPUZ-specific parsing errors
 - `PuzParseError`: PUZ-specific parsing errors
@@ -266,7 +274,7 @@ The library provides specific error classes for different scenarios:
 - `UnsupportedPuzzleTypeError`: When a file contains a non-crossword puzzle
 - `InvalidFileError`: General file format issues
 
-All error classes extend `XwordParseError` and include error codes for programmatic handling:
+All error classes extend `ParseError` and include error codes for programmatic handling:
 
 ```typescript
 try {

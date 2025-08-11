@@ -270,8 +270,8 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
         }
       } else {
         // Try to parse as number for cell numbering
-        const numVal = parseInt(cellData, 10);
-        if (!isNaN(numVal) && numVal > 0) {
+        const numVal = Number.parseInt(cellData, 10);
+        if (!Number.isNaN(numVal) && numVal > 0) {
           cell.number = cellData;
         } else {
           // It's a letter/value
@@ -366,6 +366,23 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
   return clues;
 }
 
+/**
+ * Parse an iPUZ format crossword puzzle.
+ *
+ * @param content - The iPUZ data as JSON string or Buffer
+ * @param options - Optional parsing options
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns An IpuzPuzzle object containing all puzzle data
+ * @throws {IpuzParseError} When the content is not valid iPUZ format
+ * @throws {UnsupportedPuzzleTypeError} When the puzzle is not a crossword
+ *
+ * @example
+ * ```typescript
+ * import { parseIpuz } from 'xword-parser';
+ * const ipuzData = '{"version":"http://ipuz.org/v2","kind":["http://ipuz.org/crossword#1"]...}';
+ * const puzzle = parseIpuz(ipuzData);
+ * ```
+ */
 export function parseIpuz(content: string | Buffer, options?: ParseOptions): IpuzPuzzle {
   const stringContent = typeof content === 'string' ? content : content.toString('utf-8');
   let jsonContent = stringContent.trim();
@@ -567,7 +584,19 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
   return puzzle;
 }
 
-// Convert iPUZ puzzle to unified format
+/**
+ * Convert an iPUZ puzzle to the unified Puzzle format.
+ *
+ * @param puzzle - The IpuzPuzzle object to convert
+ * @returns A unified Puzzle object
+ *
+ * @example
+ * ```typescript
+ * import { parseIpuz, convertIpuzToUnified } from 'xword-parser';
+ * const ipuzPuzzle = parseIpuz(ipuzData);
+ * const unifiedPuzzle = convertIpuzToUnified(ipuzPuzzle);
+ * ```
+ */
 export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.dimensions.width,
@@ -650,7 +679,7 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
     for (const clue of puzzle.clues.Across) {
       const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
       // Skip invalid clue numbers (NaN, 0, negative)
-      if (!isNaN(clueNumber) && clueNumber > 0) {
+      if (!Number.isNaN(clueNumber) && clueNumber > 0) {
         clues.across.push({
           number: clueNumber,
           text: clue.text || '',
@@ -663,7 +692,7 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
     for (const clue of puzzle.clues.Down) {
       const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
       // Skip invalid clue numbers (NaN, 0, negative)
-      if (!isNaN(clueNumber) && clueNumber > 0) {
+      if (!Number.isNaN(clueNumber) && clueNumber > 0) {
         clues.down.push({
           number: clueNumber,
           text: clue.text || '',
