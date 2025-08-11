@@ -1,97 +1,85 @@
 name: Fuzz Testing
-
 on:
   schedule:
     # Run at 2 AM UTC every day
     - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual triggering
-
 jobs:
   fuzz:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0  # Need full history to check commit dates
-    
-    - name: Check if main branch was updated recently
-      id: check_recent_update
-      run: |
-        # Get the timestamp of the latest commit on main branch
-        LAST_COMMIT_TIME=$(git log -1 --format=%ct origin/main)
-        CURRENT_TIME=$(date +%s)
-        TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
-        
-        # 86400 seconds = 24 hours
-        if [ $TIME_DIFF -gt 86400 ]; then
-          echo "Main branch hasn't been updated in the last 24 hours (last update was $((TIME_DIFF / 3600)) hours ago)"
-          echo "skip_fuzzing=true" >> $GITHUB_OUTPUT
-        else
-          echo "Main branch was updated $((TIME_DIFF / 3600)) hours ago, proceeding with fuzzing"
-          echo "skip_fuzzing=false" >> $GITHUB_OUTPUT
-        fi
-    
-    - name: Exit early if no recent updates
-      if: steps.check_recent_update.outputs.skip_fuzzing == 'true'
-      run: |
-        echo "Skipping fuzzing as main branch hasn't been updated recently"
-        exit 0
-    
-    - name: Use Node.js 20.x
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-    
-    - name: Install dependencies
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: npm install
-    
-    - name: Clone test data
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: |
-        git clone https://x-access-token:${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
-    
-    - name: Initialize fuzzer directories
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: |
-        echo "Initializing fuzzer directories with a quick run..."
-        npm run fuzz:concurrent -- --duration 5
-      continue-on-error: true
-      timeout-minutes: 1
-    
-    - name: Seed fuzzer corpus
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: npm run fuzz:seed
-    
-    - name: Run fuzzers
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-      run: npm run fuzz:concurrent
-      continue-on-error: true
-      timeout-minutes: 30
-    
-    - name: Create Pull Request with new regression files
-      if: steps.check_recent_update.outputs.skip_fuzzing != 'true' && steps.check_crashes.outputs.has_crashes == 'true'
-      uses: peter-evans/create-pull-request@v7
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: 'test: add fuzzer regression test files'
-        title: '[Automated] Add fuzzer regression test files'
-        body: |
-          This PR was automatically created by the nightly fuzzing workflow.
-          
-          New crash/timeout files were discovered during fuzzing and have been added as regression tests.
-          
-          ## Files added:
-          ```
-          ${{ steps.check_crashes.outputs.new_files || 'See commit for details' }}
-          ```
-          
-          Please review these files to understand the issues they represent and consider adding fixes.
-        branch: fuzzer-regression-tests-${{ github.run_number }}
-        delete-branch: true
-        add-paths: |
-          fuzz/**/*crash-*
-          fuzz/**/*timeout-*
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # Need full history to check commit dates
+      - name: Check if main branch was updated recently
+        id: check_recent_update
+        run: |
+          # Get the timestamp of the latest commit on main branch
+          LAST_COMMIT_TIME=$(git log -1 --format=%ct origin/main)
+          CURRENT_TIME=$(date +%s)
+          TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
+
+          # 86400 seconds = 24 hours
+          if [ $TIME_DIFF -gt 86400 ]; then
+            echo "Main branch hasn't been updated in the last 24 hours (last update was $((TIME_DIFF / 3600)) hours ago)"
+            echo "skip_fuzzing=true" >> $GITHUB_OUTPUT
+          else
+            echo "Main branch was updated $((TIME_DIFF / 3600)) hours ago, proceeding with fuzzing"
+            echo "skip_fuzzing=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Exit early if no recent updates
+        if: steps.check_recent_update.outputs.skip_fuzzing == 'true'
+        run: |
+          echo "Skipping fuzzing as main branch hasn't been updated recently"
+          exit 0
+      - name: Use Node.js 20.x
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install dependencies
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        run: npm install
+      - name: Clone test data
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
+      - name: Initialize fuzzer directories
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        run: |
+          echo "Initializing fuzzer directories with a quick run..."
+          npm run fuzz:concurrent -- --duration 5
+        continue-on-error: true
+        timeout-minutes: 1
+      - name: Seed fuzzer corpus
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        run: npm run fuzz:seed
+      - name: Run fuzzers
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        run: npm run fuzz:concurrent
+        continue-on-error: true
+        timeout-minutes: 30
+      - name: Create Pull Request with new regression files
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true' && steps.check_crashes.outputs.has_crashes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'test: add fuzzer regression test files'
+          title: '[Automated] Add fuzzer regression test files'
+          body: |
+            This PR was automatically created by the nightly fuzzing workflow.
+
+            New crash/timeout files were discovered during fuzzing and have been added as regression tests.
+
+            ## Files added:
+            ```
+            ${{ steps.check_crashes.outputs.new_files || 'See commit for details' }}
+            ```
+
+            Please review these files to understand the issues they represent and consider adding fixes.
+          branch: fuzzer-regression-tests-${{ github.run_number }}
+          delete-branch: true
+          add-paths: |-
+            fuzz/**/*crash-*
+            fuzz/**/*timeout-*

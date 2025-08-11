@@ -34,7 +34,7 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=./test-results.xml",
     "test:fuzz": "jest --config jest.config.fuzz.js",
     "bench": "vitest bench",
     "bench:ci": "vitest bench --run --outputJson bench-results.json",
