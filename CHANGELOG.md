@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/mjkoo/xword-parser/compare/v1.0.0...v1.0.1) (2025-08-11)
+
+
+### Bug Fixes
+
+* fix git link which broke provenance ([1abdb6f](https://github.com/mjkoo/xword-parser/commit/1abdb6f9d032b5d762faecab58279ded68ae8018))
+
 ## 1.0.0 (2025-08-11)
 
 
