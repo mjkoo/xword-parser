@@ -1,7 +1,7 @@
 {
   "name": "@xwordly/xword-parser",
   "version": "0.1.0",
-  "description": "A TypeScript library for parsing popular crossword puzzle file formats (PUZ, iPUZ, JPZ, XD) into a unified data structure",
+  "description": "Fast, type-safe TypeScript library for parsing crossword puzzles (PUZ, iPUZ, JPZ, XD)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -39,17 +39,15 @@
     "bench": "vitest bench",
     "bench:ci": "vitest bench --run --outputJson bench-results.json",
     "bench:compare": "node scripts/compare-benchmarks.js",
-    "fuzz:seed": "node scripts/seed-corpus.js",
     "fuzz": "node scripts/run-fuzzers.js",
+    "fuzz:seed": "node scripts/seed-corpus.js",
     "fuzz:concurrent": "node scripts/run-fuzzers.js --concurrent",
     "fuzz:quick": "node scripts/run-fuzzers.js --duration 60",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"{fuzz,scripts,src}/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
-    "prepack": "npm run lint && npm run typecheck && npm run build",
-    "prepublishOnly": "npm run prepack",
-    "size": "npm pack --dry-run && tar -tvf $(npm pack 2>/dev/null | tail -1) | awk '{sum+=$3} END {print \"Package size: \" sum/1024 \"KB\"}'"
+    "prepack": "npm run lint && npm run typecheck && npm run build"
   },
   "keywords": [
     "crossword",
@@ -64,7 +62,14 @@
     "converter",
     "puzzle-parser",
     "file-parser",
-    "acrosslite"
+    "acrosslite",
+    "puzzle-format",
+    "ipuz-format",
+    "puz-format",
+    "jpz-format",
+    "xd-format",
+    "crossword-converter",
+    "puzzle-library"
   ],
   "author": "Xwordly Team",
   "license": "MIT",

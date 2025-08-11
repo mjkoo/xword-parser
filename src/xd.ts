@@ -1,4 +1,4 @@
-import { InvalidFileError, XdParseError } from './errors';
+import { XdParseError } from './errors';
 import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
@@ -173,7 +173,7 @@ export function parseXd(content: string): XdPuzzle {
   const sections = splitIntoSections(content);
 
   if (sections.grid.length === 0) {
-    throw new InvalidFileError('XD', 'no grid section found');
+    throw new XdParseError('Invalid XD file: no grid section found', ErrorCode.XD_FORMAT_ERROR);
   }
 
   const metadata = parseMetadata(sections.metadata);

@@ -6,7 +6,17 @@
 import { InvalidFileError, PuzParseError } from './errors';
 import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
-import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
+import {
+  MAX_GRID_WIDTH,
+  MAX_GRID_HEIGHT,
+  PUZ_MAGIC_STRING,
+  PUZ_HEADER_SIZE,
+  PUZ_SECTION_GRBS,
+  PUZ_SECTION_RTBL,
+  PUZ_SECTION_GEXT,
+  PUZ_SECTION_LTIM,
+  PUZ_CIRCLED_CELL_FLAG,
+} from './constants';
 
 export interface PuzMetadata {
   title?: string;
@@ -62,7 +72,6 @@ interface PuzHeader {
   scrambledTag: number;
 }
 
-const MAGIC_STRING = 'ACROSS&DOWN';
 
 class PuzBinaryReader {
   private _buffer: Buffer;
@@ -165,7 +174,7 @@ class PuzBinaryReader {
 
 function readHeader(reader: PuzBinaryReader): PuzHeader {
   // Search for the magic string "ACROSS&DOWN" in the file
-  const magicBytes = Buffer.from(MAGIC_STRING, 'latin1');
+  const magicBytes = Buffer.from(PUZ_MAGIC_STRING, 'latin1');
   let magicOffset = -1;
 
   // Search for the magic string in the buffer
@@ -185,7 +194,7 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
 
   if (magicOffset === -1) {
     throw new PuzParseError(
-      `Invalid PUZ file: magic string "${MAGIC_STRING}" not found`,
+      `Invalid PUZ file: magic string "${PUZ_MAGIC_STRING}" not found`,
       ErrorCode.PUZ_INVALID_HEADER,
     );
   }
@@ -199,9 +208,8 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
     );
   }
 
-  // Ensure there's enough data for the full header (52 bytes from headerStart)
-  const HEADER_SIZE = 52;
-  if (headerStart + HEADER_SIZE > reader.length) {
+  // Ensure there's enough data for the full header
+  if (headerStart + PUZ_HEADER_SIZE > reader.length) {
     throw new PuzParseError(
       'Invalid PUZ file: insufficient data for header',
       ErrorCode.PUZ_INVALID_HEADER,
@@ -245,10 +253,10 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
   };
 
   // Verify we read the magic string correctly
-  if (header.magic !== MAGIC_STRING) {
+  if (header.magic !== PUZ_MAGIC_STRING) {
     throw new InvalidFileError(
       'PUZ',
-      `magic string mismatch after positioning. Expected "${MAGIC_STRING}", got "${header.magic}"`,
+      `magic string mismatch after positioning. Expected "${PUZ_MAGIC_STRING}", got "${header.magic}"`,
     );
   }
 
@@ -395,7 +403,7 @@ function parseExtraSections(
     const sectionData = reader.readBytes(dataLength);
 
     switch (sectionTitle) {
-      case 'GRBS': {
+      case PUZ_SECTION_GRBS: {
         // Rebus grid - one byte per square
         const height = grid.length;
         const width = grid[0]?.length || 0;
@@ -414,7 +422,7 @@ function parseExtraSections(
         break;
       }
 
-      case 'RTBL': {
+      case PUZ_SECTION_RTBL: {
         // Rebus table - semicolon-separated values with key:value pairs
         const tableStr = sectionData.toString('latin1');
         const entries = tableStr.split(';');
@@ -432,7 +440,7 @@ function parseExtraSections(
         break;
       }
 
-      case 'GEXT': {
+      case PUZ_SECTION_GEXT: {
         // Grid extras - circled squares, etc.
         const height = grid.length;
         const width = grid[0]?.length || 0;
@@ -441,7 +449,7 @@ function parseExtraSections(
             const index = row * width + col;
             if (index < sectionData.length && grid[row]?.[col]) {
               const flags = sectionData[index];
-              if (flags && flags & 0x80) {
+              if (flags && flags & PUZ_CIRCLED_CELL_FLAG) {
                 grid[row]![col]!.isCircled = true;
               }
             }
@@ -450,7 +458,7 @@ function parseExtraSections(
         break;
       }
 
-      case 'LTIM': {
+      case PUZ_SECTION_LTIM: {
         // Timer data
         const timerStr = sectionData.toString('latin1');
         const [elapsed, running] = timerStr.split(',');

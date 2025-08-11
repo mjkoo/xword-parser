@@ -47,13 +47,32 @@ npm run fuzz:concurrent
 npm run fuzz:quick
 ```
 
-### Custom Duration
+### Custom Duration and Timeout
 
 You can also run the fuzzer script directly with custom options:
 
 ```bash
-node fuzz/run-fuzzers.js --duration 600  # 10 minutes each
-node fuzz/run-fuzzers.js --concurrent --duration 120  # 2 minutes each, concurrent
+node scripts/run-fuzzers.js --duration 600  # 10 minutes each
+node scripts/run-fuzzers.js --concurrent --duration 120  # 2 minutes each, concurrent
+
+# Adjust jazzer.js execution timeout (default: 30000ms)
+node scripts/run-fuzzers.js --jazzer-timeout 60000  # 60 second timeout per test
+```
+
+#### Timeout Configuration
+
+The fuzzer uses two different timeouts:
+- **Duration timeout**: How long to run each fuzzer (default: 300 seconds)
+- **Jazzer.js timeout**: Maximum time for a single test execution (default: 30000ms)
+
+If you see timeout findings in your fuzzer output, you can increase the jazzer.js timeout:
+```bash
+# Use a more relaxed timeout for complex inputs
+export JAZZER_TIMEOUT=60000
+npm run fuzz
+
+# Or use the command line option
+node scripts/run-fuzzers.js --jazzer-timeout 60000
 ```
 
 ## What the Fuzzers Test
