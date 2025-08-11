@@ -23,7 +23,7 @@ export async function parseLazy(
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
           const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
-          const puzzle = parseIpuz(textContent);
+          const puzzle = parseIpuz(textContent, options);
           return convertIpuzToUnified(puzzle);
         }
         case 'puz': {
@@ -38,14 +38,14 @@ export async function parseLazy(
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
           const { parseJpz, convertJpzToUnified } = await import('./jpz');
-          const puzzle = parseJpz(textContent);
+          const puzzle = parseJpz(textContent, options);
           return convertJpzToUnified(puzzle);
         }
         case 'xd': {
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
           const { parseXd, convertXdToUnified } = await import('./xd');
-          const puzzle = parseXd(textContent);
+          const puzzle = parseXd(textContent, options);
           return convertXdToUnified(puzzle);
         }
       }

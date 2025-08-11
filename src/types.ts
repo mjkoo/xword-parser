@@ -1,3 +1,16 @@
+// Branded types for improved type safety
+export type ClueNumber = number & { __brand: 'ClueNumber' };
+export type GridCoordinate = number & { __brand: 'GridCoordinate' };
+export type RebusId = number & { __brand: 'RebusId' };
+
+// Helper functions to create branded types
+export const asClueNumber = (n: number): ClueNumber => n as ClueNumber;
+export const asGridCoordinate = (n: number): GridCoordinate => n as GridCoordinate;
+export const asRebusId = (n: number): RebusId => n as RebusId;
+
+// Stricter type for direction
+export type Direction = 'across' | 'down';
+
 export interface Puzzle {
   title?: string;
   author?: string;
@@ -42,6 +55,7 @@ export interface Clue {
 export interface ParseOptions {
   filename?: string;
   encoding?: BufferEncoding;
+  maxGridSize?: { width: number; height: number };
 }
 
 export enum ErrorCode {
@@ -80,5 +94,3 @@ export interface ErrorContext {
   offset?: number;
   details?: Record<string, unknown>;
 }
-
-export type Direction = 'across' | 'down';

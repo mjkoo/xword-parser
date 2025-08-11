@@ -1,6 +1,6 @@
 import { XdParseError } from './errors';
 import { ErrorCode } from './types';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
 export interface XdMetadata {
@@ -169,7 +169,7 @@ function splitIntoSections(content: string): {
   return result;
 }
 
-export function parseXd(content: string): XdPuzzle {
+export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
   const sections = splitIntoSections(content);
 
   if (sections.grid.length === 0) {
@@ -194,9 +194,12 @@ export function parseXd(content: string): XdPuzzle {
   const height = grid.length;
 
   // Validate grid dimensions are within limits
-  if (width > MAX_GRID_WIDTH || height > MAX_GRID_HEIGHT) {
+  const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
+  const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
+
+  if (width > maxWidth || height > maxHeight) {
     throw new XdParseError(
-      `Grid dimensions too large: ${width}x${height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      `Grid dimensions too large: ${width}x${height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
       ErrorCode.XD_INVALID_GRID,
     );
   }

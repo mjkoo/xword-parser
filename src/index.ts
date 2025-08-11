@@ -23,7 +23,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
         case 'ipuz': {
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const puzzle = parseIpuz(textContent);
+          const puzzle = parseIpuz(textContent, options);
           return convertIpuzToUnified(puzzle);
         }
         case 'puz': {
@@ -36,13 +36,13 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
         case 'jpz': {
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const puzzle = parseJpz(textContent);
+          const puzzle = parseJpz(textContent, options);
           return convertJpzToUnified(puzzle);
         }
         case 'xd': {
           const textContent =
             typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const puzzle = parseXd(textContent);
+          const puzzle = parseXd(textContent, options);
           return convertXdToUnified(puzzle);
         }
       }

@@ -4,7 +4,7 @@
  */
 
 import { UnsupportedPuzzleTypeError, IpuzParseError } from './errors';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
 import { ErrorCode } from './types';
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
@@ -366,7 +366,7 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
   return clues;
 }
 
-export function parseIpuz(content: string | Buffer): IpuzPuzzle {
+export function parseIpuz(content: string | Buffer, options?: ParseOptions): IpuzPuzzle {
   const stringContent = typeof content === 'string' ? content : content.toString('utf-8');
   let jsonContent = stringContent.trim();
 
@@ -423,9 +423,12 @@ export function parseIpuz(content: string | Buffer): IpuzPuzzle {
       ErrorCode.IPUZ_INVALID_GRID_SIZE,
     );
   }
-  if (data.dimensions.width > MAX_GRID_WIDTH || data.dimensions.height > MAX_GRID_HEIGHT) {
+  const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
+  const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
+
+  if (data.dimensions.width > maxWidth || data.dimensions.height > maxHeight) {
     throw new IpuzParseError(
-      `Grid dimensions too large: ${data.dimensions.width}x${data.dimensions.height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      `Grid dimensions too large: ${data.dimensions.width}x${data.dimensions.height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
       ErrorCode.IPUZ_INVALID_GRID_SIZE,
     );
   }
