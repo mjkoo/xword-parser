@@ -5,7 +5,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import { UnsupportedPuzzleTypeError, JpzParseError } from './errors';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
 import { ErrorCode } from './types';
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
 
@@ -149,7 +149,10 @@ function parseMetadata(metadataNode: unknown): JpzMetadata {
   };
 }
 
-function parseCells(gridNode: unknown): {
+function parseCells(
+  gridNode: unknown,
+  options?: ParseOptions,
+): {
   cells: Map<string, JpzCell>;
   width: number;
   height: number;
@@ -171,9 +174,12 @@ function parseCells(gridNode: unknown): {
   }
 
   // Validate grid dimensions to prevent excessive memory usage
-  if (width <= 0 || width > MAX_GRID_WIDTH || height <= 0 || height > MAX_GRID_HEIGHT) {
+  const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
+  const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
+
+  if (width <= 0 || width > maxWidth || height <= 0 || height > maxHeight) {
     throw new JpzParseError(
-      `Invalid grid dimensions: ${width}x${height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      `Invalid grid dimensions: ${width}x${height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
       ErrorCode.JPZ_INVALID_GRID,
       { details: { width, height } },
     );
@@ -360,7 +366,7 @@ function parseWords(wordsNode: unknown): JpzWord[] {
   return words;
 }
 
-export function parseJpz(content: string): JpzPuzzle {
+export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
@@ -431,7 +437,7 @@ export function parseJpz(content: string): JpzPuzzle {
   }
 
   // Parse cells and build grid
-  const { cells, width, height } = parseCells(gridNode);
+  const { cells, width, height } = parseCells(gridNode, options);
   const grid = buildGrid(cells, width, height);
 
   // Parse clues - might be in different locations

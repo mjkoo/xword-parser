@@ -47,6 +47,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"{fuzz,scripts,src}/**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
+    "analyze": "tsup --metafile && npx esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
     "prepack": "npm run lint && npm run typecheck && npm run build"
   },
   "keywords": [
