@@ -56,7 +56,7 @@ jobs:
         files: ./coverage/cobertura-coverage.xml
         flags: unittests
         name: unit-tests
-        fail_ci_if_error: false
+        fail_ci_if_error: true
         verbose: true
     
     - name: Run fuzz tests with coverage
@@ -70,5 +70,5 @@ jobs:
         files: ./coverage-fuzz/cobertura-coverage.xml
         flags: fuzztests
         name: fuzz-tests
-        fail_ci_if_error: false
+        fail_ci_if_error: true
         verbose: true

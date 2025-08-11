@@ -3,11 +3,3 @@ codecov:
 
 fixes:
   - "/home/runner/work/xword-parser/xword-parser/::"
-
-flags:
-  unittests:
-    paths:
-      - src/
-  fuzztests:
-    paths:
-      - src/
