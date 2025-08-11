@@ -414,10 +414,7 @@ export function parseIpuz(content: string | Buffer): IpuzPuzzle {
   }
 
   if (!Number.isInteger(data.dimensions.width) || !Number.isInteger(data.dimensions.height)) {
-    throw new IpuzParseError(
-      'Width and height must be integers',
-      ErrorCode.IPUZ_INVALID_DATA_TYPE,
-    );
+    throw new IpuzParseError('Width and height must be integers', ErrorCode.IPUZ_INVALID_DATA_TYPE);
   }
 
   if (data.dimensions.width <= 0 || data.dimensions.height <= 0) {
