@@ -16,19 +16,19 @@ A TypeScript library for parsing popular crossword puzzle file formats into a un
 ## Installation
 
 ```bash
-npm install xword-parser
+npm install @xwordly/xword-parser
 ```
 
 or
 
 ```bash
-yarn add xword-parser
+yarn add @xwordly/xword-parser
 ```
 
 or
 
 ```bash
-pnpm add xword-parser
+pnpm add @xwordly/xword-parser
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ pnpm add xword-parser
 ### Basic Example
 
 ```typescript
-import { parse } from 'xword-parser';
+import { parse } from '@xwordly/xword-parser';
 import { readFileSync } from 'fs';
 
 // Parse from file contents (auto-detects format)
@@ -53,7 +53,7 @@ console.log(puzzle.grid.width, 'x', puzzle.grid.height);
 Providing a filename helps with faster and more accurate format detection:
 
 ```typescript
-import { parse } from 'xword-parser';
+import { parse } from '@xwordly/xword-parser';
 
 // Provide filename hint for better format detection
 const puzzle = parse(fileContent, { 
@@ -72,7 +72,7 @@ const puzzle = parse(fileContent, {
 For smaller bundle sizes in web applications, use the lazy-loading version:
 
 ```typescript
-import { parseLazy } from 'xword-parser/lazy';
+import { parseLazy } from '@xwordly/xword-parser/lazy';
 
 // Parsers are loaded dynamically only when needed
 const puzzle = await parseLazy(fileContent);
@@ -88,7 +88,7 @@ import {
   parsePuz, 
   parseJpz, 
   parseXd 
-} from 'xword-parser';
+} from '@xwordly/xword-parser';
 
 // Use specific parser for known format
 const ipuzPuzzle = parseIpuz(jsonString);
@@ -102,7 +102,7 @@ const xdPuzzle = parseXd(textString);
 The library automatically detects the format based on the file contents:
 
 ```typescript
-import { parse } from 'xword-parser';
+import { parse } from '@xwordly/xword-parser';
 
 // Parse PUZ format (binary)
 const puzData = await fetch('https://example.com/puzzle.puz')
@@ -340,30 +340,3 @@ src/
 
 - Node.js >= 18
 - TypeScript >= 5.3 (for development)
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Adding a New Format
-
-To add support for a new crossword format:
-
-1. Create a new parser file (e.g., `src/newformat.ts`)
-2. Implement the format-specific types and parser
-3. Implement a converter to the unified `Puzzle` type
-4. Add the format to the auto-detection in `src/index.ts`
-5. Add comprehensive tests
-6. Update this README
-
-## Acknowledgments
-
-This library supports puzzle formats from:
-- Across Lite (PUZ)
-- iPUZ Specification
-- Crossword Compiler (JPZ)
-- XWord Info (XD)

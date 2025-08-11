@@ -69,24 +69,25 @@ jobs:
     - name: Run tests with coverage
       run: npm test -- --coverage
     
-    - name: Run fuzz tests with coverage
-      run: npm run test:fuzz
-    
-    - name: Merge coverage reports
-      run: |
-        npm install -g nyc
-        mkdir -p coverage-merged
-        nyc merge coverage coverage-merged/coverage-final.json
-        nyc merge coverage-fuzz coverage-merged/coverage-fuzz.json
-        nyc report --temp-dir coverage-merged --reporter=json --reporter=lcov --report-dir coverage-final
-    
-    - name: Upload coverage to Codecov
+    - name: Upload unit test coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/coverage-final.json,./coverage-fuzz/coverage-final.json
-        flags: unittests,fuzztests
-        name: codecov-umbrella
+        files: ./coverage/coverage-final.json
+        flags: unittests
+        name: unit-tests-node-${{ matrix.node-version }}
+        fail_ci_if_error: false
+    
+    - name: Run fuzz tests with coverage
+      run: npm run test:fuzz
+    
+    - name: Upload fuzz test coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage-fuzz/coverage-final.json
+        flags: fuzztests
+        name: fuzz-tests-node-${{ matrix.node-version }}
         fail_ci_if_error: false
 
   trigger-publish:
