@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { parsePuz, type PuzPuzzle } from './puz';
+import type { ParseOptions } from './types';
 
 describe('parsePuz', () => {
   const testDataDir = join(process.cwd(), 'testdata', 'puz');
@@ -196,5 +197,34 @@ describe('parsePuz', () => {
     expect(puzzle.grid).toBeDefined();
     expect(puzzle.across).toBeDefined();
     expect(puzzle.down).toBeDefined();
+  });
+
+  it('should respect maxGridSize option', () => {
+    const buffer = readFileSync(join(testDataDir, 'nyt_locked.puz'));
+
+    // First verify the puzzle can be parsed normally
+    const puzzle = parsePuz(buffer);
+    expect(puzzle.width).toBeGreaterThan(5);
+    expect(puzzle.height).toBeGreaterThan(5);
+
+    // Then verify it throws with a smaller maxGridSize
+    const options: ParseOptions = {
+      maxGridSize: { width: 5, height: 5 },
+    };
+
+    expect(() => parsePuz(buffer, options)).toThrow(/Grid dimensions too large/);
+  });
+
+  it('should allow puzzle within maxGridSize limits', () => {
+    const buffer = readFileSync(join(testDataDir, 'nyt_locked.puz'));
+
+    // Use a large enough maxGridSize
+    const options: ParseOptions = {
+      maxGridSize: { width: 100, height: 100 },
+    };
+
+    const puzzle = parsePuz(buffer, options);
+    expect(puzzle).toBeDefined();
+    expect(puzzle.grid).toBeDefined();
   });
 });

@@ -28,7 +28,7 @@ export function parse(data: string | Buffer | ArrayBuffer, options?: ParseOption
         }
         case 'puz': {
           if (typeof content !== 'string') {
-            const puzzle = parsePuz(content);
+            const puzzle = parsePuz(content, options);
             return convertPuzToUnified(puzzle);
           }
           break;

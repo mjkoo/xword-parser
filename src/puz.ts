@@ -5,7 +5,7 @@
 
 import { InvalidFileError, PuzParseError } from './errors';
 import { ErrorCode } from './types';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
+import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
 import {
   MAX_GRID_WIDTH,
   MAX_GRID_HEIGHT,
@@ -473,7 +473,10 @@ function parseExtraSections(
   return result;
 }
 
-export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzPuzzle {
+export function parsePuz(
+  data: Buffer | ArrayBuffer | Uint8Array | string,
+  options?: ParseOptions,
+): PuzPuzzle {
   let buffer: Buffer;
 
   if (typeof data === 'string') {
@@ -495,9 +498,13 @@ export function parsePuz(data: Buffer | ArrayBuffer | Uint8Array | string): PuzP
       ErrorCode.PUZ_INVALID_GRID,
     );
   }
-  if (header.width > MAX_GRID_WIDTH || header.height > MAX_GRID_HEIGHT) {
+
+  // Check against maxGridSize if provided, otherwise use defaults
+  const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
+  const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
+  if (header.width > maxWidth || header.height > maxHeight) {
     throw new PuzParseError(
-      `Puzzle dimensions too large: width=${header.width}, height=${header.height}. Maximum supported size is ${MAX_GRID_WIDTH}x${MAX_GRID_HEIGHT}`,
+      `Grid dimensions too large: ${header.width}x${header.height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
       ErrorCode.PUZ_INVALID_GRID,
     );
   }
