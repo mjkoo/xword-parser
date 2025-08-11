@@ -1,6 +1,6 @@
 {
   "name": "@xwordly/xword-parser",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Fast, type-safe TypeScript library for parsing crossword puzzles (PUZ, iPUZ, JPZ, XD)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
