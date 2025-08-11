@@ -5,10 +5,7 @@ export interface FormatHint {
   confidence: 'high' | 'medium' | 'low';
 }
 
-export function detectFormatFromContent(
-  content: string | Buffer,
-  filename?: string,
-): FormatHint[] {
+export function detectFormatFromContent(content: string | Buffer, filename?: string): FormatHint[] {
   const hints: FormatHint[] = [];
 
   // Check filename extension first
@@ -109,10 +106,7 @@ export function detectFormatFromContent(
   return hints;
 }
 
-export function getOrderedFormatsToTry(
-  content: string | Buffer,
-  filename?: string,
-): FormatType[] {
+export function getOrderedFormatsToTry(content: string | Buffer, filename?: string): FormatType[] {
   const hints = detectFormatFromContent(content, filename);
   const formats: FormatType[] = [];
 

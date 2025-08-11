@@ -72,7 +72,6 @@ interface PuzHeader {
   scrambledTag: number;
 }
 
-
 class PuzBinaryReader {
   private _buffer: Buffer;
   private offset: number;

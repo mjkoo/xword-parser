@@ -157,3 +157,67 @@ describe('XwordParseError', () => {
     expect(error.message).toBe('Test error');
   });
 });
+
+describe('Auto-detection with Edge Cases', () => {
+  it('should auto-detect and parse large grid', () => {
+    const largePuzzle = {
+      version: 'http://ipuz.org/v2',
+      kind: ['http://ipuz.org/crossword#1'],
+      dimensions: { width: 50, height: 50 },
+      puzzle: Array(50)
+        .fill(null)
+        .map(() => Array(50).fill(0)),
+      clues: {
+        Across: [{ number: 1, clue: 'Test' }],
+      },
+    };
+
+    const result = parse(JSON.stringify(largePuzzle));
+    expect(result.grid.cells.length).toBe(50);
+    expect(result.grid.cells[0]?.length).toBe(50);
+  });
+
+  it('should auto-detect and parse puzzle with unicode', () => {
+    const xd = `Title: 测试 🎯
+
+ABC
+DEF
+GHI
+
+A1. Clue ~ ABC`;
+
+    const result = parse(xd);
+    expect(result.title).toBe('测试 🎯');
+  });
+
+  it('should auto-detect and parse empty clue puzzle', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <crossword-compiler-applet>
+        <rectangular-puzzle>
+          <crossword>
+            <grid width="3" height="3">
+              <row>
+                <cell>A</cell>
+                <cell>B</cell>
+                <cell>C</cell>
+              </row>
+              <row>
+                <cell>D</cell>
+                <cell>E</cell>
+                <cell>F</cell>
+              </row>
+              <row>
+                <cell>G</cell>
+                <cell>H</cell>
+                <cell>I</cell>
+              </row>
+            </grid>
+          </crossword>
+        </rectangular-puzzle>
+      </crossword-compiler-applet>`;
+
+    const result = parse(xml);
+    expect(result.clues.across).toEqual([]);
+    expect(result.clues.down).toEqual([]);
+  });
+});

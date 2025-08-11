@@ -176,4 +176,90 @@ A1. Test ~ ABC`;
 
     expect(puzzle.grid[2]?.[0]).toBe('_');
   });
+
+  describe('Edge Cases', () => {
+    it('should handle 99x99 XD puzzle', () => {
+      const lines = [
+        'Title: Large Puzzle',
+        'Author: Test',
+        '',
+        ...Array(99).fill('.'.repeat(99)),
+        '',
+        'A1. Test clue ~ TEST',
+        'D1. Test clue ~ TEST',
+      ];
+
+      const result = parseXd(lines.join('\n'));
+      expect(result.grid.length).toBe(99);
+      expect(result.grid[0]?.length).toBe(99);
+
+      const unified = convertXdToUnified(result);
+      expect(unified.grid.cells.length).toBe(99);
+      expect(unified.grid.cells[0]?.length).toBe(99);
+    });
+
+    it('should handle unicode in XD format', () => {
+      const xd = `Title: Unicode Test 🎯
+Author: José García
+Copyright: © 2024
+
+ABC
+DEF
+GHI
+
+A1. Clue with emoji 🎉 ~ ABC
+A4. Greek letters αβγ ~ DEF
+A7. Chinese 你好 ~ GHI
+
+Test with émojis and spëcial chars`;
+
+      const result = parseXd(xd);
+      expect(result.metadata.title).toBe('Unicode Test 🎯');
+      expect(result.metadata.author).toBe('José García');
+      expect(result.metadata.copyright).toBe('© 2024');
+      expect(result.notes).toBe('Test with émojis and spëcial chars');
+
+      const unified = convertXdToUnified(result);
+      expect(unified.clues.across[0]?.text).toBe('Clue with emoji 🎉');
+      expect(unified.clues.across[1]?.text).toBe('Greek letters αβγ');
+      expect(unified.clues.across[2]?.text).toBe('Chinese 你好');
+    });
+
+    it('should handle grid with all black squares', () => {
+      const xd = `Title: All Black
+Author: Test
+
+###
+###
+###
+
+`;
+
+      const result = parseXd(xd);
+      const unified = convertXdToUnified(result);
+
+      expect(unified.grid.cells.every((row) => row.every((cell) => cell.isBlack))).toBe(true);
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+    });
+
+    it('should handle puzzle with no clues', () => {
+      const xd = `Title: No Clues
+Author: Test
+
+ABC
+D#E
+FGH
+
+`;
+
+      const result = parseXd(xd);
+      const unified = convertXdToUnified(result);
+
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+      expect(unified.grid.cells[0]?.[0]?.solution).toBe('A');
+      expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
+    });
+  });
 });

@@ -210,11 +210,6 @@ export function parseXd(content: string): XdPuzzle {
     }
   }
 
-  // Validate clues exist
-  if (across.length === 0 && down.length === 0) {
-    throw new XdParseError('No clues found', ErrorCode.XD_MISSING_CLUES);
-  }
-
   const puzzle: XdPuzzle = {
     metadata,
     grid,
