@@ -23,5 +23,5 @@ export default {
   collectCoverage: true,
   coverageDirectory: 'coverage-fuzz',
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.bench.ts', '!src/**/*.test.ts', '!src/**/*.d.ts'],
-  coverageReporters: ['json', 'lcov', 'text', 'html'],
+  coverageReporters: ['lcov', 'text', 'html'],
 };

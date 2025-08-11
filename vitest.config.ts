@@ -7,7 +7,7 @@ export default defineConfig({
     exclude: ['fuzz/**', 'node_modules/**', 'dist/**', '**/*.bench.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'lcov', 'html'],
       include: ['src/**/*.ts'],
       exclude: [
         '**/*.bench.ts',
