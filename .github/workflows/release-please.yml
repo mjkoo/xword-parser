@@ -9,6 +9,7 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write
+  issues: write
 
 jobs:
   release-please:
@@ -19,7 +20,6 @@ jobs:
         with:
           release-type: node
           package-name: "@xwordly/xword-parser"
-          skip-labeling: true
           
       # The logic below handles the npm publication
       - name: Checkout
