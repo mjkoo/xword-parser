@@ -85,8 +85,8 @@ function parseStringAttribute(value: unknown): string | undefined {
 
 function parseIntAttribute(value: unknown): number | undefined {
   if (isString(value)) {
-    const parsed = parseInt(value, 10);
-    return isNaN(parsed) ? undefined : parsed;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
 }
@@ -366,6 +366,23 @@ function parseWords(wordsNode: unknown): JpzWord[] {
   return words;
 }
 
+/**
+ * Parse a JPZ format crossword puzzle.
+ *
+ * @param content - The JPZ XML data as string
+ * @param options - Optional parsing options
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns A JpzPuzzle object containing all puzzle data
+ * @throws {JpzParseError} When the content is not valid JPZ format
+ * @throws {UnsupportedPuzzleTypeError} When the puzzle is not a crossword
+ *
+ * @example
+ * ```typescript
+ * import { parseJpz } from 'xword-parser';
+ * const jpzData = '<?xml version="1.0"?><crossword-compiler-applet>...';
+ * const puzzle = parseJpz(jpzData);
+ * ```
+ */
 export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -469,7 +486,19 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
   };
 }
 
-// Convert JPZ puzzle to unified format
+/**
+ * Convert a JPZ puzzle to the unified Puzzle format.
+ *
+ * @param puzzle - The JpzPuzzle object to convert
+ * @returns A unified Puzzle object
+ *
+ * @example
+ * ```typescript
+ * import { parseJpz, convertJpzToUnified } from 'xword-parser';
+ * const jpzPuzzle = parseJpz(jpzData);
+ * const unifiedPuzzle = convertJpzToUnified(jpzPuzzle);
+ * ```
+ */
 export function convertJpzToUnified(puzzle: JpzPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.width,

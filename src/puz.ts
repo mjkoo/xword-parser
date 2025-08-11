@@ -430,8 +430,8 @@ function parseExtraSections(
         for (const entry of entries) {
           if (entry.includes(':')) {
             const [key, value] = entry.split(':');
-            const keyNum = parseInt(key || '0');
-            if (!isNaN(keyNum)) {
+            const keyNum = Number.parseInt(key || '0', 10);
+            if (!Number.isNaN(keyNum)) {
               result.rebusTable.set(keyNum, value || '');
             }
           }
@@ -473,6 +473,25 @@ function parseExtraSections(
   return result;
 }
 
+/**
+ * Parse a PUZ format crossword puzzle.
+ *
+ * @param data - The PUZ binary data as Buffer, ArrayBuffer, Uint8Array, or string
+ * @param options - Optional parsing options
+ * @param options.maxGridSize - Maximum allowed grid dimensions
+ * @returns A PuzPuzzle object containing all puzzle data
+ * @throws {PuzParseError} When the content is not valid PUZ format
+ * @throws {InvalidFileError} When the file is corrupted or has invalid checksums
+ *
+ * @example
+ * ```typescript
+ * import { parsePuz } from 'xword-parser';
+ * import { readFileSync } from 'fs';
+ *
+ * const puzData = readFileSync('puzzle.puz');
+ * const puzzle = parsePuz(puzData);
+ * ```
+ */
 export function parsePuz(
   data: Buffer | ArrayBuffer | Uint8Array | string,
   options?: ParseOptions,
@@ -555,7 +574,19 @@ export function parsePuz(
   };
 }
 
-// Convert PUZ puzzle to unified format
+/**
+ * Convert a PUZ puzzle to the unified Puzzle format.
+ *
+ * @param puzzle - The PuzPuzzle object to convert
+ * @returns A unified Puzzle object
+ *
+ * @example
+ * ```typescript
+ * import { parsePuz, convertPuzToUnified } from 'xword-parser';
+ * const puzPuzzle = parsePuz(puzData);
+ * const unifiedPuzzle = convertPuzToUnified(puzPuzzle);
+ * ```
+ */
 export function convertPuzToUnified(puzzle: PuzPuzzle): Puzzle {
   const grid: Grid = {
     width: puzzle.width,

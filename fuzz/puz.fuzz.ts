@@ -1,7 +1,7 @@
 import '@jazzer.js/jest-runner';
 import { parsePuz, convertPuzToUnified, type PuzPuzzle } from '../src/puz';
 import type { Puzzle } from '../src/types';
-import { PuzParseError, InvalidFileError, XwordParseError } from '../src/errors';
+import { PuzParseError, InvalidFileError, ParseError } from '../src/errors';
 
 describe('PUZ Fuzzer', () => {
   it.fuzz('validates error handling and data integrity', (data: Buffer) => {
@@ -15,12 +15,12 @@ describe('PUZ Fuzzer', () => {
     }
 
     if (parseError) {
-      expect(parseError).toBeInstanceOf(XwordParseError);
+      expect(parseError).toBeInstanceOf(ParseError);
       expect(parseError instanceof PuzParseError || parseError instanceof InvalidFileError).toBe(
         true,
       );
 
-      if (parseError instanceof XwordParseError) {
+      if (parseError instanceof ParseError) {
         expect(parseError.code).toBeDefined();
         expect(typeof parseError.code).toBe('string');
         expect(typeof parseError.message).toBe('string');
@@ -100,12 +100,12 @@ describe('PUZ Fuzzer', () => {
     }
 
     if (conversionError) {
-      expect(conversionError).toBeInstanceOf(XwordParseError);
+      expect(conversionError).toBeInstanceOf(ParseError);
       expect(
         conversionError instanceof PuzParseError || conversionError instanceof InvalidFileError,
       ).toBe(true);
 
-      if (conversionError instanceof XwordParseError) {
+      if (conversionError instanceof ParseError) {
         expect(conversionError.code).toBeDefined();
         expect(typeof conversionError.code).toBe('string');
         expect(typeof conversionError.message).toBe('string');

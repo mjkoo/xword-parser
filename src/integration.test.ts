@@ -45,7 +45,7 @@ describe('End-to-End Workflows', () => {
           } catch (e) {
             // Some files might be non-crossword or have other issues
             // Log but don't fail the test
-            console.log(`Skipping ${file}: ${e.message}`);
+            console.log(`Skipping ${file}: ${e instanceof Error ? e.message : String(e)}`);
           }
         }
       }
@@ -98,8 +98,8 @@ describe('End-to-End Workflows', () => {
 
       expect(puzUnified.grid).toBeDefined();
       expect(puzUnified.clues).toBeDefined();
-      if (puzPuzzle.title) expect(puzUnified.title).toBe(puzPuzzle.title);
-      if (puzPuzzle.author) expect(puzUnified.author).toBe(puzPuzzle.author);
+      if (puzPuzzle.metadata.title) expect(puzUnified.title).toBe(puzPuzzle.metadata.title);
+      if (puzPuzzle.metadata.author) expect(puzUnified.author).toBe(puzPuzzle.metadata.author);
 
       const jpzPath = join(__dirname, '..', 'testdata', 'jpz', 'FM.jpz');
       const jpzContent = readFileSync(jpzPath, 'utf-8');
@@ -108,10 +108,8 @@ describe('End-to-End Workflows', () => {
 
       expect(jpzUnified.grid).toBeDefined();
       expect(jpzUnified.clues).toBeDefined();
-      if (jpzPuzzle.puzzle?.metadata?.title)
-        expect(jpzUnified.title).toBe(jpzPuzzle.puzzle.metadata.title);
-      if (jpzPuzzle.puzzle?.metadata?.creator)
-        expect(jpzUnified.author).toBe(jpzPuzzle.puzzle.metadata.creator);
+      if (jpzPuzzle.metadata.title) expect(jpzUnified.title).toBe(jpzPuzzle.metadata.title);
+      if (jpzPuzzle.metadata.creator) expect(jpzUnified.author).toBe(jpzPuzzle.metadata.creator);
 
       const xdPath = join(__dirname, '..', 'testdata', 'xd', 'atc2003-09-03.xd');
       const xdContent = readFileSync(xdPath, 'utf-8');
@@ -120,8 +118,8 @@ describe('End-to-End Workflows', () => {
 
       expect(xdUnified.grid).toBeDefined();
       expect(xdUnified.clues).toBeDefined();
-      if (xdPuzzle.title) expect(xdUnified.title).toBe(xdPuzzle.title);
-      if (xdPuzzle.author) expect(xdUnified.author).toBe(xdPuzzle.author);
+      if (xdPuzzle.metadata.title) expect(xdUnified.title).toBe(xdPuzzle.metadata.title);
+      if (xdPuzzle.metadata.author) expect(xdUnified.author).toBe(xdPuzzle.metadata.author);
     });
   });
 
@@ -144,8 +142,8 @@ describe('End-to-End Workflows', () => {
       const ipuzContent = readFileSync(join(__dirname, '..', 'testdata', 'ipuz', 'example.ipuz'));
 
       expect(() => parsePuz(ipuzContent)).toThrow();
-      expect(() => parseJpz(ipuzContent)).toThrow();
-      expect(() => parseXd(ipuzContent)).toThrow();
+      expect(() => parseJpz(ipuzContent.toString('utf-8'))).toThrow();
+      expect(() => parseXd(ipuzContent.toString('utf-8'))).toThrow();
     });
   });
 
@@ -202,7 +200,7 @@ describe('End-to-End Workflows', () => {
         expect(puzzle.grid.width).toBeGreaterThan(0);
         expect(puzzle.grid.height).toBeGreaterThan(0);
         expect(puzzle.grid.cells.length).toBeGreaterThan(0);
-        expect(puzzle.grid.cells[0].length).toBeGreaterThan(0);
+        expect(puzzle.grid.cells[0]?.length).toBeGreaterThan(0);
       }
     });
 

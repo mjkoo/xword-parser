@@ -6,7 +6,7 @@ import { parseJpz } from './jpz';
 import { parsePuz } from './puz';
 import { parse } from './index';
 import {
-  XwordParseError,
+  ParseError,
   FormatDetectionError,
   PuzParseError,
   IpuzParseError,
@@ -108,7 +108,7 @@ describe('Property-based tests', () => {
         }
       } catch (e) {
         const error = e as Error;
-        const isExpectedError = error instanceof XwordParseError || error instanceof IpuzParseError;
+        const isExpectedError = error instanceof ParseError || error instanceof IpuzParseError;
 
         if (!isExpectedError) {
           throw new Error(`Unexpected error type: ${error.constructor.name} - ${error.message}`);
@@ -319,7 +319,7 @@ describe('Property-based tests', () => {
           expect(parsed).toBeDefined();
         } catch (e) {
           const error = e as Error;
-          const isExpectedError = error instanceof XwordParseError || error instanceof XdParseError;
+          const isExpectedError = error instanceof ParseError || error instanceof XdParseError;
 
           if (!isExpectedError) {
             throw new Error(`Unexpected error type: ${error.constructor.name} - ${error.message}`);
@@ -380,8 +380,7 @@ describe('Property-based tests', () => {
           }
         } catch (e) {
           const error = e as Error;
-          const isExpectedError =
-            error instanceof XwordParseError || error instanceof IpuzParseError;
+          const isExpectedError = error instanceof ParseError || error instanceof IpuzParseError;
 
           expect(isExpectedError).toBe(true);
         }
@@ -412,7 +411,7 @@ describe('Property-based tests', () => {
           }
         } catch (e) {
           const error = e as Error;
-          const isExpectedError = error instanceof XwordParseError || error instanceof XdParseError;
+          const isExpectedError = error instanceof ParseError || error instanceof XdParseError;
 
           expect(isExpectedError).toBe(true);
         }
@@ -525,7 +524,7 @@ describe('Property-based tests', () => {
         }
       } catch (e) {
         const error = e as Error;
-        const isExpectedError = error instanceof XwordParseError || error instanceof IpuzParseError;
+        const isExpectedError = error instanceof ParseError || error instanceof IpuzParseError;
 
         if (!isExpectedError) {
           throw new Error(`Unexpected error type: ${error.constructor.name} - ${error.message}`);
@@ -624,7 +623,7 @@ describe('Property-based tests', () => {
           throw new Error(`Low-level error leaked: ${error.name} - ${error.message}`);
         }
 
-        expect(error instanceof XwordParseError || error instanceof IpuzParseError).toBe(true);
+        expect(error instanceof ParseError || error instanceof IpuzParseError).toBe(true);
       }
     });
 
@@ -692,7 +691,7 @@ describe('Property-based tests', () => {
           const error = e as Error;
           // Must be one of our error types
           const isExpectedError =
-            error instanceof XwordParseError ||
+            error instanceof ParseError ||
             error instanceof FormatDetectionError ||
             error instanceof IpuzParseError;
 
@@ -723,7 +722,7 @@ describe('Property-based tests', () => {
           const error = e as Error;
           // Must be one of our error types
           const isExpectedError =
-            error instanceof XwordParseError ||
+            error instanceof ParseError ||
             error instanceof FormatDetectionError ||
             error instanceof JpzParseError;
 
@@ -1004,7 +1003,7 @@ describe('Property-based tests', () => {
           } catch (e) {
             const error = e as Error;
             const isExpectedError =
-              error instanceof XwordParseError ||
+              error instanceof ParseError ||
               error instanceof FormatDetectionError ||
               error instanceof PuzParseError ||
               error instanceof IpuzParseError ||
@@ -1040,7 +1039,7 @@ describe('Property-based tests', () => {
           } catch (e) {
             const error = e as Error;
             const isExpectedError =
-              error instanceof XwordParseError ||
+              error instanceof ParseError ||
               error instanceof FormatDetectionError ||
               error instanceof PuzParseError ||
               error instanceof IpuzParseError ||
@@ -1073,7 +1072,7 @@ describe('Property-based tests', () => {
 
         if (error) {
           const isExpectedError =
-            error instanceof XwordParseError ||
+            error instanceof ParseError ||
             error instanceof FormatDetectionError ||
             error instanceof PuzParseError ||
             error instanceof IpuzParseError ||
