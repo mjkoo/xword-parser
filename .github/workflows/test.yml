@@ -58,7 +58,6 @@ jobs:
         name: unit-tests
         fail_ci_if_error: false
         verbose: true
-        root_dir: ${{ github.workspace }}
     
     - name: Run fuzz tests with coverage
       run: npm run test:fuzz
@@ -73,4 +72,3 @@ jobs:
         name: fuzz-tests
         fail_ci_if_error: false
         verbose: true
-        root_dir: ${{ github.workspace }}
