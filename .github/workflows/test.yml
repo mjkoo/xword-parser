@@ -39,7 +39,14 @@ jobs:
       run: npm run typecheck
     
     - name: Run tests with coverage
-      run: npm test -- --coverage
+      run: CI=true npm test -- --coverage
+
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: test-results.xml
     
     - name: Upload unit test coverage to Codecov
       if: matrix.node-version == '22.x'
