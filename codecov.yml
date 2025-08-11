@@ -1,37 +1,10 @@
 codecov:
   require_ci_to_pass: false
 
-coverage:
-  precision: 2
-  round: down
-  range: "70...100"
-  
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 1%
-        informational: true
-    patch:
-      default:
-        target: auto
-        threshold: 1%
-        informational: true
-
-fixes:
-  - "/home/runner/work/xword-parser/xword-parser/::/"
-
 flags:
   unittests:
     paths:
       - src/
-    carryforward: false
   fuzztests:
     paths:
       - src/
-    carryforward: false
-
-comment:
-  layout: "reach,diff,flags,tree"
-  behavior: default
-  require_changes: false

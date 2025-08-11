@@ -53,11 +53,12 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/lcov.info
+        files: ./coverage/cobertura-coverage.xml
         flags: unittests
         name: unit-tests
         fail_ci_if_error: false
         verbose: true
+        root_dir: ${{ github.workspace }}
     
     - name: Run fuzz tests with coverage
       run: npm run test:fuzz
@@ -67,8 +68,9 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage-fuzz/lcov.info
+        files: ./coverage-fuzz/cobertura-coverage.xml
         flags: fuzztests
         name: fuzz-tests
         fail_ci_if_error: false
         verbose: true
+        root_dir: ${{ github.workspace }}
