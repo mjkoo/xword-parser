@@ -5,6 +5,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     exclude: ['fuzz/**', 'node_modules/**', 'dist/**', '**/*.bench.ts'],
+    reporters: process.env.CI ? ['junit', 'default'] : ['default'],
+    outputFile: {
+      junit: 'test-results.xml',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
