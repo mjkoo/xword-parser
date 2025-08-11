@@ -157,11 +157,18 @@ function parseCells(gridNode: unknown): {
   const cells = new Map<string, JpzCell>();
 
   if (!isJpzXmlNode(gridNode)) {
-    return { cells, width: 15, height: 15 };
+    throw new JpzParseError('Missing or invalid grid element', ErrorCode.JPZ_MISSING_GRID);
   }
 
-  const width = parseIntAttribute(gridNode['@_width']) || 15;
-  const height = parseIntAttribute(gridNode['@_height']) || 15;
+  const width = parseIntAttribute(gridNode['@_width']);
+  const height = parseIntAttribute(gridNode['@_height']);
+
+  if (width === undefined || height === undefined) {
+    throw new JpzParseError(
+      'Grid dimensions (width and height) are required',
+      ErrorCode.JPZ_INVALID_GRID,
+    );
+  }
 
   // Validate grid dimensions to prevent excessive memory usage
   if (width <= 0 || width > MAX_GRID_WIDTH || height <= 0 || height > MAX_GRID_HEIGHT) {
