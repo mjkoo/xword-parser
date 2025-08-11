@@ -1,4 +1,5 @@
 import { FormatDetectionError, XwordParseError } from './errors';
+import { getOrderedFormatsToTry } from './detect';
 import type { Puzzle, ParseOptions } from './types';
 
 export async function parseLazy(
@@ -12,183 +13,65 @@ export async function parseLazy(
     content = data;
   }
 
-  if (options?.filename) {
-    const lowerName = options.filename.toLowerCase();
-    const ext = lowerName.split('.').pop();
+  const formatsToTry = getOrderedFormatsToTry(content, options?.filename);
+  let lastError: unknown;
 
-    if (ext === 'ipuz') {
-      try {
-        const textContent =
-          typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-        const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
-        const puzzle = parseIpuz(textContent);
-        return convertIpuzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    } else if (ext === 'puz') {
-      // Only try PUZ if we have binary data
-      if (typeof content !== 'string') {
-        try {
-          const { parsePuz, convertPuzToUnified } = await import('./puz');
-          const puzzle = parsePuz(content);
-          return convertPuzToUnified(puzzle);
-        } catch (e) {
-          // Only continue trying other formats if this is a format mismatch
-          if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-            throw e;
-          }
-        }
-      }
-    } else if (ext === 'jpz') {
-      try {
-        const textContent =
-          typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-        const { parseJpz, convertJpzToUnified } = await import('./jpz');
-        const puzzle = parseJpz(textContent);
-        return convertJpzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    } else if (ext === 'xd') {
-      try {
-        const textContent =
-          typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-        const { parseXd, convertXdToUnified } = await import('./xd');
-        const puzzle = parseXd(textContent);
-        return convertXdToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-  }
-
-  if (typeof content === 'string') {
-    const trimmed = content.trim();
-    if (
-      trimmed.startsWith('ipuz({') ||
-      (trimmed.startsWith('{') && trimmed.includes('"version"'))
-    ) {
-      try {
-        const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
-        const puzzle = parseIpuz(content);
-        return convertIpuzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-
-    if (
-      content.includes('<?xml') ||
-      content.includes('<crossword') ||
-      content.includes('<puzzle')
-    ) {
-      try {
-        const { parseJpz, convertJpzToUnified } = await import('./jpz');
-        const puzzle = parseJpz(content);
-        return convertJpzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-
-    const lines = content.split('\n');
-    const hasXdHeaders = lines.some((line) =>
-      /^(Title|Author|Editor|Copyright|Date|Rebus|Notepad|Notes?):/i.test(line),
-    );
-    if (hasXdHeaders) {
-      try {
-        const { parseXd, convertXdToUnified } = await import('./xd');
-        const puzzle = parseXd(content);
-        return convertXdToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-  } else {
+  for (const format of formatsToTry) {
     try {
-      const { parsePuz, convertPuzToUnified } = await import('./puz');
-      const puzzle = parsePuz(content);
-      return convertPuzToUnified(puzzle);
+      switch (format) {
+        case 'ipuz': {
+          const textContent =
+            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
+          const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
+          const puzzle = parseIpuz(textContent);
+          return convertIpuzToUnified(puzzle);
+        }
+        case 'puz': {
+          if (typeof content !== 'string') {
+            const { parsePuz, convertPuzToUnified } = await import('./puz');
+            const puzzle = parsePuz(content);
+            return convertPuzToUnified(puzzle);
+          }
+          break;
+        }
+        case 'jpz': {
+          const textContent =
+            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
+          const { parseJpz, convertJpzToUnified } = await import('./jpz');
+          const puzzle = parseJpz(textContent);
+          return convertJpzToUnified(puzzle);
+        }
+        case 'xd': {
+          const textContent =
+            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
+          const { parseXd, convertXdToUnified } = await import('./xd');
+          const puzzle = parseXd(textContent);
+          return convertXdToUnified(puzzle);
+        }
+      }
     } catch (e) {
+      lastError = e;
       // Only continue trying other formats if this is a format mismatch
       if (e instanceof XwordParseError && !e.isFormatMismatch()) {
         throw e;
       }
     }
-
-    const textContent = content.toString(options?.encoding || 'utf-8');
-    const trimmed = textContent.trim();
-
-    if (
-      trimmed.startsWith('ipuz({') ||
-      (trimmed.startsWith('{') && trimmed.includes('"version"'))
-    ) {
-      try {
-        const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
-        const puzzle = parseIpuz(textContent);
-        return convertIpuzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-
-    if (
-      textContent.includes('<?xml') ||
-      textContent.includes('<crossword') ||
-      textContent.includes('<puzzle')
-    ) {
-      try {
-        const { parseJpz, convertJpzToUnified } = await import('./jpz');
-        const puzzle = parseJpz(textContent);
-        return convertJpzToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
-
-    const lines = textContent.split('\n');
-    const hasXdHeaders = lines.some((line) =>
-      /^(Title|Author|Editor|Copyright|Date|Rebus|Notepad|Notes?):/i.test(line),
-    );
-    if (hasXdHeaders) {
-      try {
-        const { parseXd, convertXdToUnified } = await import('./xd');
-        const puzzle = parseXd(textContent);
-        return convertXdToUnified(puzzle);
-      } catch (e) {
-        // Only continue trying other formats if this is a format mismatch
-        if (e instanceof XwordParseError && !e.isFormatMismatch()) {
-          throw e;
-        }
-      }
-    }
   }
 
+  // If we get here, no format worked
+  // Only throw lastError if it was NOT a format mismatch (i.e., a real parse error)
+  if (lastError && !(lastError instanceof XwordParseError && lastError.isFormatMismatch())) {
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+    throw new FormatDetectionError(
+      'Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD',
+      undefined,
+      lastError,
+    );
+  }
+
+  // Otherwise, we couldn't detect the format
   throw new FormatDetectionError(
     'Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD',
   );

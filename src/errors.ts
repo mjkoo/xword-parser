@@ -156,8 +156,7 @@ export class XdParseError extends XwordParseError {
   }
 
   override isFormatMismatch(): boolean {
-    // XD format detection is based on headers, so these are real errors, not format mismatches
-    // If we got to parsing XD and it has invalid grid or missing clues, it's a corrupt XD file
-    return super.isFormatMismatch();
+    // XD_FORMAT_ERROR indicates the content doesn't look like XD format
+    return super.isFormatMismatch() || this.code === ErrorCode.XD_FORMAT_ERROR;
   }
 }

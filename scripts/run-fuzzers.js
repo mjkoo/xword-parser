@@ -27,6 +27,7 @@ const runningProcesses = new Set();
 const args = process.argv.slice(2);
 let concurrent = false;
 let duration = 300; // 5 minutes in seconds
+let jazzerTimeout = 30000; // 30 seconds default jazzer timeout in milliseconds
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--concurrent') {
@@ -34,10 +35,14 @@ for (let i = 0; i < args.length; i++) {
   } else if (args[i] === '--duration' && args[i + 1]) {
     duration = parseInt(args[i + 1]);
     i++;
+  } else if (args[i] === '--jazzer-timeout' && args[i + 1]) {
+    jazzerTimeout = parseInt(args[i + 1]);
+    i++;
   } else if (args[i] === '--help') {
-    console.log('Usage: node run-fuzzers.js [--concurrent] [--duration seconds]');
-    console.log('  --concurrent  Run all fuzzers concurrently');
-    console.log('  --duration    Duration in seconds (default: 300)');
+    console.log('Usage: node run-fuzzers.js [--concurrent] [--duration seconds] [--jazzer-timeout ms]');
+    console.log('  --concurrent      Run all fuzzers concurrently');
+    console.log('  --duration        Duration in seconds (default: 300)');
+    console.log('  --jazzer-timeout  Jazzer.js execution timeout in ms (default: 30000)');
     process.exit(0);
   }
 }
@@ -87,7 +92,13 @@ function executeFuzzTest(file, testName, testFile) {
   return new Promise((resolve) => {
     log(`Starting fuzzer: ${file} > ${testName}`, 'yellow');
 
-    const env = { ...process.env, JAZZER_FUZZ: '1' };
+    // Set environment variables including a more reasonable timeout for jazzer.js
+    // Default jazzer timeout is 5000ms, we use a configurable value (default: 30 seconds)
+    const env = { 
+      ...process.env, 
+      JAZZER_FUZZ: '1',
+      JAZZER_TIMEOUT: String(jazzerTimeout)  // Configurable timeout per test execution
+    };
     const jestConfig = join(__dirname, '..', 'jest.config.fuzz.js');
 
     const child = spawn(

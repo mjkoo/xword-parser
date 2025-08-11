@@ -4,7 +4,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { InvalidFileError, UnsupportedPuzzleTypeError, JpzParseError } from './errors';
+import { UnsupportedPuzzleTypeError, JpzParseError } from './errors';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues } from './types';
 import { ErrorCode } from './types';
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
@@ -385,7 +385,7 @@ export function parseJpz(content: string): JpzPuzzle {
     doc['crossword-compiler-applet'] || doc['crossword-compiler'] || doc.puzzle || doc.crossword;
 
   if (!isJpzXmlNode(puzzleRoot)) {
-    throw new InvalidFileError('JPZ', 'no recognized root element');
+    throw new JpzParseError('no recognized root element', ErrorCode.JPZ_INVALID_XML);
   }
 
   // Find the puzzle data - might be nested
@@ -427,7 +427,7 @@ export function parseJpz(content: string): JpzPuzzle {
   }
 
   if (!gridNode) {
-    throw new InvalidFileError('JPZ', 'no grid found');
+    throw new JpzParseError('no grid found', ErrorCode.JPZ_INVALID_XML);
   }
 
   // Parse cells and build grid
