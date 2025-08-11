@@ -80,18 +80,36 @@ class PuzBinaryReader {
   }
 
   readUInt8(): number {
+    if (this.offset + 1 > this._buffer.length) {
+      throw new PuzParseError(
+        `Cannot read byte at offset ${this.offset}: buffer too short`,
+        ErrorCode.PUZ_PARSE_ERROR,
+      );
+    }
     const value = this._buffer.readUInt8(this.offset);
     this.offset += 1;
     return value;
   }
 
   readUInt16LE(): number {
+    if (this.offset + 2 > this._buffer.length) {
+      throw new PuzParseError(
+        `Cannot read 16-bit value at offset ${this.offset}: buffer too short`,
+        ErrorCode.PUZ_PARSE_ERROR,
+      );
+    }
     const value = this._buffer.readUInt16LE(this.offset);
     this.offset += 2;
     return value;
   }
 
   readBytes(length: number): Buffer {
+    if (this.offset + length > this._buffer.length) {
+      throw new PuzParseError(
+        `Cannot read ${length} bytes at offset ${this.offset}: buffer too short`,
+        ErrorCode.PUZ_PARSE_ERROR,
+      );
+    }
     const value = this._buffer.slice(this.offset, this.offset + length);
     this.offset += length;
     return value;
@@ -112,6 +130,12 @@ class PuzBinaryReader {
     const start = this.offset;
     while (this.offset < this._buffer.length && this._buffer[this.offset] !== 0) {
       this.offset++;
+    }
+    if (this.offset >= this._buffer.length) {
+      throw new PuzParseError(
+        `Cannot read null-terminated string at offset ${start}: buffer ended without null terminator`,
+        ErrorCode.PUZ_PARSE_ERROR,
+      );
     }
     const str = this._buffer.toString('latin1', start, this.offset);
     this.offset++; // Skip null terminator
@@ -171,6 +195,15 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
   if (headerStart < 0) {
     throw new PuzParseError(
       'Invalid PUZ file: magic string found too early in file',
+      ErrorCode.PUZ_INVALID_HEADER,
+    );
+  }
+
+  // Ensure there's enough data for the full header (52 bytes from headerStart)
+  const HEADER_SIZE = 52;
+  if (headerStart + HEADER_SIZE > reader.length) {
+    throw new PuzParseError(
+      'Invalid PUZ file: insufficient data for header',
       ErrorCode.PUZ_INVALID_HEADER,
     );
   }

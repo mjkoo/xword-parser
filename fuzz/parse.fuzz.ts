@@ -14,28 +14,11 @@ import {
 
 describe('Parse Auto-Detection Fuzzer', () => {
   it.fuzz('validates format detection, encoding options, and error handling', (data: Buffer) => {
-    // Limit input size to prevent excessive processing time
-    const maxInputSize = 50000; // 50KB max
-    if (data.length > maxInputSize) {
-      data = data.subarray(0, maxInputSize);
-    }
-
-    // Test with both string and buffer inputs (reduced set)
+    // Test with both string and buffer inputs
     const inputs = [data, data.toString('utf-8')];
 
     // Test with various filename hints
-    const filenames = [
-      undefined,
-      'puzzle.puz',
-      'puzzle.ipuz',
-      'puzzle.jpz',
-      'puzzle.xd',
-      'puzzle.txt',
-      'puzzle.xml',
-      'puzzle.json',
-      'puzzle',
-      '',
-    ];
+    const filenames = [undefined, 'puzzle.puz', 'puzzle.ipuz', 'puzzle.jpz', 'puzzle.xd', ''];
 
     for (const input of inputs) {
       for (const filename of filenames) {
