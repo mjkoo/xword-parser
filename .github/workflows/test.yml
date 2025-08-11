@@ -42,22 +42,26 @@ jobs:
       run: npm test -- --coverage
     
     - name: Upload unit test coverage to Codecov
+      if: matrix.node-version == '22.x'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/coverage-final.json
+        files: ./coverage/lcov.info
         flags: unittests
-        name: unit-tests-node-${{ matrix.node-version }}
+        name: unit-tests
         fail_ci_if_error: false
+        verbose: true
     
     - name: Run fuzz tests with coverage
       run: npm run test:fuzz
     
     - name: Upload fuzz test coverage to Codecov
+      if: matrix.node-version == '22.x'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage-fuzz/coverage-final.json
+        files: ./coverage-fuzz/lcov.info
         flags: fuzztests
-        name: fuzz-tests-node-${{ matrix.node-version }}
+        name: fuzz-tests
         fail_ci_if_error: false
+        verbose: true
