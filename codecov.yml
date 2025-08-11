@@ -18,6 +18,10 @@ coverage:
         threshold: 1%
         informational: true
 
+fixes:
+  - "/home/runner/work/xword-parser/xword-parser/::"
+  - "::src/"
+
 flags:
   unittests:
     paths:
