@@ -54,6 +54,14 @@ jobs:
       run: |
         git clone https://x-access-token:${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
     
+    - name: Initialize fuzzer directories
+      if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+      run: |
+        echo "Initializing fuzzer directories with a quick run..."
+        npm run fuzz:concurrent -- --duration 5
+      continue-on-error: true
+      timeout-minutes: 1
+    
     - name: Seed fuzzer corpus
       if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
       run: npm run fuzz:seed
