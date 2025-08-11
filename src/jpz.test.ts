@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { parseJpz, type JpzPuzzle } from './jpz';
+import { parseJpz, convertJpzToUnified, type JpzPuzzle } from './jpz';
 
 describe('parseJpz', () => {
   const testDataDir = join(process.cwd(), 'testdata', 'jpz');
@@ -165,5 +165,136 @@ describe('parseJpz', () => {
     expect(() => parseJpz(content)).toThrow(
       'Coded/cipher crosswords (Kaidoku) puzzles are not supported',
     );
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle 99x99 JPZ puzzle', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <metadata>
+              <title>Large Puzzle</title>
+              <creator>Test</creator>
+            </metadata>
+            <crossword>
+              <grid width="99" height="99">
+                ${Array(99)
+                  .fill(null)
+                  .map(() => `<row>${Array(99).fill('<cell></cell>').join('')}</row>`)
+                  .join('')}
+              </grid>
+              <clues>
+                <clue word="1" number="1">Test clue</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.width).toBe(99);
+      expect(result.height).toBe(99);
+
+      const unified = convertJpzToUnified(result);
+      expect(unified.grid.cells.length).toBe(99);
+      expect(unified.grid.cells[0]?.length).toBe(99);
+    });
+
+    it('should handle unicode in JPZ format', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <metadata>
+              <title>Unicode Test 🎯</title>
+              <creator>José García</creator>
+              <copyright>© 2024</copyright>
+              <description>Test with émojis</description>
+            </metadata>
+            <crossword>
+              <grid width="3" height="3">
+                <row><cell>♠</cell><cell>♥</cell><cell>♦</cell></row>
+                <row><cell>α</cell><cell>β</cell><cell>γ</cell></row>
+                <row><cell>你</cell><cell>好</cell><cell>世</cell></row>
+              </grid>
+              <clues>
+                <clue word="1" number="1">Unicode clue 🎉</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.metadata?.title).toBe('Unicode Test 🎯');
+      expect(result.metadata?.creator).toBe('José García');
+      expect(result.metadata?.copyright).toBe('© 2024');
+
+      const unified = convertJpzToUnified(result);
+      expect(unified.title).toBe('Unicode Test 🎯');
+      expect(unified.author).toBe('José García');
+      expect(unified.copyright).toBe('© 2024');
+    });
+
+    it('should handle grid with all black squares', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <metadata>
+              <title>All Black</title>
+            </metadata>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" type="block"></cell>
+                <cell x="2" y="1" type="block"></cell>
+                <cell x="3" y="1" type="block"></cell>
+                <cell x="1" y="2" type="block"></cell>
+                <cell x="2" y="2" type="block"></cell>
+                <cell x="3" y="2" type="block"></cell>
+                <cell x="1" y="3" type="block"></cell>
+                <cell x="2" y="3" type="block"></cell>
+                <cell x="3" y="3" type="block"></cell>
+              </grid>
+              <clues></clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      const unified = convertJpzToUnified(result);
+
+      expect(unified.grid.cells.every((row) => row.every((cell) => cell.isBlack))).toBe(true);
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+    });
+
+    it('should handle puzzle with no clues', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <metadata>
+              <title>No Clues</title>
+            </metadata>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A"></cell>
+                <cell x="2" y="1" solution="B"></cell>
+                <cell x="3" y="1" solution="C"></cell>
+                <cell x="1" y="2" solution="D"></cell>
+                <cell x="2" y="2" type="block"></cell>
+                <cell x="3" y="2" solution="E"></cell>
+                <cell x="1" y="3" solution="F"></cell>
+                <cell x="2" y="3" solution="G"></cell>
+                <cell x="3" y="3" solution="H"></cell>
+              </grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      const unified = convertJpzToUnified(result);
+
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+      expect(unified.grid.cells[0]?.[0]?.solution).toBe('A');
+      expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
+    });
   });
 });

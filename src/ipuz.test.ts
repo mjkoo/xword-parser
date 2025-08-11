@@ -469,4 +469,104 @@ describe('ipuz parser', () => {
       });
     });
   });
+
+  describe('Edge Cases', () => {
+    it('should handle 99x99 iPUZ puzzle', () => {
+      const largePuzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 99, height: 99 },
+        puzzle: Array(99)
+          .fill(null)
+          .map(() => Array(99).fill(0)),
+        clues: {
+          Across: [{ number: 1, clue: 'Test clue' }],
+          Down: [{ number: 1, clue: 'Test clue' }],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(largePuzzle));
+      expect(result.dimensions?.width).toBe(99);
+      expect(result.dimensions?.height).toBe(99);
+
+      const unified = convertIpuzToUnified(result);
+      expect(unified.grid.cells.length).toBe(99);
+      expect(unified.grid.cells[0]?.length).toBe(99);
+    });
+
+    it('should handle unicode characters in iPUZ', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        title: 'Emoji Puzzle 🎉',
+        author: 'José García',
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          ['♠', '♥', '♦'],
+          ['α', 'β', 'γ'],
+          ['你', '好', '世'],
+        ],
+        clues: {
+          Across: [
+            { number: 1, clue: 'Spade symbol ♠' },
+            { number: 2, clue: 'Greek α' },
+            { number: 3, clue: 'Chinese 你好' },
+          ],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.title).toBe('Emoji Puzzle 🎉');
+      expect(result.author).toBe('José García');
+      expect(result.puzzle?.[0]?.[0]?.value).toBe('♠');
+      expect(result.puzzle?.[1]?.[0]?.value).toBe('α');
+      expect(result.puzzle?.[2]?.[0]?.value).toBe('你');
+
+      const unified = convertIpuzToUnified(result);
+      expect(unified.title).toBe('Emoji Puzzle 🎉');
+      expect(unified.author).toBe('José García');
+    });
+
+    it('should handle grid with all black squares', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          ['#', '#', '#'],
+          ['#', '#', '#'],
+          ['#', '#', '#'],
+        ],
+        clues: {},
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      const unified = convertIpuzToUnified(result);
+
+      expect(unified.grid.cells.every((row) => row.every((cell) => cell.isBlack))).toBe(true);
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+    });
+
+    it('should handle puzzle with no clues', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          ['A', 'B', 'C'],
+          ['D', '#', 'E'],
+          ['F', 'G', 'H'],
+        ],
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      const unified = convertIpuzToUnified(result);
+
+      expect(unified.clues.across).toEqual([]);
+      expect(unified.clues.down).toEqual([]);
+      expect(unified.grid.cells[0]?.[0]?.solution).toBe('A');
+      expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
+    });
+  });
 });
