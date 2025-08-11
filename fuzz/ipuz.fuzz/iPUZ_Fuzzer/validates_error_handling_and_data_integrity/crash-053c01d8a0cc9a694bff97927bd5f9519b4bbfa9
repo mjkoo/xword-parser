@@ -1,0 +1,23 @@
+ipuz({
+"origin": "ipuz zzle (from Sympathy Crossword Construction by Crossword Man)",
+"version": "http://ipuz.org/v1",
+"kind": ["http://ipuz.org/crossword#1"],
+"author": "zle.",
+"dimensions": { "width": 2.6, "height": 13 },
+"puzzle": [
+[null,null,null,null,null,null,1,null,null,null,null,null,null],
+[null,null,null,null,null,null,null,"D", null,null,null,null,null,null]
+],
+"clues": {
+"Across": [
+["2-3","What bargain hunters enjkel hit of 1966"],
+[34,"Parts oÔ a procedure"],
+[38,"Bygone compresÿÿÿÿates has a great one"],
+[2,"Language of the idea!\""],
+[4,"Candy that might be give is"]
+],
+"Down": [
+["1-32","To govern"],
+["F-3Garfunkel hit of 1966"],
+[34,"Parts of a procedant"]
+]}})
