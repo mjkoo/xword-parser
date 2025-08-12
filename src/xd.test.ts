@@ -262,4 +262,124 @@ FGH
       expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
     });
   });
+
+  describe('error handling', () => {
+    it('should throw error when no grid section found', () => {
+      const xdContent = `Title: No Grid Test
+Author: Test
+
+A1. Test clue. ~ TEST
+`;
+      expect(() => parseXd(xdContent)).toThrow('Invalid XD file: no grid section found');
+    });
+
+    it('should throw error for grid with inconsistent row widths', () => {
+      const xdContent = `Title: Inconsistent Grid Test
+Author: Test
+
+ABC
+DE
+FGH
+
+A1. Test clue. ~ TEST
+`;
+      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+    });
+
+    it('should throw error for another type of inconsistent grid', () => {
+      // Test with empty middle row
+      const xdContent = `Title: Missing Row Test  
+Author: Test
+
+ABC
+.
+FGH
+
+A1. Test clue. ~ TEST
+`;
+      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+    });
+
+    it('should throw error for grid with all rows of different lengths', () => {
+      const xdContent = `Title: All Different Widths
+Author: Test
+
+A
+BC
+DEF
+GHIJ
+
+A1. Test clue. ~ TEST
+`;
+      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+    });
+
+    it('should throw error when grid dimensions exceed max size', () => {
+      // Create a grid that's too large (default max is 100x100)
+      const rows = Array(101).fill('A'.repeat(101)).join('\n');
+      const xdContent = `Title: Too Large Grid
+Author: Test
+
+${rows}
+
+A1. Test clue. ~ TEST
+`;
+      expect(() => parseXd(xdContent)).toThrow('Grid dimensions too large');
+    });
+
+    it('should respect custom maxGridSize option', () => {
+      const xdContent = `Title: Small Grid Test
+Author: Test
+
+ABC
+DEF
+GHI
+
+A1. Test clue. ~ TEST
+`;
+      // Should throw with small max size
+      expect(() => parseXd(xdContent, { maxGridSize: { width: 2, height: 2 } })).toThrow(
+        'Grid dimensions too large: 3x3. Maximum supported size is 2x2',
+      );
+
+      // Should pass with larger max size
+      const puzzle = parseXd(xdContent, { maxGridSize: { width: 10, height: 10 } });
+      expect(puzzle.grid).toHaveLength(3);
+    });
+
+    it('should handle convertXdToUnified with edge cases', () => {
+      // This tests the defensive check in convertXdToUnified
+      // Though this should never happen in practice as parseXd validates the grid
+      const invalidPuzzle: any = {
+        metadata: { title: 'Test' },
+        grid: [], // Empty grid
+        across: [],
+        down: [],
+      };
+
+      expect(() => convertXdToUnified(invalidPuzzle)).toThrow('Invalid state: grid is empty');
+    });
+
+    it('should include additional properties in unified conversion', () => {
+      const xdContent = `Title: Test Puzzle
+Author: Test Author
+Editor: Test Editor
+Date: 2024-01-01
+Notepad: Some notes here
+
+ABC
+DEF
+GHI
+
+A1. Test clue. ~ TEST
+`;
+      const puzzle = parseXd(xdContent);
+      const unified = convertXdToUnified(puzzle);
+
+      // Check that additional properties are included
+      expect(unified.additionalProperties).toBeDefined();
+      expect(unified.additionalProperties?.editor).toBe('Test Editor');
+      expect(unified.additionalProperties?.notepad).toBe('Some notes here');
+    });
+  });
 });
