@@ -296,5 +296,390 @@ describe('parseJpz', () => {
       expect(unified.grid.cells[0]?.[0]?.solution).toBe('A');
       expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
     });
+
+    it('should throw error when grid element is missing', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <metadata>
+              <title>No Grid</title>
+            </metadata>
+            <crossword>
+              <!-- Grid is missing -->
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('no grid found');
+    });
+
+    it('should throw error when grid dimensions are missing', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid>
+                <!-- No width/height attributes -->
+                <cell x="1" y="1" solution="A"></cell>
+              </grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Grid dimensions (width and height) are required');
+    });
+
+    it('should throw error for invalid grid dimensions', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="0" height="5">
+                <cell x="1" y="1" solution="A"></cell>
+              </grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Invalid grid dimensions');
+    });
+
+    it('should throw error for excessively large grid', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="200" height="200">
+                <cell x="1" y="1" solution="A"></cell>
+              </grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Invalid grid dimensions');
+      expect(() => parseJpz(xml)).toThrow('Maximum supported size is 100x100');
+    });
+
+    it('should reject sudoku puzzles', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <sudoku>
+              <grid width="9" height="9"></grid>
+            </sudoku>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Number puzzles');
+    });
+
+    it('should reject word search puzzles', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <word-search>
+              <grid width="10" height="10"></grid>
+            </word-search>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Word search');
+    });
+
+    it('should handle nested puzzle structure', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <puzzle>
+            <rectangular-puzzle>
+              <crossword>
+                <grid width="3" height="3">
+                  <cell x="1" y="1" solution="A"></cell>
+                  <cell x="2" y="1" solution="B"></cell>
+                  <cell x="3" y="1" type="block"></cell>
+                  <cell x="1" y="2" solution="C"></cell>
+                  <cell x="2" y="2" solution="D"></cell>
+                  <cell x="3" y="2" solution="E"></cell>
+                  <cell x="1" y="3" type="block"></cell>
+                  <cell x="2" y="3" solution="F"></cell>
+                  <cell x="3" y="3" solution="G"></cell>
+                </grid>
+              </crossword>
+            </rectangular-puzzle>
+          </puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.width).toBe(3);
+      expect(result.height).toBe(3);
+      expect(result.grid[0]?.[0]?.solution).toBe('A');
+    });
+
+    it('should parse clues with nested title elements', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+                <cell x="2" y="1" solution="B"></cell>
+                <cell x="3" y="1" solution="C"></cell>
+              </grid>
+              <clues>
+                <title><b>Across</b></title>
+                <clue number="1">First clue</clue>
+              </clues>
+              <clues>
+                <title>Down</title>
+                <clue number="2">Second clue</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.across).toHaveLength(1);
+      expect(result.across[0]?.text).toBe('First clue');
+      expect(result.down).toHaveLength(1);
+      expect(result.down[0]?.text).toBe('Second clue');
+    });
+
+    it('should parse clues with @_title attribute', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+              </grid>
+              <clues title="Across">
+                <clue number="1">Test clue</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.across).toHaveLength(1);
+      expect(result.across[0]?.text).toBe('Test clue');
+    });
+
+    it('should parse simple string clues with number prefix', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+                <cell x="1" y="2" solution="B" number="2"></cell>
+              </grid>
+              <clues title="Across">
+                <clue>1. First letter of alphabet</clue>
+                <clue>2. Second letter</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.across).toHaveLength(2);
+      expect(result.across[0]?.number).toBe('1');
+      expect(result.across[0]?.text).toBe('First letter of alphabet');
+      expect(result.across[1]?.number).toBe('2');
+      expect(result.across[1]?.text).toBe('Second letter');
+    });
+
+    it('should parse words element', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+                <cell x="2" y="1" solution="B"></cell>
+                <cell x="3" y="1" solution="C"></cell>
+              </grid>
+              <words>
+                <word id="1-across">
+                  <cells>
+                    <cell x="1" y="1"></cell>
+                    <cell x="2" y="1"></cell>
+                    <cell x="3" y="1"></cell>
+                  </cells>
+                </word>
+                <word id="1-down">
+                  <cells>
+                    <cell x="1" y="1"></cell>
+                    <cell x="1" y="2"></cell>
+                  </cells>
+                </word>
+              </words>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.words).toBeDefined();
+      expect(result.words).toHaveLength(2);
+      expect(result.words?.[0]?.id).toBe('1-across');
+      expect(result.words?.[0]?.cells).toHaveLength(3);
+      expect(result.words?.[0]?.cells[0]).toEqual({ x: 1, y: 1 });
+      expect(result.words?.[1]?.id).toBe('1-down');
+      expect(result.words?.[1]?.cells).toHaveLength(2);
+
+      // Test that words are included in unified conversion
+      const unified = convertJpzToUnified(result);
+      expect(unified.additionalProperties?.words).toBeDefined();
+      expect(unified.additionalProperties?.words).toEqual(result.words);
+    });
+
+    it('should handle cells with bar properties', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" top-bar="true" left-bar="true"></cell>
+                <cell x="2" y="1" solution="B" bottom-bar="true"></cell>
+                <cell x="3" y="1" solution="C" right-bar="true"></cell>
+                <cell x="1" y="2" solution="D" background-color="#FF0000"></cell>
+              </grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      expect(result.grid[0]?.[0]?.barTop).toBe(true);
+      expect(result.grid[0]?.[0]?.barLeft).toBe(true);
+      expect(result.grid[0]?.[1]?.barBottom).toBe(true);
+      expect(result.grid[0]?.[2]?.barRight).toBe(true);
+      expect(result.grid[1]?.[0]?.backgroundColor).toBe('#FF0000');
+
+      // Test conversion includes bar properties
+      const unified = convertJpzToUnified(result);
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.barTop).toBe(true);
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.barLeft).toBe(true);
+      expect(unified.grid.cells[0]?.[1]?.additionalProperties?.barBottom).toBe(true);
+      expect(unified.grid.cells[0]?.[2]?.additionalProperties?.barRight).toBe(true);
+      expect(unified.grid.cells[1]?.[0]?.additionalProperties?.backgroundColor).toBe('#FF0000');
+    });
+
+    it('should throw error when no recognized root element', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <unknown-root>
+          <some-content />
+        </unknown-root>`;
+
+      expect(() => parseJpz(xml)).toThrow('no recognized root element');
+    });
+
+    it('should throw error when grid is invalid (not an object)', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid>invalid grid content</grid>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      expect(() => parseJpz(xml)).toThrow('Missing or invalid grid element');
+    });
+
+    it('should handle clues with nested title containing text node', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+              </grid>
+              <clues>
+                <title>Some text content</title>
+                <clue number="1">Test clue</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      // Should parse successfully even with non-standard title format
+      expect(result.down).toHaveLength(1);
+      expect(result.down[0]?.text).toBe('Test clue');
+    });
+
+    it('should handle parseWords with no word nodes', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A"></cell>
+              </grid>
+              <words>
+                <!-- No word elements -->
+              </words>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      // When words element is empty, it parses as empty string which is falsy
+      // So the ternary in parseJpz returns undefined
+      expect(result.words).toBeUndefined();
+    });
+
+    it('should handle clues in down format with number conversion', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword-compiler-applet>
+          <rectangular-puzzle>
+            <crossword>
+              <grid width="3" height="3">
+                <cell x="1" y="1" solution="A" number="1"></cell>
+              </grid>
+              <clues title="Down">
+                <clue number="1">Down clue</clue>
+                <clue number="invalid">Invalid number clue</clue>
+              </clues>
+            </crossword>
+          </rectangular-puzzle>
+        </crossword-compiler-applet>`;
+
+      const result = parseJpz(xml);
+      const unified = convertJpzToUnified(result);
+      
+      expect(result.down).toHaveLength(2);
+      expect(unified.clues.down[0]?.number).toBe(1);
+      // Invalid number should convert to NaN
+      expect(unified.clues.down[1]?.number).toBeNaN();
+    });
+
+    it('should handle alternate puzzle root elements', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <crossword>
+          <rectangular-puzzle>
+            <grid width="3" height="3">
+              <cell x="1" y="1" solution="A"></cell>
+              <cell x="2" y="1" solution="B"></cell>
+            </grid>
+          </rectangular-puzzle>
+        </crossword>`;
+
+      const result = parseJpz(xml);
+      expect(result.width).toBe(3);
+      expect(result.height).toBe(3);
+    });
+
+    it('should handle fallback when rectangularPuzzle is not found', () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <puzzle>
+          <grid width="3" height="3">
+            <cell x="1" y="1" solution="A"></cell>
+          </grid>
+        </puzzle>`;
+
+      const result = parseJpz(xml);
+      expect(result.width).toBe(3);
+      expect(result.height).toBe(3);
+    });
   });
 });
