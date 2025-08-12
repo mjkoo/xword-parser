@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parseLazy } from './lazy';
-import { FormatDetectionError, ParseError } from './errors';
+import { FormatDetectionError } from './errors';
 
 describe('lazy parser', () => {
   it('should parse iPUZ file lazily', async () => {

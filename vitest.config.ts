@@ -10,11 +10,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
-      exclude: [
-        '**/*.bench.ts',
-        '**/*.test.ts',
-        '**/*.d.ts',
-      ],
+      exclude: ['**/*.bench.ts', '**/*.test.ts', '**/*.d.ts'],
     },
   },
   bench: {

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { parsePuz, convertPuzToUnified, type PuzPuzzle } from './puz';
 import type { ParseOptions } from './types';
-import { ErrorCode, PuzParseError, InvalidFileError } from './errors';
+import { PuzParseError } from './errors';
 
 describe('parsePuz', () => {
   const testDataDir = join(process.cwd(), 'testdata', 'puz');

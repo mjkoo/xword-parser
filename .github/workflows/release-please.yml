@@ -16,7 +16,7 @@ jobs:
         id: release
         with:
           release-type: node
-          package-name: "@xwordly/xword-parser"
+          package-name: '@xwordly/xword-parser'
       # The logic below handles the npm publication
       - name: Checkout
         if: ${{ steps.release.outputs.release_created }}

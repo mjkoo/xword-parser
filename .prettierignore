@@ -1,6 +1,22 @@
-dist
-node_modules
-coverage
+# Dependencies
+node_modules/
+
+# Build output
+dist/
 *.min.js
+
+# Testing
+coverage*/
+
+# Test data
+testdata/
+
+# Package manager lock files
 pnpm-lock.yaml
 package-lock.json
+yarn.lock
+
+# Generated files
+*.tsbuildinfo
+test-results.xml
+bench-results*.json

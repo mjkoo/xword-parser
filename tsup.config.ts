@@ -5,7 +5,7 @@ export default defineConfig([
   {
     entry: {
       index: 'src/index.ts',
-      lazy: 'src/lazy.ts'
+      lazy: 'src/lazy.ts',
     },
     format: ['cjs', 'esm'],
     dts: {
