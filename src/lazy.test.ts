@@ -90,8 +90,9 @@ describe('lazy parser', () => {
 
   it('should wrap non-Error exceptions in FormatDetectionError', async () => {
     // Create a malformed JSON that will cause a parsing error
-    const malformedJson = '{"version": "http://ipuz.org/v2", "kind": ["http://ipuz.org/crossword#1"], ';
-    
+    const malformedJson =
+      '{"version": "http://ipuz.org/v2", "kind": ["http://ipuz.org/crossword#1"], ';
+
     try {
       await parseLazy(malformedJson);
       expect.fail('Should have thrown an error');
@@ -111,8 +112,10 @@ describe('lazy parser', () => {
       dimensions: { width: -1, height: -1 },
       puzzle: [],
     });
-    
-    await expect(parseLazy(invalidCrossword)).rejects.toThrow('Width and height must be positive numbers');
+
+    await expect(parseLazy(invalidCrossword)).rejects.toThrow(
+      'Width and height must be positive numbers',
+    );
   });
 
   it('should handle encoding option for text formats', async () => {

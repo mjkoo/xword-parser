@@ -3,9 +3,10 @@
  * Based on reverse-engineered specification
  */
 
-import { InvalidFileError, PuzParseError } from './errors';
+import { InvalidFileError, PuzParseError, BinaryParseError } from './errors';
 import { ErrorCode } from './types';
 import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
+import { BinaryReader } from './binary-reader';
 import {
   MAX_GRID_WIDTH,
   MAX_GRID_HEIGHT,
@@ -72,106 +73,7 @@ interface PuzHeader {
   scrambledTag: number;
 }
 
-class PuzBinaryReader {
-  private _buffer: Buffer;
-  private offset: number;
-
-  constructor(data: Buffer | ArrayBuffer | Uint8Array) {
-    if (data instanceof ArrayBuffer) {
-      this._buffer = Buffer.from(data);
-    } else if (data instanceof Uint8Array) {
-      this._buffer = Buffer.from(data);
-    } else {
-      this._buffer = data;
-    }
-    this.offset = 0;
-  }
-
-  readUInt8(): number {
-    if (this.offset + 1 > this._buffer.length) {
-      throw new PuzParseError(
-        `Cannot read byte at offset ${this.offset}: buffer too short`,
-        ErrorCode.PUZ_PARSE_ERROR,
-      );
-    }
-    const value = this._buffer.readUInt8(this.offset);
-    this.offset += 1;
-    return value;
-  }
-
-  readUInt16LE(): number {
-    if (this.offset + 2 > this._buffer.length) {
-      throw new PuzParseError(
-        `Cannot read 16-bit value at offset ${this.offset}: buffer too short`,
-        ErrorCode.PUZ_PARSE_ERROR,
-      );
-    }
-    const value = this._buffer.readUInt16LE(this.offset);
-    this.offset += 2;
-    return value;
-  }
-
-  readBytes(length: number): Buffer {
-    if (this.offset + length > this._buffer.length) {
-      throw new PuzParseError(
-        `Cannot read ${length} bytes at offset ${this.offset}: buffer too short`,
-        ErrorCode.PUZ_PARSE_ERROR,
-      );
-    }
-    const value = this._buffer.slice(this.offset, this.offset + length);
-    this.offset += length;
-    return value;
-  }
-
-  readString(length: number, trimNull: boolean = true): string {
-    const bytes = this.readBytes(length);
-    if (trimNull) {
-      // Remove trailing nulls
-      let end = bytes.indexOf(0);
-      if (end === -1) end = length;
-      return bytes.toString('latin1', 0, end);
-    }
-    return bytes.toString('latin1');
-  }
-
-  readNullTerminatedString(): string {
-    const start = this.offset;
-    while (this.offset < this._buffer.length && this._buffer[this.offset] !== 0) {
-      this.offset++;
-    }
-    if (this.offset >= this._buffer.length) {
-      throw new PuzParseError(
-        `Cannot read null-terminated string at offset ${start}: buffer ended without null terminator`,
-        ErrorCode.PUZ_PARSE_ERROR,
-      );
-    }
-    const str = this._buffer.toString('latin1', start, this.offset);
-    this.offset++; // Skip null terminator
-    return str;
-  }
-
-  seek(position: number): void {
-    this.offset = position;
-  }
-
-  get position(): number {
-    return this.offset;
-  }
-
-  get length(): number {
-    return this._buffer.length;
-  }
-
-  get buffer(): Buffer {
-    return this._buffer;
-  }
-
-  hasMore(): boolean {
-    return this.offset < this._buffer.length;
-  }
-}
-
-function readHeader(reader: PuzBinaryReader): PuzHeader {
+function readHeader(reader: BinaryReader): PuzHeader {
   // Search for the magic string "ACROSS&DOWN" in the file
   const magicBytes = Buffer.from(PUZ_MAGIC_STRING, 'latin1');
   let magicOffset = -1;
@@ -219,11 +121,11 @@ function readHeader(reader: PuzBinaryReader): PuzHeader {
 
   // Read header fields according to PUZ specification
   const checksum = reader.readUInt16LE(); // 0x00-0x01
-  const magic = reader.readString(12); // 0x02-0x0D
+  const magic = reader.readString(12, true, 'latin1'); // 0x02-0x0D
   const cibChecksum = reader.readUInt16LE(); // 0x0E-0x0F
   const maskedLowChecksum = reader.readUInt16LE(); // 0x10-0x11
   const maskedHighChecksum = reader.readUInt16LE(); // 0x12-0x13
-  const version = reader.readString(4); // 0x14-0x17
+  const version = reader.readString(4, true, 'latin1'); // 0x14-0x17
   const reserved1 = reader.readUInt16LE(); // 0x18-0x19
   const scrambledChecksum = reader.readUInt16LE(); // 0x1A-0x1B
   const reserved2 = reader.readBytes(12); // 0x1C-0x27
@@ -369,7 +271,7 @@ function parseClues(
 }
 
 function parseExtraSections(
-  reader: PuzBinaryReader,
+  reader: BinaryReader,
   grid: PuzCell[][],
 ): {
   rebusTable?: Map<number, string>;
@@ -392,7 +294,7 @@ function parseExtraSections(
     // Check again after skipping padding
     if (reader.position + 8 > reader.length) break;
 
-    const sectionTitle = reader.readString(4);
+    const sectionTitle = reader.readString(4, true, 'latin1');
     const dataLength = reader.readUInt16LE();
     reader.readUInt16LE(); // checksum (unused)
 
@@ -507,71 +409,80 @@ export function parsePuz(
     buffer = Buffer.from(data as ArrayBuffer);
   }
 
-  const reader = new PuzBinaryReader(buffer);
-  const header = readHeader(reader);
+  try {
+    const reader = new BinaryReader(buffer);
+    const header = readHeader(reader);
 
-  // Validate dimensions
-  if (header.width <= 0 || header.height <= 0) {
-    throw new PuzParseError(
-      `Invalid puzzle dimensions: width=${header.width}, height=${header.height}`,
-      ErrorCode.PUZ_INVALID_GRID,
-    );
+    // Validate dimensions
+    if (header.width <= 0 || header.height <= 0) {
+      throw new PuzParseError(
+        `Invalid puzzle dimensions: width=${header.width}, height=${header.height}`,
+        ErrorCode.PUZ_INVALID_GRID,
+      );
+    }
+
+    // Check against maxGridSize if provided, otherwise use defaults
+    const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
+    const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
+    if (header.width > maxWidth || header.height > maxHeight) {
+      throw new PuzParseError(
+        `Grid dimensions too large: ${header.width}x${header.height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
+        ErrorCode.PUZ_INVALID_GRID,
+      );
+    }
+
+    // Read puzzle data
+    const gridSize = header.width * header.height;
+    const solution = reader.readString(gridSize, true, 'latin1');
+    const playerState = reader.readString(gridSize, true, 'latin1');
+
+    // Read strings
+    const title = reader.readNullTerminatedString('latin1');
+    const author = reader.readNullTerminatedString('latin1');
+    const copyright = reader.readNullTerminatedString('latin1');
+
+    // Read clues
+    const clueStrings: string[] = [];
+    for (let i = 0; i < header.numClues; i++) {
+      clueStrings.push(reader.readNullTerminatedString('latin1'));
+    }
+
+    const notes = reader.readNullTerminatedString('latin1');
+
+    // Parse grid
+    const grid = parseGrid(solution, playerState, header.width, header.height);
+
+    // Assign clue numbers and parse clues
+    const cluePositions = assignClueNumbers(grid);
+    const { across, down } = parseClues(clueStrings, cluePositions);
+
+    // Parse extra sections
+    const extras = parseExtraSections(reader, grid);
+
+    return {
+      width: header.width,
+      height: header.height,
+      metadata: {
+        title: title || undefined,
+        author: author || undefined,
+        copyright: copyright || undefined,
+        notes: notes || undefined,
+      },
+      grid,
+      across,
+      down,
+      rebusTable: extras.rebusTable,
+      isScrambled: header.scrambledTag !== 0,
+      timer: extras.timer,
+    };
+  } catch (error) {
+    // Convert BinaryParseError to PuzParseError
+    if (error instanceof BinaryParseError) {
+      throw new PuzParseError(error.message, ErrorCode.PUZ_PARSE_ERROR);
+    }
+    // Re-throw other errors as-is
+    throw error;
   }
-
-  // Check against maxGridSize if provided, otherwise use defaults
-  const maxWidth = options?.maxGridSize?.width ?? MAX_GRID_WIDTH;
-  const maxHeight = options?.maxGridSize?.height ?? MAX_GRID_HEIGHT;
-  if (header.width > maxWidth || header.height > maxHeight) {
-    throw new PuzParseError(
-      `Grid dimensions too large: ${header.width}x${header.height}. Maximum supported size is ${maxWidth}x${maxHeight}`,
-      ErrorCode.PUZ_INVALID_GRID,
-    );
-  }
-
-  // Read puzzle data
-  const gridSize = header.width * header.height;
-  const solution = reader.readString(gridSize);
-  const playerState = reader.readString(gridSize);
-
-  // Read strings
-  const title = reader.readNullTerminatedString();
-  const author = reader.readNullTerminatedString();
-  const copyright = reader.readNullTerminatedString();
-
-  // Read clues
-  const clueStrings: string[] = [];
-  for (let i = 0; i < header.numClues; i++) {
-    clueStrings.push(reader.readNullTerminatedString());
-  }
-
-  const notes = reader.readNullTerminatedString();
-
-  // Parse grid
-  const grid = parseGrid(solution, playerState, header.width, header.height);
-
-  // Assign clue numbers and parse clues
-  const cluePositions = assignClueNumbers(grid);
-  const { across, down } = parseClues(clueStrings, cluePositions);
-
-  // Parse extra sections
-  const extras = parseExtraSections(reader, grid);
-
-  return {
-    width: header.width,
-    height: header.height,
-    metadata: {
-      title: title || undefined,
-      author: author || undefined,
-      copyright: copyright || undefined,
-      notes: notes || undefined,
-    },
-    grid,
-    across,
-    down,
-    rebusTable: extras.rebusTable,
-    isScrambled: header.scrambledTag !== 0,
-    timer: extras.timer,
-  };
 }
 
 /**

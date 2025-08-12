@@ -144,3 +144,14 @@ export class XdParseError extends ParseError {
     return super.isFormatMismatch() || this.code === ErrorCode.XD_FORMAT_ERROR;
   }
 }
+
+/**
+ * Error thrown when binary data cannot be read or parsed correctly.
+ * This is used by the BinaryReader class for low-level binary parsing errors.
+ */
+export class BinaryParseError extends ParseError {
+  constructor(message: string, context?: ErrorContext) {
+    super(message, ErrorCode.BINARY_PARSE_ERROR, context);
+    this.name = 'BinaryParseError';
+  }
+}

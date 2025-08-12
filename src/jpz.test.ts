@@ -646,7 +646,7 @@ describe('parseJpz', () => {
 
       const result = parseJpz(xml);
       const unified = convertJpzToUnified(result);
-      
+
       expect(result.down).toHaveLength(2);
       expect(unified.clues.down[0]?.number).toBe(1);
       // Invalid number should convert to NaN

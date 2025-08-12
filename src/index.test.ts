@@ -164,16 +164,16 @@ describe('parse error handling', () => {
   it('should throw original Error when not a format mismatch', () => {
     // Create invalid JSON that will cause a SyntaxError
     const malformedJson = '{"version": "invalid json';
-    
+
     expect(() => parse(malformedJson)).toThrow();
   });
 
   it('should wrap non-Error exceptions in FormatDetectionError', () => {
-    // This test ensures line 87-91 in index.ts are covered
+    // This test ensures non-Error exceptions are properly wrapped
     // We need a scenario where lastError exists but is not an Error instance
     // Since our parsers throw Error instances, we'll test with completely invalid data
-    const invalidData = Buffer.from([0xFF, 0xFE, 0xFD, 0xFC]);
-    
+    const invalidData = Buffer.from([0xff, 0xfe, 0xfd, 0xfc]);
+
     try {
       parse(invalidData);
       expect.fail('Should have thrown an error');
@@ -187,7 +187,7 @@ describe('parse error handling', () => {
 
   it('should handle invalid JSON that causes parse errors', () => {
     const partialJson = '{"version": "http://ipuz.org/v2"';
-    
+
     expect(() => parse(partialJson)).toThrow(FormatDetectionError);
   });
 
@@ -199,13 +199,13 @@ describe('parse error handling', () => {
       dimensions: { width: -1, height: -1 },
       puzzle: [],
     });
-    
+
     expect(() => parse(invalidIpuz)).toThrow('Width and height must be positive numbers');
   });
 
   it('should skip PUZ parsing when content is a string', () => {
     const stringContent = 'this is a string, not binary data for PUZ';
-    
+
     expect(() => parse(stringContent)).toThrow(FormatDetectionError);
   });
 });
