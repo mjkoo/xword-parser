@@ -45,10 +45,11 @@
     "fuzz:quick": "node scripts/run-fuzzers.js --duration 60",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"{fuzz,scripts,src}/**/*.{ts,tsx,json,md}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,json,yml,yaml}\"",
     "typecheck": "tsc --noEmit",
     "analyze": "tsup --metafile && npx esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
-    "prepack": "npm run lint && npm run typecheck && npm run build"
+    "prepack": "npm run lint && npm run typecheck && npm run build",
+    "prepare": "husky"
   },
   "keywords": [
     "crossword",
@@ -95,7 +96,9 @@
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.5",
+    "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
     "tsup": "^8.5.0",
@@ -114,5 +117,18 @@
       "@types/jest": "$@types/jest",
       "jest": "$jest"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --check",
+      "eslint",
+      "bash -c 'npm run typecheck'"
+    ],
+    "*.{json,yml,yaml}": [
+      "prettier --check"
+    ],
+    "src/**/*.ts": [
+      "bash -c 'npm test'"
+    ]
   }
 }
