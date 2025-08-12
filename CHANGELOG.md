@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5](https://github.com/mjkoo/xword-parser/compare/v1.0.4...v1.0.5) (2025-08-12)
+
+
+### Bug Fixes
+
+* add Buffer polyfill for browser environments ([add4a5d](https://github.com/mjkoo/xword-parser/commit/add4a5dcd84609756dad9b8f7e62b54c327e9eec))
+
 ## [1.0.4](https://github.com/mjkoo/xword-parser/compare/v1.0.3...v1.0.4) (2025-08-12)
 
 
