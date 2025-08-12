@@ -569,4 +569,405 @@ describe('ipuz parser', () => {
       expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
     });
   });
+
+  describe('improved coverage tests', () => {
+    it('should handle cells with null type', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [{ cell: 'null' }, { cell: null }, 1],
+          [2, '#', 3],
+          [4, 5, 6],
+        ],
+        clues: {
+          Across: [
+            { number: 1, clue: 'Test' },
+            { number: 2, clue: 'Test' },
+          ],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.puzzle[0]?.[0]?.type).toBe(CellType.NULL);
+      expect(result.puzzle[0]?.[1]?.type).toBe(CellType.NULL);
+    });
+
+    it('should handle cells with continued field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [{ cell: 1, continued: { cell: true, direction: 'right' } }, 2, 3],
+          [4, '#', 5],
+          [6, 7, 8],
+        ],
+        clues: {
+          Across: [{ number: 1, clue: 'Test' }],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.puzzle[0]?.[0]?.continued).toEqual({ cell: true, direction: 'right' });
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.continued).toEqual({ cell: true, direction: 'right' });
+    });
+
+    it('should handle cells with directions field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [{ cell: 1, directions: ['NE', 'SW'] }, 2, 3],
+          [4, '#', 5],
+          [6, 7, 8],
+        ],
+        clues: {
+          Across: [{ number: 1, clue: 'Test' }],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.puzzle[0]?.[0]?.directions).toEqual(['NE', 'SW']);
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.directions).toEqual(['NE', 'SW']);
+    });
+
+    it('should handle cells with given field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [{ cell: 1, given: true }, { cell: 2, given: false }, 3],
+          [4, '#', 5],
+          [6, 7, 8],
+        ],
+        clues: {
+          Across: [{ number: 1, clue: 'Test' }],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.puzzle[0]?.[0]?.given).toBe(true);
+      expect(result.puzzle[0]?.[1]?.given).toBe(false);
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.given).toBe(true);
+      // Cell at [0][1] doesn't have additionalProperties if given is false (empty object is removed)
+      expect(unified.grid.cells[0]?.[1]?.additionalProperties).toBeUndefined();
+    });
+
+    it('should handle string cell with # as block', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          ['#', '1', '2'],
+          ['3', '#', '4'],
+          ['5', '6', '#'],
+        ],
+        clues: {
+          Across: [{ number: 1, clue: 'Test' }],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.puzzle[0]?.[0]?.type).toBe(CellType.BLOCK);
+      expect(result.puzzle[1]?.[1]?.type).toBe(CellType.BLOCK);
+      expect(result.puzzle[2]?.[2]?.type).toBe(CellType.BLOCK);
+    });
+
+    it('should handle clues with extended array format', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [1, 2, 3],
+          [4, '#', 5],
+          [6, 7, 8],
+        ],
+        clues: {
+          Across: [
+            [1, 'Simple clue'],
+            [2, 'Clue with references', { references: { direction: 'Down', number: 3 } }],
+            [3, 'Clue with continued', { continued: { direction: 'Down', number: 4 } }],
+            [4, 'Clue with highlight', { highlight: true }],
+            [5, 'Clue with image', { image: 'test.png' }],
+            [6, 'Clue with multiple', { references: { direction: 'Down', number: 1 }, continued: { direction: 'Across', number: 2 }, highlight: false, image: 'icon.png' }],
+          ],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.clues.Across?.[0]?.text).toBe('Simple clue');
+      expect(result.clues.Across?.[1]?.references).toEqual({ direction: 'Down', number: 3 });
+      expect(result.clues.Across?.[2]?.continued).toEqual({ direction: 'Down', number: 4 });
+      expect(result.clues.Across?.[3]?.highlight).toBe(true);
+      expect(result.clues.Across?.[4]?.image).toBe('test.png');
+      expect(result.clues.Across?.[5]?.references).toEqual({ direction: 'Down', number: 1 });
+      expect(result.clues.Across?.[5]?.continued).toEqual({ direction: 'Across', number: 2 });
+      // highlight: false is stored as undefined (since false is the default)
+      expect(result.clues.Across?.[5]?.highlight).toBeUndefined();
+      expect(result.clues.Across?.[5]?.image).toBe('icon.png');
+    });
+
+    it('should handle clues with object format including all fields', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3, height: 3 },
+        puzzle: [
+          [1, 2, 3],
+          [4, '#', 5],
+          [6, 7, 8],
+        ],
+        clues: {
+          Across: [
+            { number: 1, clue: 'Test with references', references: { direction: 'Down', number: 2 } },
+            { number: 2, clue: 'Test with continued', continued: { direction: 'Across', number: 1 } },
+            { number: 3, clue: 'Test with highlight', highlight: true },
+            { number: 4, clue: 'Test with image', image: 'picture.jpg' },
+          ],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.clues.Across?.[0]?.references).toEqual({ direction: 'Down', number: 2 });
+      expect(result.clues.Across?.[1]?.continued).toEqual({ direction: 'Across', number: 1 });
+      expect(result.clues.Across?.[2]?.highlight).toBe(true);
+      expect(result.clues.Across?.[3]?.image).toBe('picture.jpg');
+    });
+
+    it('should reject non-integer dimensions', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 3.5, height: 4.2 },
+        puzzle: [],
+        clues: {},
+      };
+
+      expect(() => parseIpuz(JSON.stringify(puzzle))).toThrow('Width and height must be integers');
+    });
+
+    it('should handle uniqueid field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        uniqueid: 'puzzle-123-456',
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.uniqueId).toBe('puzzle-123-456');
+    });
+
+    it('should handle showenumerations field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        showenumerations: true,
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.showEnumerations).toBe(true);
+    });
+
+    it('should handle clueplacement field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        clueplacement: 'before',
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.cluePlacement).toBe('before');
+    });
+
+    it('should handle answers field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        answers: {
+          Across: ['TEST', 'WORD'],
+          Down: ['TW', 'EO'],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.answers).toEqual({
+        Across: ['TEST', 'WORD'],
+        Down: ['TW', 'EO'],
+      });
+    });
+
+    it('should handle enumeration field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        enumeration: true,
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.enumeration).toBe(true);
+    });
+
+    it('should handle enumerations field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        enumerations: {
+          Across: ['4', '4'],
+          Down: ['2', '2'],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.enumerations).toEqual({
+        Across: ['4', '4'],
+        Down: ['2', '2'],
+      });
+    });
+
+    it('should handle volatile field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        volatile: { cells: [[0, 0], [1, 1]] },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.volatile).toEqual({ cells: [[0, 0], [1, 1]] });
+    });
+
+    it('should handle checksum field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        checksum: ['ABC123', 'DEF456'],
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.checksum).toEqual(['ABC123', 'DEF456']);
+    });
+
+    it('should handle zones field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        zones: [
+          { rect: [0, 0, 1, 1], style: { shapebg: 'circle' } },
+          { cells: [[0, 0], [1, 1]], style: { color: 'red' } },
+        ],
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.zones).toEqual([
+        { rect: [0, 0, 1, 1], style: { shapebg: 'circle' } },
+        { cells: [[0, 0], [1, 1]], style: { color: 'red' } },
+      ]);
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.additionalProperties?.zones).toEqual(result.zones);
+    });
+
+    it('should handle styles field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        styles: {
+          highlight: { shapebg: 'circle', color: 'yellow' },
+          theme: { colorborder: 'black', colortext: 'blue' },
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.styles).toEqual({
+        highlight: { shapebg: 'circle', color: 'yellow' },
+        theme: { colorborder: 'black', colortext: 'blue' },
+      });
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.additionalProperties?.styles).toEqual(result.styles);
+    });
+
+    it('should handle misses field', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+        misses: {
+          Across: [1, 2],
+          Down: [3, 4],
+        },
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      expect(result.misses).toEqual({
+        Across: [1, 2],
+        Down: [3, 4],
+      });
+    });
+
+    it('should handle extensions field in convertIpuzToUnified', () => {
+      const puzzle = {
+        version: 'http://ipuz.org/v2',
+        kind: ['http://ipuz.org/crossword#1'],
+        dimensions: { width: 2, height: 2 },
+        puzzle: [[1, 2], [3, 4]],
+        clues: {},
+      };
+
+      const result = parseIpuz(JSON.stringify(puzzle));
+      result.extensions = {
+        'com.example.timer': { enabled: true, seconds: 300 },
+        'com.example.hints': { maxHints: 3 },
+      };
+      
+      const unified = convertIpuzToUnified(result);
+      expect(unified.additionalProperties?.extensions).toEqual({
+        'com.example.timer': { enabled: true, seconds: 300 },
+        'com.example.hints': { maxHints: 3 },
+      });
+    });
+  });
 });
