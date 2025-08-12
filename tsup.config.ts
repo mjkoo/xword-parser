@@ -35,17 +35,16 @@ export default defineConfig([
       options.mainFields = ['module', 'main'];
     },
   },
-  // Browser build (UMD for CDN usage)
+  // Browser build (ESM for modern bundlers)
   {
     entry: {
       'xword-parser.browser': 'src/index.ts',
     },
-    format: ['iife'],
+    format: ['esm'],
     dts: false,
     sourcemap: true,
     minify: true,
     platform: 'browser',
-    globalName: 'XwordParser',
     noExternal: ['fast-xml-parser'],
     outExtension() {
       return {
