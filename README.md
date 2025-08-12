@@ -8,7 +8,7 @@ A TypeScript library for parsing popular crossword puzzle file formats into a un
 
 ## Features
 
-- **Universal Format Support**: Parse PUZ, iPUZ, JPZ, and XD crossword formats
+- **Format Support**: Parse PUZ, iPUZ, JPZ, and XD crossword formats
 - **Unified Data Model**: All formats are converted to a common representation
 - **Type-Safe**: Full TypeScript support with comprehensive type definitions
 - **Lightweight**: Minimal runtime dependencies (only fast-xml-parser for JPZ support)
@@ -295,7 +295,7 @@ try {
 
 The library is designed with the following principles:
 
-1. **Pure Functions**: All parsers are pure functions with no side effects or file I/O
+1. **Sans I/O**: All parsers are pure functions with no side effects or file I/O
 2. **Format-First Parsing**: Each parser first captures all format-specific data, then converts to the unified format
 3. **Type Safety**: Comprehensive TypeScript types for both format-specific and unified structures
 4. **Error Recovery**: Smart error handling that distinguishes between format mismatches and real parsing errors
@@ -331,21 +331,6 @@ npm run lint             # Check for linting errors
 npm run lint:fix         # Fix linting errors
 npm run format           # Format code with Prettier
 npm run typecheck        # Type-check without building
-```
-
-### Project Structure
-
-```
-src/
-├── index.ts           # Main entry point with auto-detection
-├── lazy.ts            # Lazy-loading entry point
-├── types.ts           # Shared TypeScript types
-├── errors.ts          # Error classes and codes
-├── ipuz.ts            # iPUZ parser and types
-├── puz.ts             # PUZ parser and types
-├── jpz.ts             # JPZ parser and types
-├── xd.ts              # XD parser and types
-└── *.test.ts          # Test files for each module
 ```
 
 ## Requirements

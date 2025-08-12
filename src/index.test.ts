@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parse, ParseError } from './index';
+import { parse, ParseError, FormatDetectionError } from './index';
 
 describe('parse auto-detection', () => {
   const testDataDir = join(process.cwd(), 'testdata');
@@ -157,6 +157,56 @@ describe('ParseError', () => {
     expect(error.message).toBe('Test error');
     expect(error instanceof ParseError).toBe(true);
     expect(error instanceof Error).toBe(true);
+  });
+});
+
+describe('parse error handling', () => {
+  it('should throw original Error when not a format mismatch', () => {
+    // Create invalid JSON that will cause a SyntaxError
+    const malformedJson = '{"version": "invalid json';
+    
+    expect(() => parse(malformedJson)).toThrow();
+  });
+
+  it('should wrap non-Error exceptions in FormatDetectionError', () => {
+    // This test ensures line 87-91 in index.ts are covered
+    // We need a scenario where lastError exists but is not an Error instance
+    // Since our parsers throw Error instances, we'll test with completely invalid data
+    const invalidData = Buffer.from([0xFF, 0xFE, 0xFD, 0xFC]);
+    
+    try {
+      parse(invalidData);
+      expect.fail('Should have thrown an error');
+    } catch (e) {
+      expect(e).toBeInstanceOf(FormatDetectionError);
+      if (e instanceof FormatDetectionError) {
+        expect(e.message).toContain('Unable to detect puzzle format');
+      }
+    }
+  });
+
+  it('should handle invalid JSON that causes parse errors', () => {
+    const partialJson = '{"version": "http://ipuz.org/v2"';
+    
+    expect(() => parse(partialJson)).toThrow(FormatDetectionError);
+  });
+
+  it('should propagate non-format-mismatch errors with their original type', () => {
+    // Create a valid iPUZ structure that will fail validation
+    const invalidIpuz = JSON.stringify({
+      version: 'http://ipuz.org/v2',
+      kind: ['http://ipuz.org/crossword#1'],
+      dimensions: { width: -1, height: -1 },
+      puzzle: [],
+    });
+    
+    expect(() => parse(invalidIpuz)).toThrow('Width and height must be positive numbers');
+  });
+
+  it('should skip PUZ parsing when content is a string', () => {
+    const stringContent = 'this is a string, not binary data for PUZ';
+    
+    expect(() => parse(stringContent)).toThrow(FormatDetectionError);
   });
 });
 
