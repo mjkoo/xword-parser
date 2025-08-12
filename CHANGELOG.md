@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2](https://github.com/mjkoo/xword-parser/compare/v1.0.1...v1.0.2) (2025-08-12)
+
+
+### Bug Fixes
+
+* add path fixes to codecov.yml for proper source file resolution ([75a72bd](https://github.com/mjkoo/xword-parser/commit/75a72bd62f5f3d36f7e66129a606e6f91bb5a301))
+* improve codecov integration ([8e158be](https://github.com/mjkoo/xword-parser/commit/8e158be1f7ed99f9ffcc719a8242fb22f671e506))
+* switch codecov coverage format from lcov to cobertura ([3e6c6ba](https://github.com/mjkoo/xword-parser/commit/3e6c6ba61ae78efc1215650003289d5cc3a3b006))
+
 ## [1.0.1](https://github.com/mjkoo/xword-parser/compare/v1.0.0...v1.0.1) (2025-08-11)
 
 
