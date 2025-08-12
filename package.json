@@ -110,6 +110,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "fast-xml-parser": "^5.2.5"
   },
   "overrides": {

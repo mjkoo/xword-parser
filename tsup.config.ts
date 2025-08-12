@@ -45,7 +45,7 @@ export default defineConfig([
     sourcemap: true,
     minify: true,
     platform: 'browser',
-    noExternal: ['fast-xml-parser'],
+    noExternal: ['fast-xml-parser', 'buffer'],
     outExtension() {
       return {
         js: '.min.js',
@@ -54,6 +54,11 @@ export default defineConfig([
     esbuildOptions(options) {
       options.treeShaking = true;
       options.target = ['es2020', 'chrome91', 'firefox90', 'safari14'];
+      options.define = {
+        ...options.define,
+        global: 'globalThis',
+      };
+      options.inject = ['./src/buffer-polyfill.ts'];
     },
   },
 ]);
