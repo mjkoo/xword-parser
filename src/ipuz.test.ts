@@ -611,9 +611,12 @@ describe('ipuz parser', () => {
 
       const result = parseIpuz(JSON.stringify(puzzle));
       expect(result.puzzle[0]?.[0]?.continued).toEqual({ cell: true, direction: 'right' });
-      
+
       const unified = convertIpuzToUnified(result);
-      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.continued).toEqual({ cell: true, direction: 'right' });
+      expect(unified.grid.cells[0]?.[0]?.additionalProperties?.continued).toEqual({
+        cell: true,
+        direction: 'right',
+      });
     });
 
     it('should handle cells with directions field', () => {
@@ -633,7 +636,7 @@ describe('ipuz parser', () => {
 
       const result = parseIpuz(JSON.stringify(puzzle));
       expect(result.puzzle[0]?.[0]?.directions).toEqual(['NE', 'SW']);
-      
+
       const unified = convertIpuzToUnified(result);
       expect(unified.grid.cells[0]?.[0]?.additionalProperties?.directions).toEqual(['NE', 'SW']);
     });
@@ -656,7 +659,7 @@ describe('ipuz parser', () => {
       const result = parseIpuz(JSON.stringify(puzzle));
       expect(result.puzzle[0]?.[0]?.given).toBe(true);
       expect(result.puzzle[0]?.[1]?.given).toBe(false);
-      
+
       const unified = convertIpuzToUnified(result);
       expect(unified.grid.cells[0]?.[0]?.additionalProperties?.given).toBe(true);
       // Cell at [0][1] doesn't have additionalProperties if given is false (empty object is removed)
@@ -701,7 +704,16 @@ describe('ipuz parser', () => {
             [3, 'Clue with continued', { continued: { direction: 'Down', number: 4 } }],
             [4, 'Clue with highlight', { highlight: true }],
             [5, 'Clue with image', { image: 'test.png' }],
-            [6, 'Clue with multiple', { references: { direction: 'Down', number: 1 }, continued: { direction: 'Across', number: 2 }, highlight: false, image: 'icon.png' }],
+            [
+              6,
+              'Clue with multiple',
+              {
+                references: { direction: 'Down', number: 1 },
+                continued: { direction: 'Across', number: 2 },
+                highlight: false,
+                image: 'icon.png',
+              },
+            ],
           ],
         },
       };
@@ -731,8 +743,16 @@ describe('ipuz parser', () => {
         ],
         clues: {
           Across: [
-            { number: 1, clue: 'Test with references', references: { direction: 'Down', number: 2 } },
-            { number: 2, clue: 'Test with continued', continued: { direction: 'Across', number: 1 } },
+            {
+              number: 1,
+              clue: 'Test with references',
+              references: { direction: 'Down', number: 2 },
+            },
+            {
+              number: 2,
+              clue: 'Test with continued',
+              continued: { direction: 'Across', number: 1 },
+            },
             { number: 3, clue: 'Test with highlight', highlight: true },
             { number: 4, clue: 'Test with image', image: 'picture.jpg' },
           ],
@@ -763,7 +783,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         uniqueid: 'puzzle-123-456',
       };
@@ -777,7 +800,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         showenumerations: true,
       };
@@ -791,7 +817,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         clueplacement: 'before',
       };
@@ -805,7 +834,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         answers: {
           Across: ['TEST', 'WORD'],
@@ -825,7 +857,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         enumeration: true,
       };
@@ -839,7 +874,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         enumerations: {
           Across: ['4', '4'],
@@ -859,13 +897,26 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
-        volatile: { cells: [[0, 0], [1, 1]] },
+        volatile: {
+          cells: [
+            [0, 0],
+            [1, 1],
+          ],
+        },
       };
 
       const result = parseIpuz(JSON.stringify(puzzle));
-      expect(result.volatile).toEqual({ cells: [[0, 0], [1, 1]] });
+      expect(result.volatile).toEqual({
+        cells: [
+          [0, 0],
+          [1, 1],
+        ],
+      });
     });
 
     it('should handle checksum field', () => {
@@ -873,7 +924,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         checksum: ['ABC123', 'DEF456'],
       };
@@ -887,20 +941,35 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         zones: [
           { rect: [0, 0, 1, 1], style: { shapebg: 'circle' } },
-          { cells: [[0, 0], [1, 1]], style: { color: 'red' } },
+          {
+            cells: [
+              [0, 0],
+              [1, 1],
+            ],
+            style: { color: 'red' },
+          },
         ],
       };
 
       const result = parseIpuz(JSON.stringify(puzzle));
       expect(result.zones).toEqual([
         { rect: [0, 0, 1, 1], style: { shapebg: 'circle' } },
-        { cells: [[0, 0], [1, 1]], style: { color: 'red' } },
+        {
+          cells: [
+            [0, 0],
+            [1, 1],
+          ],
+          style: { color: 'red' },
+        },
       ]);
-      
+
       const unified = convertIpuzToUnified(result);
       expect(unified.additionalProperties?.zones).toEqual(result.zones);
     });
@@ -910,7 +979,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         styles: {
           highlight: { shapebg: 'circle', color: 'yellow' },
@@ -923,7 +995,7 @@ describe('ipuz parser', () => {
         highlight: { shapebg: 'circle', color: 'yellow' },
         theme: { colorborder: 'black', colortext: 'blue' },
       });
-      
+
       const unified = convertIpuzToUnified(result);
       expect(unified.additionalProperties?.styles).toEqual(result.styles);
     });
@@ -933,7 +1005,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
         misses: {
           Across: [1, 2],
@@ -953,7 +1028,10 @@ describe('ipuz parser', () => {
         version: 'http://ipuz.org/v2',
         kind: ['http://ipuz.org/crossword#1'],
         dimensions: { width: 2, height: 2 },
-        puzzle: [[1, 2], [3, 4]],
+        puzzle: [
+          [1, 2],
+          [3, 4],
+        ],
         clues: {},
       };
 
@@ -962,7 +1040,7 @@ describe('ipuz parser', () => {
         'com.example.timer': { enabled: true, seconds: 300 },
         'com.example.hints': { maxHints: 3 },
       };
-      
+
       const unified = convertIpuzToUnified(result);
       expect(unified.additionalProperties?.extensions).toEqual({
         'com.example.timer': { enabled: true, seconds: 300 },
