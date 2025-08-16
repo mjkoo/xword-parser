@@ -2,7 +2,7 @@
 
 A TypeScript library for parsing popular crossword puzzle file formats into a unified, easy-to-use data structure.
 
-![NPM Version](https://img.shields.io/npm/v/%40xwordly%2Fxword-parser)
+[![NPM Version](https://img.shields.io/npm/v/%40xwordly%2Fxword-parser)](https://www.npmjs.com/package/@xwordly/xword-parser)
 [![Test](https://github.com/mjkoo/xword-parser/actions/workflows/test.yml/badge.svg)](https://github.com/mjkoo/xword-parser/actions/workflows/test.yml)
 [![codecov](https://codecov.io/github/mjkoo/xword-parser/graph/badge.svg?token=ZM495OCGGY)](https://codecov.io/github/mjkoo/xword-parser)
 
