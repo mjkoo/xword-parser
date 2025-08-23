@@ -36,9 +36,6 @@ updates:
           - 'eslint-*'
           - 'prettier'
     versioning-strategy: increase
-    labels:
-      - 'dependencies'
-      - 'automated'
     commit-message:
       prefix: 'chore'
       prefix-development: 'chore'
@@ -53,10 +50,6 @@ updates:
       day: 'monday'
       time: '04:00'
     open-pull-requests-limit: 5
-    labels:
-      - 'dependencies'
-      - 'github-actions'
-      - 'automated'
     commit-message:
       prefix: 'ci'
       include: 'scope'
