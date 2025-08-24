@@ -2,7 +2,7 @@ name: Fuzz Testing
 on:
   schedule:
     # Run at 2 AM UTC every day
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch: # Allow manual triggering
 jobs:
   fuzz:
@@ -65,8 +65,8 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'test: add fuzzer regression test files'
-          title: '[Automated] Add fuzzer regression test files'
+          commit-message: "test: add fuzzer regression test files"
+          title: "[Automated] Add fuzzer regression test files"
           body: |
             This PR was automatically created by the nightly fuzzing workflow.
 

@@ -1,6 +1,6 @@
-import { FormatDetectionError, ParseError } from './errors';
-import { getOrderedFormatsToTry } from './detect';
-import type { Puzzle, ParseOptions } from './types';
+import { FormatDetectionError, ParseError } from "./errors";
+import { getOrderedFormatsToTry } from "./detect";
+import type { Puzzle, ParseOptions } from "./types";
 
 /**
  * Parse a crossword puzzle asynchronously with dynamic imports for smaller bundle size.
@@ -42,32 +42,38 @@ export async function parseLazy(
   for (const format of formatsToTry) {
     try {
       switch (format) {
-        case 'ipuz': {
+        case "ipuz": {
           const textContent =
-            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const { parseIpuz, convertIpuzToUnified } = await import('./ipuz');
+            typeof content === "string"
+              ? content
+              : content.toString(options?.encoding || "utf-8");
+          const { parseIpuz, convertIpuzToUnified } = await import("./ipuz");
           const puzzle = parseIpuz(textContent, options);
           return convertIpuzToUnified(puzzle);
         }
-        case 'puz': {
-          if (typeof content !== 'string') {
-            const { parsePuz, convertPuzToUnified } = await import('./puz');
+        case "puz": {
+          if (typeof content !== "string") {
+            const { parsePuz, convertPuzToUnified } = await import("./puz");
             const puzzle = parsePuz(content, options);
             return convertPuzToUnified(puzzle);
           }
           break;
         }
-        case 'jpz': {
+        case "jpz": {
           const textContent =
-            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const { parseJpz, convertJpzToUnified } = await import('./jpz');
+            typeof content === "string"
+              ? content
+              : content.toString(options?.encoding || "utf-8");
+          const { parseJpz, convertJpzToUnified } = await import("./jpz");
           const puzzle = parseJpz(textContent, options);
           return convertJpzToUnified(puzzle);
         }
-        case 'xd': {
+        case "xd": {
           const textContent =
-            typeof content === 'string' ? content : content.toString(options?.encoding || 'utf-8');
-          const { parseXd, convertXdToUnified } = await import('./xd');
+            typeof content === "string"
+              ? content
+              : content.toString(options?.encoding || "utf-8");
+          const { parseXd, convertXdToUnified } = await import("./xd");
           const puzzle = parseXd(textContent, options);
           return convertXdToUnified(puzzle);
         }
@@ -83,12 +89,15 @@ export async function parseLazy(
 
   // If we get here, no format worked
   // Only throw lastError if it was NOT a format mismatch (i.e., a real parse error)
-  if (lastError && !(lastError instanceof ParseError && lastError.isFormatMismatch())) {
+  if (
+    lastError &&
+    !(lastError instanceof ParseError && lastError.isFormatMismatch())
+  ) {
     if (lastError instanceof Error) {
       throw lastError;
     }
     throw new FormatDetectionError(
-      'Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD',
+      "Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD",
       undefined,
       lastError,
     );
@@ -96,6 +105,6 @@ export async function parseLazy(
 
   // Otherwise, we couldn't detect the format
   throw new FormatDetectionError(
-    'Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD',
+    "Unable to detect puzzle format. Supported formats: iPUZ, PUZ, JPZ, XD",
   );
 }

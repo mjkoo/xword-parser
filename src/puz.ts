@@ -3,10 +3,16 @@
  * Based on reverse-engineered specification
  */
 
-import { InvalidFileError, PuzParseError, BinaryParseError } from './errors';
-import { ErrorCode } from './types';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
-import { BinaryReader } from './binary-reader';
+import { InvalidFileError, PuzParseError, BinaryParseError } from "./errors";
+import { ErrorCode } from "./types";
+import type {
+  Puzzle,
+  Grid,
+  Cell as UnifiedCell,
+  Clues,
+  ParseOptions,
+} from "./types";
+import { BinaryReader } from "./binary-reader";
 import {
   MAX_GRID_WIDTH,
   MAX_GRID_HEIGHT,
@@ -17,7 +23,7 @@ import {
   PUZ_SECTION_GEXT,
   PUZ_SECTION_LTIM,
   PUZ_CIRCLED_CELL_FLAG,
-} from './constants';
+} from "./constants";
 
 export interface PuzMetadata {
   title?: string;
@@ -75,7 +81,7 @@ interface PuzHeader {
 
 function readHeader(reader: BinaryReader): PuzHeader {
   // Search for the magic string "ACROSS&DOWN" in the file
-  const magicBytes = Buffer.from(PUZ_MAGIC_STRING, 'latin1');
+  const magicBytes = Buffer.from(PUZ_MAGIC_STRING, "latin1");
   let magicOffset = -1;
 
   // Search for the magic string in the buffer
@@ -104,7 +110,7 @@ function readHeader(reader: BinaryReader): PuzHeader {
   const headerStart = magicOffset - 2;
   if (headerStart < 0) {
     throw new PuzParseError(
-      'Invalid PUZ file: magic string found too early in file',
+      "Invalid PUZ file: magic string found too early in file",
       ErrorCode.PUZ_INVALID_HEADER,
     );
   }
@@ -112,7 +118,7 @@ function readHeader(reader: BinaryReader): PuzHeader {
   // Ensure there's enough data for the full header
   if (headerStart + PUZ_HEADER_SIZE > reader.length) {
     throw new PuzParseError(
-      'Invalid PUZ file: insufficient data for header',
+      "Invalid PUZ file: insufficient data for header",
       ErrorCode.PUZ_INVALID_HEADER,
     );
   }
@@ -121,11 +127,11 @@ function readHeader(reader: BinaryReader): PuzHeader {
 
   // Read header fields according to PUZ specification
   const checksum = reader.readUInt16LE(); // 0x00-0x01
-  const magic = reader.readString(12, true, 'latin1'); // 0x02-0x0D
+  const magic = reader.readString(12, true, "latin1"); // 0x02-0x0D
   const cibChecksum = reader.readUInt16LE(); // 0x0E-0x0F
   const maskedLowChecksum = reader.readUInt16LE(); // 0x10-0x11
   const maskedHighChecksum = reader.readUInt16LE(); // 0x12-0x13
-  const version = reader.readString(4, true, 'latin1'); // 0x14-0x17
+  const version = reader.readString(4, true, "latin1"); // 0x14-0x17
   const reserved1 = reader.readUInt16LE(); // 0x18-0x19
   const scrambledChecksum = reader.readUInt16LE(); // 0x1A-0x1B
   const reserved2 = reader.readBytes(12); // 0x1C-0x27
@@ -156,7 +162,7 @@ function readHeader(reader: BinaryReader): PuzHeader {
   // Verify we read the magic string correctly
   if (header.magic !== PUZ_MAGIC_STRING) {
     throw new InvalidFileError(
-      'PUZ',
+      "PUZ",
       `magic string mismatch after positioning. Expected "${PUZ_MAGIC_STRING}", got "${header.magic}"`,
     );
   }
@@ -180,9 +186,10 @@ function parseGrid(
       const playerChar = playerState[index];
 
       cells.push({
-        solution: solutionChar === '.' ? undefined : solutionChar,
-        playerState: playerChar === '-' || playerChar === '.' ? undefined : playerChar,
-        isBlack: solutionChar === '.',
+        solution: solutionChar === "." ? undefined : solutionChar,
+        playerState:
+          playerChar === "-" || playerChar === "." ? undefined : playerChar,
+        isBlack: solutionChar === ".",
       });
     }
     grid.push(cells);
@@ -236,12 +243,12 @@ function parseClues(
 
   // Sort positions to ensure correct clue assignment
   const sortedPositions = Array.from(cluePositions.entries()).sort((a, b) => {
-    const [aType, aPos] = a[0].split(',');
-    const [bType, bPos] = b[0].split(',');
-    const aRow = parseInt(aType?.substring(1) || '0');
-    const bRow = parseInt(bType?.substring(1) || '0');
-    const aCol = parseInt(aPos || '0');
-    const bCol = parseInt(bPos || '0');
+    const [aType, aPos] = a[0].split(",");
+    const [bType, bPos] = b[0].split(",");
+    const aRow = parseInt(aType?.substring(1) || "0");
+    const bRow = parseInt(bType?.substring(1) || "0");
+    const aCol = parseInt(aPos || "0");
+    const bCol = parseInt(bPos || "0");
 
     if (aRow !== bRow) return aRow - bRow;
     return aCol - bCol;
@@ -249,20 +256,20 @@ function parseClues(
 
   // First pass: collect all across clues
   for (const [key, number] of sortedPositions) {
-    if (key.startsWith('A') && clueIndex < clueStrings.length) {
+    if (key.startsWith("A") && clueIndex < clueStrings.length) {
       across.push({
         number,
-        text: clueStrings[clueIndex++] || '',
+        text: clueStrings[clueIndex++] || "",
       });
     }
   }
 
   // Second pass: collect all down clues
   for (const [key, number] of sortedPositions) {
-    if (key.startsWith('D') && clueIndex < clueStrings.length) {
+    if (key.startsWith("D") && clueIndex < clueStrings.length) {
       down.push({
         number,
-        text: clueStrings[clueIndex++] || '',
+        text: clueStrings[clueIndex++] || "",
       });
     }
   }
@@ -294,7 +301,7 @@ function parseExtraSections(
     // Check again after skipping padding
     if (reader.position + 8 > reader.length) break;
 
-    const sectionTitle = reader.readString(4, true, 'latin1');
+    const sectionTitle = reader.readString(4, true, "latin1");
     const dataLength = reader.readUInt16LE();
     reader.readUInt16LE(); // checksum (unused)
 
@@ -325,16 +332,16 @@ function parseExtraSections(
 
       case PUZ_SECTION_RTBL: {
         // Rebus table - semicolon-separated values with key:value pairs
-        const tableStr = sectionData.toString('latin1');
-        const entries = tableStr.split(';');
+        const tableStr = sectionData.toString("latin1");
+        const entries = tableStr.split(";");
         result.rebusTable = new Map();
 
         for (const entry of entries) {
-          if (entry.includes(':')) {
-            const [key, value] = entry.split(':');
-            const keyNum = Number.parseInt(key || '0', 10);
+          if (entry.includes(":")) {
+            const [key, value] = entry.split(":");
+            const keyNum = Number.parseInt(key || "0", 10);
             if (!Number.isNaN(keyNum)) {
-              result.rebusTable.set(keyNum, value || '');
+              result.rebusTable.set(keyNum, value || "");
             }
           }
         }
@@ -361,11 +368,11 @@ function parseExtraSections(
 
       case PUZ_SECTION_LTIM: {
         // Timer data
-        const timerStr = sectionData.toString('latin1');
-        const [elapsed, running] = timerStr.split(',');
+        const timerStr = sectionData.toString("latin1");
+        const [elapsed, running] = timerStr.split(",");
         result.timer = {
-          elapsed: parseInt(elapsed || '0') || 0,
-          running: running === '0' ? false : true,
+          elapsed: parseInt(elapsed || "0") || 0,
+          running: running === "0" ? false : true,
         };
         break;
       }
@@ -400,9 +407,9 @@ export function parsePuz(
 ): PuzPuzzle {
   let buffer: Buffer;
 
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     // If string is passed, assume it's base64 encoded
-    buffer = Buffer.from(data, 'base64');
+    buffer = Buffer.from(data, "base64");
   } else if (data instanceof Buffer) {
     buffer = data;
   } else {
@@ -433,21 +440,21 @@ export function parsePuz(
 
     // Read puzzle data
     const gridSize = header.width * header.height;
-    const solution = reader.readString(gridSize, true, 'latin1');
-    const playerState = reader.readString(gridSize, true, 'latin1');
+    const solution = reader.readString(gridSize, true, "latin1");
+    const playerState = reader.readString(gridSize, true, "latin1");
 
     // Read strings
-    const title = reader.readNullTerminatedString('latin1');
-    const author = reader.readNullTerminatedString('latin1');
-    const copyright = reader.readNullTerminatedString('latin1');
+    const title = reader.readNullTerminatedString("latin1");
+    const author = reader.readNullTerminatedString("latin1");
+    const copyright = reader.readNullTerminatedString("latin1");
 
     // Read clues
     const clueStrings: string[] = [];
     for (let i = 0; i < header.numClues; i++) {
-      clueStrings.push(reader.readNullTerminatedString('latin1'));
+      clueStrings.push(reader.readNullTerminatedString("latin1"));
     }
 
-    const notes = reader.readNullTerminatedString('latin1');
+    const notes = reader.readNullTerminatedString("latin1");
 
     // Parse grid
     const grid = parseGrid(solution, playerState, header.width, header.height);

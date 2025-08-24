@@ -1,15 +1,16 @@
 // Branded types for improved type safety
-export type ClueNumber = number & { __brand: 'ClueNumber' };
-export type GridCoordinate = number & { __brand: 'GridCoordinate' };
-export type RebusId = number & { __brand: 'RebusId' };
+export type ClueNumber = number & { __brand: "ClueNumber" };
+export type GridCoordinate = number & { __brand: "GridCoordinate" };
+export type RebusId = number & { __brand: "RebusId" };
 
 // Helper functions to create branded types
 export const asClueNumber = (n: number): ClueNumber => n as ClueNumber;
-export const asGridCoordinate = (n: number): GridCoordinate => n as GridCoordinate;
+export const asGridCoordinate = (n: number): GridCoordinate =>
+  n as GridCoordinate;
 export const asRebusId = (n: number): RebusId => n as RebusId;
 
 // Stricter type for direction
-export type Direction = 'across' | 'down';
+export type Direction = "across" | "down";
 
 export interface Puzzle {
   title?: string;
@@ -59,33 +60,33 @@ export interface ParseOptions {
 }
 
 export enum ErrorCode {
-  FORMAT_DETECTION_FAILED = 'FORMAT_DETECTION_FAILED',
-  INVALID_FILE = 'INVALID_FILE',
-  UNSUPPORTED_PUZZLE_TYPE = 'UNSUPPORTED_PUZZLE_TYPE',
-  BINARY_PARSE_ERROR = 'BINARY_PARSE_ERROR',
+  FORMAT_DETECTION_FAILED = "FORMAT_DETECTION_FAILED",
+  INVALID_FILE = "INVALID_FILE",
+  UNSUPPORTED_PUZZLE_TYPE = "UNSUPPORTED_PUZZLE_TYPE",
+  BINARY_PARSE_ERROR = "BINARY_PARSE_ERROR",
 
-  IPUZ_PARSE_ERROR = 'IPUZ_PARSE_ERROR',
-  IPUZ_INVALID_JSON = 'IPUZ_INVALID_JSON',
-  IPUZ_MISSING_VERSION = 'IPUZ_MISSING_VERSION',
-  IPUZ_MISSING_KIND = 'IPUZ_MISSING_KIND',
-  IPUZ_MISSING_REQUIRED_FIELD = 'IPUZ_MISSING_REQUIRED_FIELD',
-  IPUZ_INVALID_DATA_TYPE = 'IPUZ_INVALID_DATA_TYPE',
-  IPUZ_INVALID_GRID_SIZE = 'IPUZ_INVALID_GRID_SIZE',
+  IPUZ_PARSE_ERROR = "IPUZ_PARSE_ERROR",
+  IPUZ_INVALID_JSON = "IPUZ_INVALID_JSON",
+  IPUZ_MISSING_VERSION = "IPUZ_MISSING_VERSION",
+  IPUZ_MISSING_KIND = "IPUZ_MISSING_KIND",
+  IPUZ_MISSING_REQUIRED_FIELD = "IPUZ_MISSING_REQUIRED_FIELD",
+  IPUZ_INVALID_DATA_TYPE = "IPUZ_INVALID_DATA_TYPE",
+  IPUZ_INVALID_GRID_SIZE = "IPUZ_INVALID_GRID_SIZE",
 
-  PUZ_PARSE_ERROR = 'PUZ_PARSE_ERROR',
-  PUZ_INVALID_HEADER = 'PUZ_INVALID_HEADER',
-  PUZ_INVALID_GRID = 'PUZ_INVALID_GRID',
-  PUZ_CHECKSUM_MISMATCH = 'PUZ_CHECKSUM_MISMATCH',
+  PUZ_PARSE_ERROR = "PUZ_PARSE_ERROR",
+  PUZ_INVALID_HEADER = "PUZ_INVALID_HEADER",
+  PUZ_INVALID_GRID = "PUZ_INVALID_GRID",
+  PUZ_CHECKSUM_MISMATCH = "PUZ_CHECKSUM_MISMATCH",
 
-  JPZ_PARSE_ERROR = 'JPZ_PARSE_ERROR',
-  JPZ_INVALID_XML = 'JPZ_INVALID_XML',
-  JPZ_MISSING_GRID = 'JPZ_MISSING_GRID',
-  JPZ_INVALID_GRID = 'JPZ_INVALID_GRID',
+  JPZ_PARSE_ERROR = "JPZ_PARSE_ERROR",
+  JPZ_INVALID_XML = "JPZ_INVALID_XML",
+  JPZ_MISSING_GRID = "JPZ_MISSING_GRID",
+  JPZ_INVALID_GRID = "JPZ_INVALID_GRID",
 
-  XD_PARSE_ERROR = 'XD_PARSE_ERROR',
-  XD_FORMAT_ERROR = 'XD_FORMAT_ERROR',
-  XD_INVALID_GRID = 'XD_INVALID_GRID',
-  XD_MISSING_CLUES = 'XD_MISSING_CLUES',
+  XD_PARSE_ERROR = "XD_PARSE_ERROR",
+  XD_FORMAT_ERROR = "XD_FORMAT_ERROR",
+  XD_INVALID_GRID = "XD_INVALID_GRID",
+  XD_MISSING_CLUES = "XD_MISSING_CLUES",
 }
 
 export interface ErrorContext {

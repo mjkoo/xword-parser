@@ -1,7 +1,13 @@
-import { XdParseError } from './errors';
-import { ErrorCode } from './types';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
-import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
+import { XdParseError } from "./errors";
+import { ErrorCode } from "./types";
+import type {
+  Puzzle,
+  Grid,
+  Cell as UnifiedCell,
+  Clues,
+  ParseOptions,
+} from "./types";
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from "./constants";
 
 export interface XdMetadata {
   title?: string;
@@ -32,7 +38,7 @@ function parseMetadata(lines: string[]): XdMetadata {
   const metadata: XdMetadata = {};
 
   for (const line of lines) {
-    const colonIndex = line.indexOf(':');
+    const colonIndex = line.indexOf(":");
     if (colonIndex === -1) continue;
 
     const key = line.substring(0, colonIndex).trim();
@@ -40,7 +46,7 @@ function parseMetadata(lines: string[]): XdMetadata {
 
     if (key && value) {
       // Convert first character to lowercase to match TypeScript conventions
-      const normalizedKey = (key[0] ?? '').toLowerCase() + key.slice(1);
+      const normalizedKey = (key[0] ?? "").toLowerCase() + key.slice(1);
       metadata[normalizedKey] = value;
     }
   }
@@ -73,12 +79,12 @@ function parseClues(lines: string[]): { across: XdClue[]; down: XdClue[] } {
       const [, direction, number, clue, answer] = match;
 
       const clueObj: XdClue = {
-        number: number ?? '',
-        clue: clue?.trim() ?? '',
-        answer: answer?.trim() ?? '',
+        number: number ?? "",
+        clue: clue?.trim() ?? "",
+        answer: answer?.trim() ?? "",
       };
 
-      if (direction === 'A') {
+      if (direction === "A") {
         across.push(clueObj);
       } else {
         down.push(clueObj);
@@ -95,13 +101,13 @@ function splitIntoSections(content: string): {
   clues: string[];
   notes: string[];
 } {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const sections: string[][] = [];
   let currentSection: string[] = [];
   let blankLineCount = 0;
 
   for (const line of lines) {
-    if (line.trim() === '') {
+    if (line.trim() === "") {
       blankLineCount++;
       if (blankLineCount >= 2 && currentSection.length > 0) {
         sections.push(currentSection);
@@ -133,7 +139,7 @@ function splitIntoSections(content: string): {
 
   if (sections.length > sectionIndex) {
     const section = sections[sectionIndex];
-    if (section && section.some((line) => line.includes(':'))) {
+    if (section && section.some((line) => line.includes(":"))) {
       result.metadata = section;
       sectionIndex++;
     }
@@ -141,7 +147,10 @@ function splitIntoSections(content: string): {
 
   if (sections.length > sectionIndex) {
     const section = sections[sectionIndex];
-    if (section && section.every((line) => /^[A-Za-z0-9#._]+$/.test(line) && line.length > 0)) {
+    if (
+      section &&
+      section.every((line) => /^[A-Za-z0-9#._]+$/.test(line) && line.length > 0)
+    ) {
       result.grid = section;
       sectionIndex++;
     }
@@ -189,7 +198,10 @@ export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
   const sections = splitIntoSections(content);
 
   if (sections.grid.length === 0) {
-    throw new XdParseError('Invalid XD file: no grid section found', ErrorCode.XD_FORMAT_ERROR);
+    throw new XdParseError(
+      "Invalid XD file: no grid section found",
+      ErrorCode.XD_FORMAT_ERROR,
+    );
   }
 
   const metadata = parseMetadata(sections.metadata);
@@ -198,13 +210,13 @@ export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
 
   // Validate grid is not empty
   if (grid.length === 0) {
-    throw new XdParseError('Grid is empty', ErrorCode.XD_INVALID_GRID);
+    throw new XdParseError("Grid is empty", ErrorCode.XD_INVALID_GRID);
   }
 
   // Validate grid has consistent row lengths
   const width = grid[0]?.length || 0;
   if (width === 0) {
-    throw new XdParseError('Grid has no columns', ErrorCode.XD_INVALID_GRID);
+    throw new XdParseError("Grid has no columns", ErrorCode.XD_INVALID_GRID);
   }
 
   const height = grid.length;
@@ -237,7 +249,7 @@ export function parseXd(content: string, options?: ParseOptions): XdPuzzle {
   };
 
   if (sections.notes.length > 0) {
-    puzzle.notes = sections.notes.join('\n').trim();
+    puzzle.notes = sections.notes.join("\n").trim();
   }
 
   return puzzle;
@@ -261,7 +273,7 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
   const firstRow = puzzle.grid[0];
   if (!firstRow) {
     // This should never happen as parser validates grid is not empty
-    throw new Error('Invalid state: grid is empty');
+    throw new Error("Invalid state: grid is empty");
   }
 
   const grid: Grid = {
@@ -278,20 +290,20 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
     const cellRow: UnifiedCell[] = [];
     for (let x = 0; x < row.length; x++) {
       const cellValue = row[x]!; // Parser guarantees consistent width
-      const isBlack = cellValue === '#';
+      const isBlack = cellValue === "#";
 
       // Determine if this cell should have a number
       let number: number | undefined;
       if (!isBlack) {
         const needsNumber =
           // Start of across word
-          ((x === 0 || puzzle.grid[y]![x - 1] === '#') &&
+          ((x === 0 || puzzle.grid[y]![x - 1] === "#") &&
             x < row.length - 1 &&
-            puzzle.grid[y]![x + 1] !== '#') ||
+            puzzle.grid[y]![x + 1] !== "#") ||
           // Start of down word
-          ((y === 0 || puzzle.grid[y - 1]?.[x] === '#') &&
+          ((y === 0 || puzzle.grid[y - 1]?.[x] === "#") &&
             y < puzzle.grid.length - 1 &&
-            puzzle.grid[y + 1]?.[x] !== '#');
+            puzzle.grid[y + 1]?.[x] !== "#");
 
         if (needsNumber) {
           number = cellNumber++;
@@ -336,7 +348,8 @@ export function convertXdToUnified(puzzle: XdPuzzle): Puzzle {
 
   // XD format also supports rebus metadata (different format than PUZ)
   if (puzzle.metadata.rebus) additionalProps.rebus = puzzle.metadata.rebus;
-  if (puzzle.metadata.notepad) additionalProps.notepad = puzzle.metadata.notepad;
+  if (puzzle.metadata.notepad)
+    additionalProps.notepad = puzzle.metadata.notepad;
 
   if (Object.keys(additionalProps).length > 0) {
     result.additionalProperties = additionalProps;

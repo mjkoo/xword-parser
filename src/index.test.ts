@@ -1,14 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { parse, ParseError, FormatDetectionError } from './index';
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { parse, ParseError, FormatDetectionError } from "./index";
 
-describe('parse auto-detection', () => {
-  const testDataDir = join(process.cwd(), 'testdata');
+describe("parse auto-detection", () => {
+  const testDataDir = join(process.cwd(), "testdata");
 
-  it('should auto-detect and parse iPUZ files', () => {
-    const ipuzFile = join(testDataDir, 'ipuz', 'example.ipuz');
-    const content = readFileSync(ipuzFile, 'utf-8');
+  it("should auto-detect and parse iPUZ files", () => {
+    const ipuzFile = join(testDataDir, "ipuz", "example.ipuz");
+    const content = readFileSync(ipuzFile, "utf-8");
 
     const puzzle = parse(content);
 
@@ -20,9 +20,9 @@ describe('parse auto-detection', () => {
     expect(puzzle.clues.down).toBeDefined();
   });
 
-  it('should auto-detect and parse XD files', () => {
-    const xdFile = join(testDataDir, 'xd', 'nyt2003-11-17.xd');
-    const content = readFileSync(xdFile, 'utf-8');
+  it("should auto-detect and parse XD files", () => {
+    const xdFile = join(testDataDir, "xd", "nyt2003-11-17.xd");
+    const content = readFileSync(xdFile, "utf-8");
 
     const puzzle = parse(content);
 
@@ -32,35 +32,35 @@ describe('parse auto-detection', () => {
     expect(puzzle.grid.height).toBeGreaterThan(0);
   });
 
-  it('should auto-detect and parse PUZ files from Buffer', () => {
-    const puzFile = join(testDataDir, 'puz', 'av110622.puz');
+  it("should auto-detect and parse PUZ files from Buffer", () => {
+    const puzFile = join(testDataDir, "puz", "av110622.puz");
     const buffer = readFileSync(puzFile);
 
     const puzzle = parse(buffer);
 
     expect(puzzle).toBeDefined();
-    expect(puzzle.title).toBe('AV Club xword, 6 22 11');
-    expect(puzzle.author).toBe('Ben Tausig');
+    expect(puzzle.title).toBe("AV Club xword, 6 22 11");
+    expect(puzzle.author).toBe("Ben Tausig");
     expect(puzzle.grid).toBeDefined();
     expect(puzzle.clues.across.length).toBeGreaterThan(0);
     expect(puzzle.clues.down.length).toBeGreaterThan(0);
   });
 
-  it('should auto-detect and parse JPZ files', () => {
-    const jpzFile = join(testDataDir, 'jpz', 'FM.jpz');
-    const content = readFileSync(jpzFile, 'utf-8');
+  it("should auto-detect and parse JPZ files", () => {
+    const jpzFile = join(testDataDir, "jpz", "FM.jpz");
+    const content = readFileSync(jpzFile, "utf-8");
 
     const puzzle = parse(content);
 
     expect(puzzle).toBeDefined();
-    expect(puzzle.title).toBe('FM (A Grid Charlemagne Puzzle)');
-    expect(puzzle.author).toBe('Alex Boisvert');
+    expect(puzzle.title).toBe("FM (A Grid Charlemagne Puzzle)");
+    expect(puzzle.author).toBe("Alex Boisvert");
     expect(puzzle.grid.width).toBe(15);
     expect(puzzle.grid.height).toBe(15);
   });
 
-  it('should convert ArrayBuffer to Buffer and parse PUZ', () => {
-    const puzFile = join(testDataDir, 'puz', 'av110622.puz');
+  it("should convert ArrayBuffer to Buffer and parse PUZ", () => {
+    const puzFile = join(testDataDir, "puz", "av110622.puz");
     const buffer = readFileSync(puzFile);
     const arrayBuffer = buffer.buffer.slice(
       buffer.byteOffset,
@@ -70,18 +70,20 @@ describe('parse auto-detection', () => {
     const puzzle = parse(arrayBuffer);
 
     expect(puzzle).toBeDefined();
-    expect(puzzle.title).toBe('AV Club xword, 6 22 11');
+    expect(puzzle.title).toBe("AV Club xword, 6 22 11");
   });
 
-  it('should throw error for unsupported format', () => {
-    const invalidContent = 'This is not a valid puzzle format';
+  it("should throw error for unsupported format", () => {
+    const invalidContent = "This is not a valid puzzle format";
 
-    expect(() => parse(invalidContent)).toThrow('Unable to detect puzzle format');
+    expect(() => parse(invalidContent)).toThrow(
+      "Unable to detect puzzle format",
+    );
   });
 
-  it('should parse iPUZ with wrapper function', () => {
-    const ipuzFile = join(testDataDir, 'ipuz', 'test.ipuz');
-    const content = readFileSync(ipuzFile, 'utf-8');
+  it("should parse iPUZ with wrapper function", () => {
+    const ipuzFile = join(testDataDir, "ipuz", "test.ipuz");
+    const content = readFileSync(ipuzFile, "utf-8");
 
     const puzzle = parse(content);
 
@@ -89,9 +91,9 @@ describe('parse auto-detection', () => {
     expect(puzzle.grid).toBeDefined();
   });
 
-  it('should correctly convert grid cells', () => {
-    const xdFile = join(testDataDir, 'xd', 'usa2024-05-13.xd');
-    const content = readFileSync(xdFile, 'utf-8');
+  it("should correctly convert grid cells", () => {
+    const xdFile = join(testDataDir, "xd", "usa2024-05-13.xd");
+    const content = readFileSync(xdFile, "utf-8");
 
     const puzzle = parse(content);
 
@@ -122,8 +124,8 @@ describe('parse auto-detection', () => {
     expect(hasSolutionCell).toBe(true);
   });
 
-  it('should correctly convert clues', () => {
-    const puzFile = join(testDataDir, 'puz', 'av110622.puz');
+  it("should correctly convert clues", () => {
+    const puzFile = join(testDataDir, "puz", "av110622.puz");
     const buffer = readFileSync(puzFile);
 
     const puzzle = parse(buffer);
@@ -150,25 +152,25 @@ describe('parse auto-detection', () => {
   });
 });
 
-describe('ParseError', () => {
-  it('should create an error with the correct class name', () => {
-    const error = new ParseError('Test error');
-    expect(error.constructor.name).toBe('ParseError');
-    expect(error.message).toBe('Test error');
+describe("ParseError", () => {
+  it("should create an error with the correct class name", () => {
+    const error = new ParseError("Test error");
+    expect(error.constructor.name).toBe("ParseError");
+    expect(error.message).toBe("Test error");
     expect(error instanceof ParseError).toBe(true);
     expect(error instanceof Error).toBe(true);
   });
 });
 
-describe('parse error handling', () => {
-  it('should throw original Error when not a format mismatch', () => {
+describe("parse error handling", () => {
+  it("should throw original Error when not a format mismatch", () => {
     // Create invalid JSON that will cause a SyntaxError
     const malformedJson = '{"version": "invalid json';
 
     expect(() => parse(malformedJson)).toThrow();
   });
 
-  it('should wrap non-Error exceptions in FormatDetectionError', () => {
+  it("should wrap non-Error exceptions in FormatDetectionError", () => {
     // This test ensures non-Error exceptions are properly wrapped
     // We need a scenario where lastError exists but is not an Error instance
     // Since our parsers throw Error instances, we'll test with completely invalid data
@@ -176,51 +178,53 @@ describe('parse error handling', () => {
 
     try {
       parse(invalidData);
-      expect.fail('Should have thrown an error');
+      expect.fail("Should have thrown an error");
     } catch (e) {
       expect(e).toBeInstanceOf(FormatDetectionError);
       if (e instanceof FormatDetectionError) {
-        expect(e.message).toContain('Unable to detect puzzle format');
+        expect(e.message).toContain("Unable to detect puzzle format");
       }
     }
   });
 
-  it('should handle invalid JSON that causes parse errors', () => {
+  it("should handle invalid JSON that causes parse errors", () => {
     const partialJson = '{"version": "http://ipuz.org/v2"';
 
     expect(() => parse(partialJson)).toThrow(FormatDetectionError);
   });
 
-  it('should propagate non-format-mismatch errors with their original type', () => {
+  it("should propagate non-format-mismatch errors with their original type", () => {
     // Create a valid iPUZ structure that will fail validation
     const invalidIpuz = JSON.stringify({
-      version: 'http://ipuz.org/v2',
-      kind: ['http://ipuz.org/crossword#1'],
+      version: "http://ipuz.org/v2",
+      kind: ["http://ipuz.org/crossword#1"],
       dimensions: { width: -1, height: -1 },
       puzzle: [],
     });
 
-    expect(() => parse(invalidIpuz)).toThrow('Width and height must be positive numbers');
+    expect(() => parse(invalidIpuz)).toThrow(
+      "Width and height must be positive numbers",
+    );
   });
 
-  it('should skip PUZ parsing when content is a string', () => {
-    const stringContent = 'this is a string, not binary data for PUZ';
+  it("should skip PUZ parsing when content is a string", () => {
+    const stringContent = "this is a string, not binary data for PUZ";
 
     expect(() => parse(stringContent)).toThrow(FormatDetectionError);
   });
 });
 
-describe('Auto-detection with Edge Cases', () => {
-  it('should auto-detect and parse large grid', () => {
+describe("Auto-detection with Edge Cases", () => {
+  it("should auto-detect and parse large grid", () => {
     const largePuzzle = {
-      version: 'http://ipuz.org/v2',
-      kind: ['http://ipuz.org/crossword#1'],
+      version: "http://ipuz.org/v2",
+      kind: ["http://ipuz.org/crossword#1"],
       dimensions: { width: 50, height: 50 },
       puzzle: Array(50)
         .fill(null)
         .map(() => Array(50).fill(0)),
       clues: {
-        Across: [{ number: 1, clue: 'Test' }],
+        Across: [{ number: 1, clue: "Test" }],
       },
     };
 
@@ -229,7 +233,7 @@ describe('Auto-detection with Edge Cases', () => {
     expect(result.grid.cells[0]?.length).toBe(50);
   });
 
-  it('should auto-detect and parse puzzle with unicode', () => {
+  it("should auto-detect and parse puzzle with unicode", () => {
     const xd = `Title: 测试 🎯
 
 ABC
@@ -239,10 +243,10 @@ GHI
 A1. Clue ~ ABC`;
 
     const result = parse(xd);
-    expect(result.title).toBe('测试 🎯');
+    expect(result.title).toBe("测试 🎯");
   });
 
-  it('should auto-detect and parse empty clue puzzle', () => {
+  it("should auto-detect and parse empty clue puzzle", () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
       <crossword-compiler-applet>
         <rectangular-puzzle>

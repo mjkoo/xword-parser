@@ -3,38 +3,44 @@
  * JPZ is an XML-based format
  */
 
-import { XMLParser } from 'fast-xml-parser';
-import { UnsupportedPuzzleTypeError, JpzParseError } from './errors';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
-import { ErrorCode } from './types';
-import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
+import { XMLParser } from "fast-xml-parser";
+import { UnsupportedPuzzleTypeError, JpzParseError } from "./errors";
+import type {
+  Puzzle,
+  Grid,
+  Cell as UnifiedCell,
+  Clues,
+  ParseOptions,
+} from "./types";
+import { ErrorCode } from "./types";
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from "./constants";
 
 // Type definitions for XML parser output
 interface JpzXmlNode {
   [key: string]: unknown;
-  '@_width'?: string;
-  '@_height'?: string;
-  '@_x'?: string;
-  '@_y'?: string;
-  '@_type'?: string;
-  '@_solution'?: string;
-  '@_letter'?: string;
-  '@_number'?: string;
-  '@_background-shape'?: string;
-  '@_background-color'?: string;
-  '@_top-bar'?: string;
-  '@_bottom-bar'?: string;
-  '@_left-bar'?: string;
-  '@_right-bar'?: string;
-  '@_title'?: string;
-  '@_format'?: string;
-  '@_text'?: string;
-  '@_word'?: string;
-  '@_id'?: string;
-  '#text'?: string;
+  "@_width"?: string;
+  "@_height"?: string;
+  "@_x"?: string;
+  "@_y"?: string;
+  "@_type"?: string;
+  "@_solution"?: string;
+  "@_letter"?: string;
+  "@_number"?: string;
+  "@_background-shape"?: string;
+  "@_background-color"?: string;
+  "@_top-bar"?: string;
+  "@_bottom-bar"?: string;
+  "@_left-bar"?: string;
+  "@_right-bar"?: string;
+  "@_title"?: string;
+  "@_format"?: string;
+  "@_text"?: string;
+  "@_word"?: string;
+  "@_id"?: string;
+  "#text"?: string;
   cell?: JpzXmlNode | JpzXmlNode[];
   cells?: { cell?: JpzXmlNode | JpzXmlNode[] };
-  title?: string | { b?: string; '#text'?: string };
+  title?: string | { b?: string; "#text"?: string };
   creator?: string;
   author?: string;
   copyright?: string;
@@ -46,13 +52,13 @@ interface JpzXmlNode {
   number?: string;
   word?: JpzXmlNode | JpzXmlNode[];
   // Additional properties found in parsing
-  'rectangular-puzzle'?: JpzXmlNode;
+  "rectangular-puzzle"?: JpzXmlNode;
   puzzle?: JpzXmlNode;
   crossword?: JpzXmlNode;
   coded?: unknown;
   sudoku?: unknown;
   kakuro?: unknown;
-  'word-search'?: unknown;
+  "word-search"?: unknown;
   wordsearch?: unknown;
   metadata?: JpzXmlNode;
   grid?: JpzXmlNode;
@@ -64,19 +70,19 @@ interface JpzXmlNode {
 }
 
 interface JpzXmlRoot {
-  'crossword-compiler-applet'?: JpzXmlNode;
-  'crossword-compiler'?: JpzXmlNode;
+  "crossword-compiler-applet"?: JpzXmlNode;
+  "crossword-compiler"?: JpzXmlNode;
   puzzle?: JpzXmlNode;
   crossword?: JpzXmlNode;
 }
 
 // Type guards
 function isJpzXmlNode(value: unknown): value is JpzXmlNode {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function isString(value: unknown): value is string {
-  return typeof value === 'string';
+  return typeof value === "string";
 }
 
 function parseStringAttribute(value: unknown): string | undefined {
@@ -105,7 +111,7 @@ export interface JpzCell {
   y: number;
   solution?: string;
   number?: number;
-  type?: 'block' | 'cell';
+  type?: "block" | "cell";
   isCircled?: boolean;
   backgroundColor?: string;
   barTop?: boolean;
@@ -141,7 +147,8 @@ function parseMetadata(metadataNode: unknown): JpzMetadata {
   return {
     title: parseStringAttribute(metadataNode.title),
     creator:
-      parseStringAttribute(metadataNode.creator) || parseStringAttribute(metadataNode.author),
+      parseStringAttribute(metadataNode.creator) ||
+      parseStringAttribute(metadataNode.author),
     copyright: parseStringAttribute(metadataNode.copyright),
     description: parseStringAttribute(metadataNode.description),
     publisher: parseStringAttribute(metadataNode.publisher),
@@ -160,15 +167,18 @@ function parseCells(
   const cells = new Map<string, JpzCell>();
 
   if (!isJpzXmlNode(gridNode)) {
-    throw new JpzParseError('Missing or invalid grid element', ErrorCode.JPZ_MISSING_GRID);
+    throw new JpzParseError(
+      "Missing or invalid grid element",
+      ErrorCode.JPZ_MISSING_GRID,
+    );
   }
 
-  const width = parseIntAttribute(gridNode['@_width']);
-  const height = parseIntAttribute(gridNode['@_height']);
+  const width = parseIntAttribute(gridNode["@_width"]);
+  const height = parseIntAttribute(gridNode["@_height"]);
 
   if (width === undefined || height === undefined) {
     throw new JpzParseError(
-      'Grid dimensions (width and height) are required',
+      "Grid dimensions (width and height) are required",
       ErrorCode.JPZ_INVALID_GRID,
     );
   }
@@ -193,8 +203,8 @@ function parseCells(
     for (const cellNode of cellArray) {
       if (!isJpzXmlNode(cellNode)) continue;
 
-      const x = parseIntAttribute(cellNode['@_x']);
-      const y = parseIntAttribute(cellNode['@_y']);
+      const x = parseIntAttribute(cellNode["@_x"]);
+      const y = parseIntAttribute(cellNode["@_y"]);
 
       if (x === undefined || y === undefined) continue;
 
@@ -203,17 +213,21 @@ function parseCells(
       const jpzCell: JpzCell = {
         x,
         y,
-        type: parseStringAttribute(cellNode['@_type']) === 'block' ? 'block' : 'cell',
+        type:
+          parseStringAttribute(cellNode["@_type"]) === "block"
+            ? "block"
+            : "cell",
         solution:
-          parseStringAttribute(cellNode['@_solution']) ||
-          parseStringAttribute(cellNode['@_letter']),
-        number: parseIntAttribute(cellNode['@_number']),
-        isCircled: parseStringAttribute(cellNode['@_background-shape']) === 'circle',
-        backgroundColor: parseStringAttribute(cellNode['@_background-color']),
-        barTop: parseStringAttribute(cellNode['@_top-bar']) === 'true',
-        barBottom: parseStringAttribute(cellNode['@_bottom-bar']) === 'true',
-        barLeft: parseStringAttribute(cellNode['@_left-bar']) === 'true',
-        barRight: parseStringAttribute(cellNode['@_right-bar']) === 'true',
+          parseStringAttribute(cellNode["@_solution"]) ||
+          parseStringAttribute(cellNode["@_letter"]),
+        number: parseIntAttribute(cellNode["@_number"]),
+        isCircled:
+          parseStringAttribute(cellNode["@_background-shape"]) === "circle",
+        backgroundColor: parseStringAttribute(cellNode["@_background-color"]),
+        barTop: parseStringAttribute(cellNode["@_top-bar"]) === "true",
+        barBottom: parseStringAttribute(cellNode["@_bottom-bar"]) === "true",
+        barLeft: parseStringAttribute(cellNode["@_left-bar"]) === "true",
+        barRight: parseStringAttribute(cellNode["@_right-bar"]) === "true",
       };
 
       cells.set(key, jpzCell);
@@ -223,7 +237,11 @@ function parseCells(
   return { cells, width, height };
 }
 
-function buildGrid(cells: Map<string, JpzCell>, width: number, height: number): JpzCell[][] {
+function buildGrid(
+  cells: Map<string, JpzCell>,
+  width: number,
+  height: number,
+): JpzCell[][] {
   const grid: JpzCell[][] = [];
 
   // JPZ uses 1-based indexing
@@ -240,7 +258,7 @@ function buildGrid(cells: Map<string, JpzCell>, width: number, height: number): 
         row.push({
           x,
           y,
-          type: 'cell',
+          type: "cell",
         });
       }
     }
@@ -250,7 +268,10 @@ function buildGrid(cells: Map<string, JpzCell>, width: number, height: number): 
   return grid;
 }
 
-function parseClues(cluesNode: unknown): { across: JpzClue[]; down: JpzClue[] } {
+function parseClues(cluesNode: unknown): {
+  across: JpzClue[];
+  down: JpzClue[];
+} {
   const across: JpzClue[] = [];
   const down: JpzClue[] = [];
 
@@ -265,7 +286,7 @@ function parseClues(cluesNode: unknown): { across: JpzClue[]; down: JpzClue[] } 
     if (!isJpzXmlNode(clueSet)) continue;
 
     // Get title/direction - might be nested object with text content
-    let titleStr = '';
+    let titleStr = "";
     if (isString(clueSet.title)) {
       titleStr = clueSet.title;
     } else if (isJpzXmlNode(clueSet.title)) {
@@ -273,13 +294,13 @@ function parseClues(cluesNode: unknown): { across: JpzClue[]; down: JpzClue[] } 
       const titleNode = clueSet.title;
       titleStr =
         parseStringAttribute(titleNode.b) ||
-        parseStringAttribute(titleNode['#text']) ||
+        parseStringAttribute(titleNode["#text"]) ||
         JSON.stringify(titleNode);
-    } else if (parseStringAttribute(clueSet['@_title'])) {
-      titleStr = parseStringAttribute(clueSet['@_title']) || '';
+    } else if (parseStringAttribute(clueSet["@_title"])) {
+      titleStr = parseStringAttribute(clueSet["@_title"]) || "";
     }
 
-    const isAcross = titleStr.toLowerCase().includes('across');
+    const isAcross = titleStr.toLowerCase().includes("across");
     const targetArray = isAcross ? across : down;
 
     // Get clues
@@ -293,25 +314,27 @@ function parseClues(cluesNode: unknown): { across: JpzClue[]; down: JpzClue[] } 
           const match = clue.match(/^(\d+)\.\s*(.+)$/);
           if (match) {
             targetArray.push({
-              number: match[1] || '',
-              text: match[2] || '',
+              number: match[1] || "",
+              text: match[2] || "",
             });
           }
         } else if (isJpzXmlNode(clue)) {
           // Structured clue
           const clueObj: JpzClue = {
             number:
-              parseStringAttribute(clue['@_number']) || parseStringAttribute(clue.number) || '',
+              parseStringAttribute(clue["@_number"]) ||
+              parseStringAttribute(clue.number) ||
+              "",
             text:
-              parseStringAttribute(clue['#text']) ||
+              parseStringAttribute(clue["#text"]) ||
               parseStringAttribute(clue.text) ||
-              parseStringAttribute(clue['@_text']) ||
-              '',
-            format: parseStringAttribute(clue['@_format']),
+              parseStringAttribute(clue["@_text"]) ||
+              "",
+            format: parseStringAttribute(clue["@_format"]),
           };
 
           // Handle word reference
-          const wordRef = parseStringAttribute(clue['@_word']);
+          const wordRef = parseStringAttribute(clue["@_word"]);
           if (wordRef) {
             clueObj.number = wordRef;
           }
@@ -332,13 +355,15 @@ function parseWords(wordsNode: unknown): JpzWord[] {
     return words;
   }
 
-  const wordNodes = Array.isArray(wordsNode.word) ? wordsNode.word : [wordsNode.word];
+  const wordNodes = Array.isArray(wordsNode.word)
+    ? wordsNode.word
+    : [wordsNode.word];
 
   for (const word of wordNodes) {
     if (!isJpzXmlNode(word)) continue;
 
     const jpzWord: JpzWord = {
-      id: parseStringAttribute(word['@_id']) || '',
+      id: parseStringAttribute(word["@_id"]) || "",
       cells: [],
     };
 
@@ -350,8 +375,8 @@ function parseWords(wordsNode: unknown): JpzWord[] {
         for (const cell of cells) {
           if (!isJpzXmlNode(cell)) continue;
 
-          const x = parseIntAttribute(cell['@_x']);
-          const y = parseIntAttribute(cell['@_y']);
+          const x = parseIntAttribute(cell["@_x"]);
+          const y = parseIntAttribute(cell["@_y"]);
 
           if (x !== undefined && y !== undefined) {
             jpzWord.cells.push({ x, y });
@@ -386,8 +411,8 @@ function parseWords(wordsNode: unknown): JpzWord[] {
 export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
   const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    textNodeName: '#text',
+    attributeNamePrefix: "@_",
+    textNodeName: "#text",
     parseAttributeValue: false,
   });
 
@@ -396,7 +421,7 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
     doc = parser.parse(content) as JpzXmlRoot;
   } catch (e) {
     throw new JpzParseError(
-      `Invalid XML: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      `Invalid XML: ${e instanceof Error ? e.message : "Unknown error"}`,
       ErrorCode.JPZ_INVALID_XML,
       undefined,
       e,
@@ -405,18 +430,24 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
 
   // Handle different JPZ root elements
   const puzzleRoot =
-    doc['crossword-compiler-applet'] || doc['crossword-compiler'] || doc.puzzle || doc.crossword;
+    doc["crossword-compiler-applet"] ||
+    doc["crossword-compiler"] ||
+    doc.puzzle ||
+    doc.crossword;
 
   if (!isJpzXmlNode(puzzleRoot)) {
-    throw new JpzParseError('no recognized root element', ErrorCode.JPZ_INVALID_XML);
+    throw new JpzParseError(
+      "no recognized root element",
+      ErrorCode.JPZ_INVALID_XML,
+    );
   }
 
   // Find the puzzle data - might be nested
-  let rectangularPuzzle = puzzleRoot['rectangular-puzzle'];
+  let rectangularPuzzle = puzzleRoot["rectangular-puzzle"];
   if (!isJpzXmlNode(rectangularPuzzle) && isJpzXmlNode(puzzleRoot.puzzle)) {
     const puzzleChild = puzzleRoot.puzzle;
     if (isJpzXmlNode(puzzleChild)) {
-      rectangularPuzzle = puzzleChild['rectangular-puzzle'];
+      rectangularPuzzle = puzzleChild["rectangular-puzzle"];
     }
   }
   if (!isJpzXmlNode(rectangularPuzzle)) {
@@ -425,13 +456,13 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
 
   // Check if this is a non-crossword puzzle type we don't support
   if (rectangularPuzzle.coded) {
-    throw new UnsupportedPuzzleTypeError('Coded/cipher crosswords (Kaidoku)');
+    throw new UnsupportedPuzzleTypeError("Coded/cipher crosswords (Kaidoku)");
   }
   if (rectangularPuzzle.sudoku || rectangularPuzzle.kakuro) {
-    throw new UnsupportedPuzzleTypeError('Number puzzles');
+    throw new UnsupportedPuzzleTypeError("Number puzzles");
   }
-  if (rectangularPuzzle['word-search'] || rectangularPuzzle.wordsearch) {
-    throw new UnsupportedPuzzleTypeError('Word search');
+  if (rectangularPuzzle["word-search"] || rectangularPuzzle.wordsearch) {
+    throw new UnsupportedPuzzleTypeError("Word search");
   }
 
   // Extract components
@@ -439,7 +470,9 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
 
   // Find grid and clues - should be in crossword section for standard crosswords
   const crosswordNode =
-    rectangularPuzzle.crossword || rectangularPuzzle.puzzle || rectangularPuzzle;
+    rectangularPuzzle.crossword ||
+    rectangularPuzzle.puzzle ||
+    rectangularPuzzle;
 
   let gridNode: unknown = undefined;
   if (isJpzXmlNode(crosswordNode)) {
@@ -450,7 +483,7 @@ export function parseJpz(content: string, options?: ParseOptions): JpzPuzzle {
   }
 
   if (!gridNode) {
-    throw new JpzParseError('no grid found', ErrorCode.JPZ_INVALID_XML);
+    throw new JpzParseError("no grid found", ErrorCode.JPZ_INVALID_XML);
   }
 
   // Parse cells and build grid
@@ -513,20 +546,30 @@ export function convertJpzToUnified(puzzle: JpzPuzzle): Puzzle {
       const unifiedCell: UnifiedCell = {
         solution: cell.solution,
         number: cell.number,
-        isBlack: cell.type === 'block',
+        isBlack: cell.type === "block",
         isCircled: cell.isCircled,
       };
 
       // Add cell-specific metadata if present
-      if (cell.backgroundColor || cell.barTop || cell.barBottom || cell.barLeft || cell.barRight) {
+      if (
+        cell.backgroundColor ||
+        cell.barTop ||
+        cell.barBottom ||
+        cell.barLeft ||
+        cell.barRight
+      ) {
         unifiedCell.additionalProperties = {};
         if (cell.backgroundColor) {
-          unifiedCell.additionalProperties.backgroundColor = cell.backgroundColor;
+          unifiedCell.additionalProperties.backgroundColor =
+            cell.backgroundColor;
         }
         if (cell.barTop) unifiedCell.additionalProperties.barTop = cell.barTop;
-        if (cell.barBottom) unifiedCell.additionalProperties.barBottom = cell.barBottom;
-        if (cell.barLeft) unifiedCell.additionalProperties.barLeft = cell.barLeft;
-        if (cell.barRight) unifiedCell.additionalProperties.barRight = cell.barRight;
+        if (cell.barBottom)
+          unifiedCell.additionalProperties.barBottom = cell.barBottom;
+        if (cell.barLeft)
+          unifiedCell.additionalProperties.barLeft = cell.barLeft;
+        if (cell.barRight)
+          unifiedCell.additionalProperties.barRight = cell.barRight;
       }
 
       cellRow.push(unifiedCell);
@@ -537,11 +580,11 @@ export function convertJpzToUnified(puzzle: JpzPuzzle): Puzzle {
   // Convert clues
   const clues: Clues = {
     across: puzzle.across.map((c) => ({
-      number: typeof c.number === 'string' ? parseInt(c.number) : c.number,
+      number: typeof c.number === "string" ? parseInt(c.number) : c.number,
       text: c.text,
     })),
     down: puzzle.down.map((c) => ({
-      number: typeof c.number === 'string' ? parseInt(c.number) : c.number,
+      number: typeof c.number === "string" ? parseInt(c.number) : c.number,
       text: c.text,
     })),
   };
@@ -557,9 +600,12 @@ export function convertJpzToUnified(puzzle: JpzPuzzle): Puzzle {
   // Add puzzle-level metadata if present
   const additionalProps: Record<string, unknown> = {};
 
-  if (puzzle.metadata.description) additionalProps.description = puzzle.metadata.description;
-  if (puzzle.metadata.publisher) additionalProps.publisher = puzzle.metadata.publisher;
-  if (puzzle.metadata.identifier) additionalProps.identifier = puzzle.metadata.identifier;
+  if (puzzle.metadata.description)
+    additionalProps.description = puzzle.metadata.description;
+  if (puzzle.metadata.publisher)
+    additionalProps.publisher = puzzle.metadata.publisher;
+  if (puzzle.metadata.identifier)
+    additionalProps.identifier = puzzle.metadata.identifier;
 
   // Add words information if present
   if (puzzle.words && puzzle.words.length > 0) {

@@ -1,37 +1,40 @@
-import { bench, describe } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { parse } from './index';
-import { parseIpuz } from './ipuz';
-import { parsePuz } from './puz';
-import { parseJpz } from './jpz';
-import { parseXd } from './xd';
+import { bench, describe } from "vitest";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { parse } from "./index";
+import { parseIpuz } from "./ipuz";
+import { parsePuz } from "./puz";
+import { parseJpz } from "./jpz";
+import { parseXd } from "./xd";
 
-const testDataDir = join(__dirname, '..', 'testdata');
+const testDataDir = join(__dirname, "..", "testdata");
 
 // Pre-load test data to avoid I/O in benchmarks
 const testData = {
   ipuz: {
-    small: readFileSync(join(testDataDir, 'ipuz', 'example.ipuz'), 'utf-8'),
-    large: readFileSync(join(testDataDir, 'ipuz', 'marching-bands.ipuz'), 'utf-8'),
+    small: readFileSync(join(testDataDir, "ipuz", "example.ipuz"), "utf-8"),
+    large: readFileSync(
+      join(testDataDir, "ipuz", "marching-bands.ipuz"),
+      "utf-8",
+    ),
   },
   puz: {
-    av110622: readFileSync(join(testDataDir, 'puz', 'av110622.puz')),
-    cs080904: readFileSync(join(testDataDir, 'puz', 'cs080904.puz')),
-    diagramless: readFileSync(join(testDataDir, 'puz', 'nyt_diagramless.puz')),
+    av110622: readFileSync(join(testDataDir, "puz", "av110622.puz")),
+    cs080904: readFileSync(join(testDataDir, "puz", "cs080904.puz")),
+    diagramless: readFileSync(join(testDataDir, "puz", "nyt_diagramless.puz")),
   },
   jpz: {
-    fm: readFileSync(join(testDataDir, 'jpz', 'FM.jpz'), 'utf-8'),
+    fm: readFileSync(join(testDataDir, "jpz", "FM.jpz"), "utf-8"),
   },
   xd: {
-    usa: readFileSync(join(testDataDir, 'xd', 'usa2024-05-13.xd'), 'utf-8'),
-    cs: readFileSync(join(testDataDir, 'xd', 'cs2007-05-11.xd'), 'utf-8'),
+    usa: readFileSync(join(testDataDir, "xd", "usa2024-05-13.xd"), "utf-8"),
+    cs: readFileSync(join(testDataDir, "xd", "cs2007-05-11.xd"), "utf-8"),
   },
 };
 
-describe('iPUZ Parser Performance', () => {
+describe("iPUZ Parser Performance", () => {
   bench(
-    'small iPUZ file (example.ipuz)',
+    "small iPUZ file (example.ipuz)",
     () => {
       parseIpuz(testData.ipuz.small);
     },
@@ -43,7 +46,7 @@ describe('iPUZ Parser Performance', () => {
   );
 
   bench(
-    'large iPUZ file (marching-bands.ipuz)',
+    "large iPUZ file (marching-bands.ipuz)",
     () => {
       parseIpuz(testData.ipuz.large);
     },
@@ -55,9 +58,9 @@ describe('iPUZ Parser Performance', () => {
   );
 });
 
-describe('PUZ Parser Performance', () => {
+describe("PUZ Parser Performance", () => {
   bench(
-    'standard PUZ file (av110622.puz)',
+    "standard PUZ file (av110622.puz)",
     () => {
       parsePuz(testData.puz.av110622);
     },
@@ -69,7 +72,7 @@ describe('PUZ Parser Performance', () => {
   );
 
   bench(
-    'diagramless PUZ file',
+    "diagramless PUZ file",
     () => {
       parsePuz(testData.puz.diagramless);
     },
@@ -81,7 +84,7 @@ describe('PUZ Parser Performance', () => {
   );
 
   bench(
-    'batch PUZ parsing (3 files)',
+    "batch PUZ parsing (3 files)",
     () => {
       parsePuz(testData.puz.av110622);
       parsePuz(testData.puz.cs080904);
@@ -95,9 +98,9 @@ describe('PUZ Parser Performance', () => {
   );
 });
 
-describe('JPZ Parser Performance', () => {
+describe("JPZ Parser Performance", () => {
   bench(
-    'JPZ XML file (FM.jpz)',
+    "JPZ XML file (FM.jpz)",
     () => {
       parseJpz(testData.jpz.fm);
     },
@@ -109,9 +112,9 @@ describe('JPZ Parser Performance', () => {
   );
 });
 
-describe('XD Parser Performance', () => {
+describe("XD Parser Performance", () => {
   bench(
-    'XD text file (usa2024-05-13.xd)',
+    "XD text file (usa2024-05-13.xd)",
     () => {
       parseXd(testData.xd.usa);
     },
@@ -123,7 +126,7 @@ describe('XD Parser Performance', () => {
   );
 
   bench(
-    'XD text file (cs2007-05-11.xd)',
+    "XD text file (cs2007-05-11.xd)",
     () => {
       parseXd(testData.xd.cs);
     },
@@ -135,9 +138,9 @@ describe('XD Parser Performance', () => {
   );
 });
 
-describe('Auto-detection Performance', () => {
+describe("Auto-detection Performance", () => {
   bench(
-    'auto-detect iPUZ',
+    "auto-detect iPUZ",
     () => {
       parse(testData.ipuz.small);
     },
@@ -149,7 +152,7 @@ describe('Auto-detection Performance', () => {
   );
 
   bench(
-    'auto-detect PUZ',
+    "auto-detect PUZ",
     () => {
       parse(testData.puz.av110622);
     },
@@ -161,7 +164,7 @@ describe('Auto-detection Performance', () => {
   );
 
   bench(
-    'auto-detect JPZ',
+    "auto-detect JPZ",
     () => {
       parse(testData.jpz.fm);
     },
@@ -173,7 +176,7 @@ describe('Auto-detection Performance', () => {
   );
 
   bench(
-    'auto-detect XD',
+    "auto-detect XD",
     () => {
       parse(testData.xd.usa);
     },
@@ -185,9 +188,9 @@ describe('Auto-detection Performance', () => {
   );
 });
 
-describe('Format Hint Performance', () => {
+describe("Format Hint Performance", () => {
   bench(
-    'PUZ without hint',
+    "PUZ without hint",
     () => {
       parse(testData.puz.av110622);
     },
@@ -199,9 +202,9 @@ describe('Format Hint Performance', () => {
   );
 
   bench(
-    'PUZ with filename hint',
+    "PUZ with filename hint",
     () => {
-      parse(testData.puz.av110622, { filename: 'test.puz' });
+      parse(testData.puz.av110622, { filename: "test.puz" });
     },
     {
       warmupIterations: 10,
@@ -211,29 +214,29 @@ describe('Format Hint Performance', () => {
   );
 });
 
-describe('Direct vs Auto-detect Comparison', () => {
+describe("Direct vs Auto-detect Comparison", () => {
   describe.each([
     {
-      name: 'iPUZ',
+      name: "iPUZ",
       data: testData.ipuz.small,
       directParse: (d: string | Buffer) => parseIpuz(d as string),
     },
     {
-      name: 'PUZ',
+      name: "PUZ",
       data: testData.puz.av110622,
       directParse: (d: string | Buffer) => parsePuz(d as Buffer),
     },
     {
-      name: 'JPZ',
+      name: "JPZ",
       data: testData.jpz.fm,
       directParse: (d: string | Buffer) => parseJpz(d as string),
     },
     {
-      name: 'XD',
+      name: "XD",
       data: testData.xd.usa,
       directParse: (d: string | Buffer) => parseXd(d as string),
     },
-  ])('$name format', ({ name, data, directParse }) => {
+  ])("$name format", ({ name, data, directParse }) => {
     bench(
       `${name} direct parse`,
       () => {

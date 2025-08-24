@@ -3,9 +3,9 @@
  * This file is injected into the browser build to provide Buffer support
  */
 
-import { Buffer } from 'buffer';
+import { Buffer } from "buffer";
 
-if (typeof globalThis !== 'undefined' && !globalThis.Buffer) {
+if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
   globalThis.Buffer = Buffer;
 }
 

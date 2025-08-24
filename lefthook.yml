@@ -1,14 +1,6 @@
-# Lefthook configuration for git hooks
-# https://github.com/evilmartians/lefthook
-
-# Enable colored output
 colors: true
-
-# Skip execution in CI environments
 skip_in_ci: true
-
 pre-commit:
-  # Use lint-staged for compatibility with existing configuration
   commands:
     lint-staged:
       run: npx lint-staged

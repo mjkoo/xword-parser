@@ -1,11 +1,11 @@
-import '@jazzer.js/jest-runner';
-import { parseXd, convertXdToUnified, type XdPuzzle } from '../src/xd';
-import type { Puzzle } from '../src/types';
-import { XdParseError, InvalidFileError, ParseError } from '../src/errors';
+import "@jazzer.js/jest-runner";
+import { parseXd, convertXdToUnified, type XdPuzzle } from "../src/xd";
+import type { Puzzle } from "../src/types";
+import { XdParseError, InvalidFileError, ParseError } from "../src/errors";
 
-describe('XD Fuzzer', () => {
-  it.fuzz('validates error handling and data integrity', (data: Buffer) => {
-    const input = data.toString('utf-8');
+describe("XD Fuzzer", () => {
+  it.fuzz("validates error handling and data integrity", (data: Buffer) => {
+    const input = data.toString("utf-8");
 
     let parsed: XdPuzzle | undefined;
     let parseError: unknown = null;
@@ -18,14 +18,15 @@ describe('XD Fuzzer', () => {
 
     if (parseError) {
       expect(parseError).toBeInstanceOf(ParseError);
-      expect(parseError instanceof XdParseError || parseError instanceof InvalidFileError).toBe(
-        true,
-      );
+      expect(
+        parseError instanceof XdParseError ||
+          parseError instanceof InvalidFileError,
+      ).toBe(true);
 
       if (parseError instanceof ParseError) {
         expect(parseError.code).toBeDefined();
-        expect(typeof parseError.code).toBe('string');
-        expect(typeof parseError.message).toBe('string');
+        expect(typeof parseError.code).toBe("string");
+        expect(typeof parseError.message).toBe("string");
         expect(parseError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -49,7 +50,7 @@ describe('XD Fuzzer', () => {
       expect(gridRow.length).toBe(width); // Parser validates consistent width
       // Each cell is a string
       for (const cell of gridRow) {
-        expect(typeof cell).toBe('string');
+        expect(typeof cell).toBe("string");
         // Most cells should be single character, but allow longer for rebus
         expect(cell.length).toBeGreaterThanOrEqual(1);
       }
@@ -59,25 +60,25 @@ describe('XD Fuzzer', () => {
     expect(Array.isArray(parsed.across)).toBe(true);
     for (const clue of parsed.across) {
       expect(clue).toBeDefined();
-      expect(typeof clue.number).toBe('string');
-      expect(typeof clue.clue).toBe('string');
-      expect(typeof clue.answer).toBe('string');
+      expect(typeof clue.number).toBe("string");
+      expect(typeof clue.clue).toBe("string");
+      expect(typeof clue.answer).toBe("string");
     }
 
     expect(parsed.down).toBeDefined();
     expect(Array.isArray(parsed.down)).toBe(true);
     for (const clue of parsed.down) {
       expect(clue).toBeDefined();
-      expect(typeof clue.number).toBe('string');
-      expect(typeof clue.clue).toBe('string');
-      expect(typeof clue.answer).toBe('string');
+      expect(typeof clue.number).toBe("string");
+      expect(typeof clue.clue).toBe("string");
+      expect(typeof clue.answer).toBe("string");
     }
 
     if (parsed.metadata) {
-      expect(typeof parsed.metadata).toBe('object');
+      expect(typeof parsed.metadata).toBe("object");
       for (const [key, value] of Object.entries(parsed.metadata)) {
-        expect(typeof key).toBe('string');
-        expect(typeof value).toBe('string');
+        expect(typeof key).toBe("string");
+        expect(typeof value).toBe("string");
       }
     }
 
@@ -93,13 +94,14 @@ describe('XD Fuzzer', () => {
     if (conversionError) {
       expect(conversionError).toBeInstanceOf(ParseError);
       expect(
-        conversionError instanceof XdParseError || conversionError instanceof InvalidFileError,
+        conversionError instanceof XdParseError ||
+          conversionError instanceof InvalidFileError,
       ).toBe(true);
 
       if (conversionError instanceof ParseError) {
         expect(conversionError.code).toBeDefined();
-        expect(typeof conversionError.code).toBe('string');
-        expect(typeof conversionError.message).toBe('string');
+        expect(typeof conversionError.code).toBe("string");
+        expect(typeof conversionError.message).toBe("string");
         expect(conversionError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -109,7 +111,7 @@ describe('XD Fuzzer', () => {
 
     expect(unified.grid).toBeDefined();
     expect(unified.clues).toBeDefined();
-    expect(typeof unified.grid).toBe('object');
+    expect(typeof unified.grid).toBe("object");
     expect(unified.grid.width).toBe(width);
     expect(unified.grid.height).toBe(height);
     expect(Array.isArray(unified.grid.cells)).toBe(true);
@@ -121,34 +123,42 @@ describe('XD Fuzzer', () => {
       expect(cellRow.length).toBe(width);
       for (let col = 0; col < width; col++) {
         const cell = cellRow[col]!; // Converter guarantees all cells exist
-        expect(typeof cell.isBlack).toBe('boolean');
-        expect(cell.number === undefined || typeof cell.number === 'number').toBe(true);
-        expect(cell.solution === undefined || typeof cell.solution === 'string').toBe(true);
-        expect(cell.isCircled === undefined || typeof cell.isCircled === 'boolean').toBe(true);
-        expect(cell.hasRebus === undefined || typeof cell.hasRebus === 'boolean').toBe(true);
+        expect(typeof cell.isBlack).toBe("boolean");
+        expect(
+          cell.number === undefined || typeof cell.number === "number",
+        ).toBe(true);
+        expect(
+          cell.solution === undefined || typeof cell.solution === "string",
+        ).toBe(true);
+        expect(
+          cell.isCircled === undefined || typeof cell.isCircled === "boolean",
+        ).toBe(true);
+        expect(
+          cell.hasRebus === undefined || typeof cell.hasRebus === "boolean",
+        ).toBe(true);
       }
     }
 
-    expect(typeof unified.clues).toBe('object');
+    expect(typeof unified.clues).toBe("object");
 
     if (unified.title !== undefined) {
-      expect(typeof unified.title).toBe('string');
+      expect(typeof unified.title).toBe("string");
     }
     if (unified.author !== undefined) {
-      expect(typeof unified.author).toBe('string');
+      expect(typeof unified.author).toBe("string");
     }
     if (unified.copyright !== undefined) {
-      expect(typeof unified.copyright).toBe('string');
+      expect(typeof unified.copyright).toBe("string");
     }
     if (unified.notes !== undefined) {
-      expect(typeof unified.notes).toBe('string');
+      expect(typeof unified.notes).toBe("string");
     }
 
     if (unified.rebusTable) {
       expect(unified.rebusTable instanceof Map).toBe(true);
       for (const [key, value] of unified.rebusTable.entries()) {
-        expect(typeof key).toBe('number');
-        expect(typeof value).toBe('string');
+        expect(typeof key).toBe("number");
+        expect(typeof value).toBe("string");
       }
     }
   });

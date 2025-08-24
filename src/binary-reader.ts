@@ -2,7 +2,7 @@
  * Generic binary reader for parsing binary file formats
  */
 
-import { BinaryParseError } from './errors';
+import { BinaryParseError } from "./errors";
 
 /**
  * A utility class for reading binary data from buffers with automatic offset tracking.
@@ -73,7 +73,7 @@ export class BinaryReader {
   readString(
     length: number,
     trimNull: boolean = true,
-    encoding: BufferEncoding = 'latin1',
+    encoding: BufferEncoding = "latin1",
   ): string {
     const bytes = this.readBytes(length);
     if (trimNull) {
@@ -89,9 +89,12 @@ export class BinaryReader {
    * Read a null-terminated string and advance past the null terminator
    * @param encoding Character encoding (default: 'latin1')
    */
-  readNullTerminatedString(encoding: BufferEncoding = 'latin1'): string {
+  readNullTerminatedString(encoding: BufferEncoding = "latin1"): string {
     const start = this._offset;
-    while (this._offset < this._buffer.length && this._buffer[this._offset] !== 0) {
+    while (
+      this._offset < this._buffer.length &&
+      this._buffer[this._offset] !== 0
+    ) {
       this._offset++;
     }
     if (this._offset >= this._buffer.length) {

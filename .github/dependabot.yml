@@ -1,55 +1,55 @@
 version: 2
 updates:
-  - package-ecosystem: 'npm'
-    directory: '/'
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '04:00'
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
     open-pull-requests-limit: 10
     groups:
       dev-dependencies:
-        dependency-type: 'development'
+        dependency-type: "development"
         patterns:
-          - '*'
+          - "*"
       production-dependencies:
-        dependency-type: 'production'
+        dependency-type: "production"
         patterns:
-          - '*'
+          - "*"
       typescript:
         patterns:
-          - 'typescript'
-          - '@types/*'
-          - '@typescript-eslint/*'
+          - "typescript"
+          - "@types/*"
+          - "@typescript-eslint/*"
       testing:
         patterns:
-          - 'vitest'
-          - '@vitest/*'
-          - 'jest'
-          - '@jest/*'
-          - '@jazzer.js/*'
-          - 'ts-jest'
-          - '@fast-check/*'
+          - "vitest"
+          - "@vitest/*"
+          - "jest"
+          - "@jest/*"
+          - "@jazzer.js/*"
+          - "ts-jest"
+          - "@fast-check/*"
       linting:
         patterns:
-          - 'eslint'
-          - 'eslint-*'
-          - 'prettier'
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
     versioning-strategy: increase
     commit-message:
-      prefix: 'chore'
-      prefix-development: 'chore'
-      include: 'scope'
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
     pull-request-branch-name:
-      separator: '-'
+      separator: "-"
 
-  - package-ecosystem: 'github-actions'
-    directory: '/'
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '04:00'
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
     open-pull-requests-limit: 5
     commit-message:
-      prefix: 'ci'
-      include: 'scope'
+      prefix: "ci"
+      include: "scope"

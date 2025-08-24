@@ -1,16 +1,16 @@
-import '@jazzer.js/jest-runner';
-import { parseIpuz, convertIpuzToUnified, type IpuzPuzzle } from '../src/ipuz';
-import type { Puzzle } from '../src/types';
+import "@jazzer.js/jest-runner";
+import { parseIpuz, convertIpuzToUnified, type IpuzPuzzle } from "../src/ipuz";
+import type { Puzzle } from "../src/types";
 import {
   IpuzParseError,
   UnsupportedPuzzleTypeError,
   InvalidFileError,
   ParseError,
-} from '../src/errors';
+} from "../src/errors";
 
-describe('iPUZ Fuzzer', () => {
-  it.fuzz('validates error handling and data integrity', (data: Buffer) => {
-    const input = data.toString('utf-8');
+describe("iPUZ Fuzzer", () => {
+  it.fuzz("validates error handling and data integrity", (data: Buffer) => {
+    const input = data.toString("utf-8");
 
     let parsed: IpuzPuzzle | undefined;
     let parseError: unknown = null;
@@ -31,8 +31,8 @@ describe('iPUZ Fuzzer', () => {
 
       if (parseError instanceof ParseError) {
         expect(parseError.code).toBeDefined();
-        expect(typeof parseError.code).toBe('string');
-        expect(typeof parseError.message).toBe('string');
+        expect(typeof parseError.code).toBe("string");
+        expect(typeof parseError.message).toBe("string");
         expect(parseError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -45,16 +45,16 @@ describe('iPUZ Fuzzer', () => {
     expect(parsed.kind).toBeDefined();
     expect(Array.isArray(parsed.kind)).toBe(true);
     // iPUZ uses URIs like "http://ipuz.org/crossword#1"
-    const hasCrossword = parsed.kind.some((k) => k.includes('crossword'));
+    const hasCrossword = parsed.kind.some((k) => k.includes("crossword"));
     expect(hasCrossword).toBe(true);
 
     if (parsed.dimensions) {
       if (parsed.dimensions.width !== undefined) {
-        expect(typeof parsed.dimensions.width).toBe('number');
+        expect(typeof parsed.dimensions.width).toBe("number");
         expect(parsed.dimensions.width).toBeGreaterThan(0);
       }
       if (parsed.dimensions.height !== undefined) {
-        expect(typeof parsed.dimensions.height).toBe('number');
+        expect(typeof parsed.dimensions.height).toBe("number");
         expect(parsed.dimensions.height).toBeGreaterThan(0);
       }
     }
@@ -82,8 +82,8 @@ describe('iPUZ Fuzzer', () => {
 
       if (conversionError instanceof ParseError) {
         expect(conversionError.code).toBeDefined();
-        expect(typeof conversionError.code).toBe('string');
-        expect(typeof conversionError.message).toBe('string');
+        expect(typeof conversionError.code).toBe("string");
+        expect(typeof conversionError.message).toBe("string");
         expect(conversionError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -93,11 +93,11 @@ describe('iPUZ Fuzzer', () => {
 
     expect(unified.grid).toBeDefined();
     expect(unified.clues).toBeDefined();
-    expect(typeof unified.grid).toBe('object');
+    expect(typeof unified.grid).toBe("object");
 
     // Parser guarantees grid dimensions are valid numbers
-    expect(typeof unified.grid.width).toBe('number');
-    expect(typeof unified.grid.height).toBe('number');
+    expect(typeof unified.grid.width).toBe("number");
+    expect(typeof unified.grid.height).toBe("number");
     expect(unified.grid.width).toBeGreaterThan(0);
     expect(unified.grid.height).toBeGreaterThan(0);
 
@@ -113,27 +113,35 @@ describe('iPUZ Fuzzer', () => {
       expect(cellRow.length).toBe(gridWidth);
       for (let col = 0; col < gridWidth; col++) {
         const cell = cellRow[col]!; // Converter guarantees all cells exist
-        expect(typeof cell.isBlack).toBe('boolean');
-        expect(cell.number === undefined || typeof cell.number === 'number').toBe(true);
-        expect(cell.solution === undefined || typeof cell.solution === 'string').toBe(true);
-        expect(cell.isCircled === undefined || typeof cell.isCircled === 'boolean').toBe(true);
-        expect(cell.hasRebus === undefined || typeof cell.hasRebus === 'boolean').toBe(true);
+        expect(typeof cell.isBlack).toBe("boolean");
+        expect(
+          cell.number === undefined || typeof cell.number === "number",
+        ).toBe(true);
+        expect(
+          cell.solution === undefined || typeof cell.solution === "string",
+        ).toBe(true);
+        expect(
+          cell.isCircled === undefined || typeof cell.isCircled === "boolean",
+        ).toBe(true);
+        expect(
+          cell.hasRebus === undefined || typeof cell.hasRebus === "boolean",
+        ).toBe(true);
       }
     }
 
-    expect(typeof unified.clues).toBe('object');
+    expect(typeof unified.clues).toBe("object");
 
     if (unified.title !== undefined) {
-      expect(typeof unified.title).toBe('string');
+      expect(typeof unified.title).toBe("string");
     }
     if (unified.author !== undefined) {
-      expect(typeof unified.author).toBe('string');
+      expect(typeof unified.author).toBe("string");
     }
     if (unified.copyright !== undefined) {
-      expect(typeof unified.copyright).toBe('string');
+      expect(typeof unified.copyright).toBe("string");
     }
     if (unified.notes !== undefined) {
-      expect(typeof unified.notes).toBe('string');
+      expect(typeof unified.notes).toBe("string");
     }
   });
 });

@@ -2,7 +2,7 @@
  * Custom error classes for xword-parser
  */
 
-import { ErrorCode, ErrorContext } from './types';
+import { ErrorCode, ErrorContext } from "./types";
 
 /**
  * Base error class for all parsing errors
@@ -39,7 +39,7 @@ export class ParseError extends Error {
  */
 export class FormatDetectionError extends ParseError {
   constructor(
-    message: string = 'Unable to detect puzzle format',
+    message: string = "Unable to detect puzzle format",
     context?: ErrorContext,
     cause?: unknown,
   ) {
@@ -51,8 +51,18 @@ export class FormatDetectionError extends ParseError {
  * Error thrown when a file is corrupted or invalid
  */
 export class InvalidFileError extends ParseError {
-  constructor(format: string, message: string, context?: ErrorContext, cause?: unknown) {
-    super(`Invalid ${format} file: ${message}`, ErrorCode.INVALID_FILE, context, cause);
+  constructor(
+    format: string,
+    message: string,
+    context?: ErrorContext,
+    cause?: unknown,
+  ) {
+    super(
+      `Invalid ${format} file: ${message}`,
+      ErrorCode.INVALID_FILE,
+      context,
+      cause,
+    );
   }
 }
 
@@ -108,7 +118,9 @@ export class PuzParseError extends ParseError {
   override isFormatMismatch(): boolean {
     // PUZ_INVALID_HEADER means the file doesn't appear to be a PUZ file at all
     // PUZ_CHECKSUM_MISMATCH is a real error - the file is corrupted
-    return super.isFormatMismatch() || this.code === ErrorCode.PUZ_INVALID_HEADER;
+    return (
+      super.isFormatMismatch() || this.code === ErrorCode.PUZ_INVALID_HEADER
+    );
   }
 }
 
@@ -152,6 +164,6 @@ export class XdParseError extends ParseError {
 export class BinaryParseError extends ParseError {
   constructor(message: string, context?: ErrorContext) {
     super(message, ErrorCode.BINARY_PARSE_ERROR, context);
-    this.name = 'BinaryParseError';
+    this.name = "BinaryParseError";
   }
 }

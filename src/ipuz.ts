@@ -3,15 +3,21 @@
  * Based on specification at https://www.puzzazz.com/ipuz
  */
 
-import { UnsupportedPuzzleTypeError, IpuzParseError } from './errors';
-import type { Puzzle, Grid, Cell as UnifiedCell, Clues, ParseOptions } from './types';
-import { ErrorCode } from './types';
-import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from './constants';
+import { UnsupportedPuzzleTypeError, IpuzParseError } from "./errors";
+import type {
+  Puzzle,
+  Grid,
+  Cell as UnifiedCell,
+  Clues,
+  ParseOptions,
+} from "./types";
+import { ErrorCode } from "./types";
+import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from "./constants";
 
 export enum CellType {
-  NORMAL = 'normal',
-  BLOCK = 'block',
-  NULL = 'null',
+  NORMAL = "normal",
+  BLOCK = "block",
+  NULL = "null",
 }
 
 export interface CellStyle {
@@ -178,60 +184,70 @@ interface IpuzData {
   [key: string]: unknown;
 }
 
-function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell {
+function parseCellFromIpuz(
+  cellData: unknown,
+  solutionData?: unknown,
+): IpuzCell {
   const cell: IpuzCell = {
     type: CellType.NORMAL,
   };
 
-  if (cellData === null || cellData === 'null') {
+  if (cellData === null || cellData === "null") {
     cell.type = CellType.NULL;
     return cell;
   }
 
-  if (cellData === '#') {
+  if (cellData === "#") {
     cell.type = CellType.BLOCK;
     return cell;
   }
 
-  if (typeof cellData === 'object' && cellData !== null) {
+  if (typeof cellData === "object" && cellData !== null) {
     const cellObj = cellData as IpuzCellData;
 
-    if ('cell' in cellObj && cellObj.cell !== undefined) {
+    if ("cell" in cellObj && cellObj.cell !== undefined) {
       const baseValue = cellObj.cell;
-      if (baseValue === '#') {
+      if (baseValue === "#") {
         cell.type = CellType.BLOCK;
-      } else if (baseValue === 'null' || baseValue === null) {
+      } else if (baseValue === "null" || baseValue === null) {
         cell.type = CellType.NULL;
-      } else if (typeof baseValue === 'number' || typeof baseValue === 'string') {
-        if (baseValue !== 0 && baseValue !== '0') {
+      } else if (
+        typeof baseValue === "number" ||
+        typeof baseValue === "string"
+      ) {
+        if (baseValue !== 0 && baseValue !== "0") {
           cell.number = baseValue;
         }
       }
     }
 
-    if ('style' in cellObj && cellObj.style && typeof cellObj.style === 'object') {
+    if (
+      "style" in cellObj &&
+      cellObj.style &&
+      typeof cellObj.style === "object"
+    ) {
       cell.style = {};
       const styleFields: (keyof CellStyle)[] = [
-        'shapebg',
-        'highlight',
-        'named',
-        'border',
-        'divided',
-        'label',
-        'mark',
-        'imagebg',
-        'color',
-        'colortext',
-        'colorborder',
-        'colorbar',
-        'barred',
-        'dotted',
-        'dashed',
-        'lessthan',
-        'greaterthan',
-        'equal',
-        'handler',
-        'handlerdata',
+        "shapebg",
+        "highlight",
+        "named",
+        "border",
+        "divided",
+        "label",
+        "mark",
+        "imagebg",
+        "color",
+        "colortext",
+        "colorborder",
+        "colorbar",
+        "barred",
+        "dotted",
+        "dashed",
+        "lessthan",
+        "greaterthan",
+        "equal",
+        "handler",
+        "handlerdata",
       ];
 
       for (const field of styleFields) {
@@ -244,28 +260,28 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
       }
     }
 
-    if ('value' in cellObj && cellObj.value !== undefined) {
+    if ("value" in cellObj && cellObj.value !== undefined) {
       cell.value = cellObj.value;
     }
 
-    if ('continued' in cellObj && cellObj.continued !== undefined) {
+    if ("continued" in cellObj && cellObj.continued !== undefined) {
       cell.continued = cellObj.continued;
     }
 
-    if ('directions' in cellObj && cellObj.directions !== undefined) {
+    if ("directions" in cellObj && cellObj.directions !== undefined) {
       cell.directions = cellObj.directions;
     }
 
-    if ('given' in cellObj && cellObj.given !== undefined) {
+    if ("given" in cellObj && cellObj.given !== undefined) {
       cell.given = cellObj.given;
     }
-  } else if (typeof cellData === 'number' || typeof cellData === 'string') {
-    if (typeof cellData === 'number' && cellData > 0) {
+  } else if (typeof cellData === "number" || typeof cellData === "string") {
+    if (typeof cellData === "number" && cellData > 0) {
       cell.number = cellData;
-    } else if (typeof cellData === 'string') {
-      if (cellData === '0' || cellData === '#' || cellData === 'null') {
+    } else if (typeof cellData === "string") {
+      if (cellData === "0" || cellData === "#" || cellData === "null") {
         // Handle special cases
-        if (cellData === '#') {
+        if (cellData === "#") {
           cell.type = CellType.BLOCK;
         }
       } else {
@@ -283,9 +299,9 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
 
   if (solutionData) {
     if (
-      typeof solutionData === 'string' &&
-      solutionData !== '#' &&
-      solutionData !== 'null' &&
+      typeof solutionData === "string" &&
+      solutionData !== "#" &&
+      solutionData !== "null" &&
       solutionData !== null
     ) {
       cell.solution = solutionData;
@@ -295,7 +311,9 @@ function parseCellFromIpuz(cellData: unknown, solutionData?: unknown): IpuzCell 
   return cell;
 }
 
-function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string, IpuzClue[]> {
+function parseCluesFromIpuz(
+  cluesData: Record<string, unknown[]>,
+): Record<string, IpuzClue[]> {
   const clues: Record<string, IpuzClue[]> = {};
 
   for (const [direction, clueList] of Object.entries(cluesData)) {
@@ -316,28 +334,28 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
         if (clueItem.length > 2) {
           for (let i = 2; i < clueItem.length; i++) {
             const extra = clueItem[i] as unknown;
-            if (typeof extra === 'object' && extra !== null) {
+            if (typeof extra === "object" && extra !== null) {
               const extraObj = extra as IpuzClueData;
-              if ('references' in extraObj && extraObj.references) {
+              if ("references" in extraObj && extraObj.references) {
                 clue.references = extraObj.references;
               }
-              if ('continued' in extraObj && extraObj.continued) {
+              if ("continued" in extraObj && extraObj.continued) {
                 clue.continued = extraObj.continued;
               }
-              if ('highlight' in extraObj && extraObj.highlight) {
+              if ("highlight" in extraObj && extraObj.highlight) {
                 clue.highlight = extraObj.highlight;
               }
-              if ('image' in extraObj && extraObj.image) {
+              if ("image" in extraObj && extraObj.image) {
                 clue.image = extraObj.image;
               }
             }
           }
         }
-      } else if (typeof clueItem === 'object' && clueItem !== null) {
+      } else if (typeof clueItem === "object" && clueItem !== null) {
         const clueObj = clueItem as IpuzClueData;
         clue = {
-          number: clueObj.number || '',
-          text: clueObj.clue || '',
+          number: clueObj.number || "",
+          text: clueObj.clue || "",
         };
 
         if (clueObj.cells) {
@@ -383,11 +401,15 @@ function parseCluesFromIpuz(cluesData: Record<string, unknown[]>): Record<string
  * const puzzle = parseIpuz(ipuzData);
  * ```
  */
-export function parseIpuz(content: string | Buffer, options?: ParseOptions): IpuzPuzzle {
-  const stringContent = typeof content === 'string' ? content : content.toString('utf-8');
+export function parseIpuz(
+  content: string | Buffer,
+  options?: ParseOptions,
+): IpuzPuzzle {
+  const stringContent =
+    typeof content === "string" ? content : content.toString("utf-8");
   let jsonContent = stringContent.trim();
 
-  if (jsonContent.startsWith('ipuz(') && jsonContent.endsWith(')')) {
+  if (jsonContent.startsWith("ipuz(") && jsonContent.endsWith(")")) {
     jsonContent = jsonContent.slice(5, -1);
   }
 
@@ -396,7 +418,7 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
     data = JSON.parse(jsonContent) as IpuzData;
   } catch (e) {
     throw new IpuzParseError(
-      `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      `Invalid JSON: ${e instanceof Error ? e.message : "Unknown error"}`,
       ErrorCode.IPUZ_INVALID_JSON,
       undefined,
       e,
@@ -406,37 +428,49 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
   if (
     !data.kind ||
     !Array.isArray(data.kind) ||
-    !data.kind.some((k: string) => k.includes('crossword'))
+    !data.kind.some((k: string) => k.includes("crossword"))
   ) {
-    throw new UnsupportedPuzzleTypeError('Non-crossword');
+    throw new UnsupportedPuzzleTypeError("Non-crossword");
   }
 
   // Validate required fields for crossword puzzles
-  if (!data.dimensions || typeof data.dimensions !== 'object') {
+  if (!data.dimensions || typeof data.dimensions !== "object") {
     throw new IpuzParseError(
-      'Missing or invalid dimensions field',
+      "Missing or invalid dimensions field",
       ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
     );
   }
 
   if (!data.dimensions.width || !data.dimensions.height) {
     throw new IpuzParseError(
-      'Missing width or height in dimensions',
+      "Missing width or height in dimensions",
       ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
     );
   }
 
-  if (typeof data.dimensions.width !== 'number' || typeof data.dimensions.height !== 'number') {
-    throw new IpuzParseError('Width and height must be numbers', ErrorCode.IPUZ_INVALID_DATA_TYPE);
+  if (
+    typeof data.dimensions.width !== "number" ||
+    typeof data.dimensions.height !== "number"
+  ) {
+    throw new IpuzParseError(
+      "Width and height must be numbers",
+      ErrorCode.IPUZ_INVALID_DATA_TYPE,
+    );
   }
 
-  if (!Number.isInteger(data.dimensions.width) || !Number.isInteger(data.dimensions.height)) {
-    throw new IpuzParseError('Width and height must be integers', ErrorCode.IPUZ_INVALID_DATA_TYPE);
+  if (
+    !Number.isInteger(data.dimensions.width) ||
+    !Number.isInteger(data.dimensions.height)
+  ) {
+    throw new IpuzParseError(
+      "Width and height must be integers",
+      ErrorCode.IPUZ_INVALID_DATA_TYPE,
+    );
   }
 
   if (data.dimensions.width <= 0 || data.dimensions.height <= 0) {
     throw new IpuzParseError(
-      'Width and height must be positive numbers',
+      "Width and height must be positive numbers",
       ErrorCode.IPUZ_INVALID_GRID_SIZE,
     );
   }
@@ -452,13 +486,13 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
 
   if (!data.puzzle || !Array.isArray(data.puzzle)) {
     throw new IpuzParseError(
-      'Missing or invalid puzzle grid',
+      "Missing or invalid puzzle grid",
       ErrorCode.IPUZ_MISSING_REQUIRED_FIELD,
     );
   }
 
   const puzzle: IpuzPuzzle = {
-    version: data.version || '',
+    version: data.version || "",
     kind: data.kind || [],
     dimensions: data.dimensions,
     puzzle: [],
@@ -467,23 +501,23 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
   };
 
   const simpleFields = [
-    'title',
-    'author',
-    'copyright',
-    'publisher',
-    'publication',
-    'url',
-    'intro',
-    'explanation',
-    'annotation',
-    'notes',
-    'difficulty',
-    'origin',
-    'date',
-    'empty',
-    'charset',
-    'block',
-    'answer',
+    "title",
+    "author",
+    "copyright",
+    "publisher",
+    "publication",
+    "url",
+    "intro",
+    "explanation",
+    "annotation",
+    "notes",
+    "difficulty",
+    "origin",
+    "date",
+    "empty",
+    "charset",
+    "block",
+    "answer",
   ] as const;
 
   for (const field of simpleFields) {
@@ -494,45 +528,45 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
   }
 
   // Handle fields that need renaming from spec format to camelCase
-  if ('uniqueid' in data && data.uniqueid !== undefined) {
+  if ("uniqueid" in data && data.uniqueid !== undefined) {
     puzzle.uniqueId = data.uniqueid;
   }
-  if ('showenumerations' in data && data.showenumerations !== undefined) {
+  if ("showenumerations" in data && data.showenumerations !== undefined) {
     puzzle.showEnumerations = data.showenumerations;
   }
-  if ('clueplacement' in data && data.clueplacement !== undefined) {
+  if ("clueplacement" in data && data.clueplacement !== undefined) {
     puzzle.cluePlacement = data.clueplacement;
   }
 
-  if ('answers' in data && data.answers) {
+  if ("answers" in data && data.answers) {
     puzzle.answers = data.answers;
   }
 
-  if ('enumeration' in data && data.enumeration !== undefined) {
+  if ("enumeration" in data && data.enumeration !== undefined) {
     puzzle.enumeration = data.enumeration;
   }
 
-  if ('enumerations' in data && data.enumerations) {
+  if ("enumerations" in data && data.enumerations) {
     puzzle.enumerations = data.enumerations;
   }
 
-  if ('volatile' in data && data.volatile) {
+  if ("volatile" in data && data.volatile) {
     puzzle.volatile = data.volatile;
   }
 
-  if ('checksum' in data && data.checksum) {
+  if ("checksum" in data && data.checksum) {
     puzzle.checksum = data.checksum;
   }
 
-  if ('zones' in data && data.zones) {
+  if ("zones" in data && data.zones) {
     puzzle.zones = data.zones;
   }
 
-  if ('styles' in data && data.styles) {
+  if ("styles" in data && data.styles) {
     puzzle.styles = data.styles;
   }
 
-  if ('misses' in data && data.misses) {
+  if ("misses" in data && data.misses) {
     puzzle.misses = data.misses;
   }
 
@@ -541,7 +575,7 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
     puzzle.solution = solutionGrid;
   }
 
-  if ('saved' in data && data.saved) {
+  if ("saved" in data && data.saved) {
     puzzle.saved = data.saved;
   }
 
@@ -571,12 +605,16 @@ export function parseIpuz(content: string | Buffer, options?: ParseOptions): Ipu
     puzzle.puzzle.push(cellRow);
   }
 
-  if ('clues' in data && data.clues) {
+  if ("clues" in data && data.clues) {
     puzzle.clues = parseCluesFromIpuz(data.clues);
   }
 
   for (const [key, value] of Object.entries(data)) {
-    if (key.startsWith('http://') || key.startsWith('https://') || key.includes(':')) {
+    if (
+      key.startsWith("http://") ||
+      key.startsWith("https://") ||
+      key.includes(":")
+    ) {
       puzzle.extensions[key] = value;
     }
   }
@@ -613,7 +651,7 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
 
       // iPUZ cells are already Cell objects from our parser
       const cellNumber = ipuzCell?.number
-        ? typeof ipuzCell.number === 'string'
+        ? typeof ipuzCell.number === "string"
           ? parseInt(ipuzCell.number)
           : ipuzCell.number
         : undefined;
@@ -621,7 +659,9 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
       const isBlack = ipuzCell?.type === CellType.BLOCK;
 
       const solution =
-        typeof solutionCell === 'string' ? solutionCell : ipuzCell?.value || undefined;
+        typeof solutionCell === "string"
+          ? solutionCell
+          : ipuzCell?.value || undefined;
 
       const cell: UnifiedCell = {
         solution,
@@ -632,20 +672,26 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
       // Check for circle style (common in iPUZ)
       if (
         ipuzCell?.style &&
-        typeof ipuzCell.style === 'object' &&
-        ipuzCell.style.shapebg === 'circle'
+        typeof ipuzCell.style === "object" &&
+        ipuzCell.style.shapebg === "circle"
       ) {
         cell.isCircled = true;
       }
 
       // Add remaining cell-specific metadata if present
-      if (ipuzCell?.style || ipuzCell?.continued || ipuzCell?.directions || ipuzCell?.given) {
+      if (
+        ipuzCell?.style ||
+        ipuzCell?.continued ||
+        ipuzCell?.directions ||
+        ipuzCell?.given
+      ) {
         cell.additionalProperties = {};
         // Only add style if it has more than just shapebg='circle'
         if (
           ipuzCell.style &&
-          typeof ipuzCell.style === 'object' &&
-          (Object.keys(ipuzCell.style).length > 1 || ipuzCell.style.shapebg !== 'circle')
+          typeof ipuzCell.style === "object" &&
+          (Object.keys(ipuzCell.style).length > 1 ||
+            ipuzCell.style.shapebg !== "circle")
         ) {
           cell.additionalProperties.style = ipuzCell.style;
         }
@@ -677,12 +723,13 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
 
   if (puzzle.clues?.Across) {
     for (const clue of puzzle.clues.Across) {
-      const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
+      const clueNumber =
+        typeof clue.number === "string" ? parseInt(clue.number) : clue.number;
       // Skip invalid clue numbers (NaN, 0, negative)
       if (!Number.isNaN(clueNumber) && clueNumber > 0) {
         clues.across.push({
           number: clueNumber,
-          text: clue.text || '',
+          text: clue.text || "",
         });
       }
     }
@@ -690,12 +737,13 @@ export function convertIpuzToUnified(puzzle: IpuzPuzzle): Puzzle {
 
   if (puzzle.clues?.Down) {
     for (const clue of puzzle.clues.Down) {
-      const clueNumber = typeof clue.number === 'string' ? parseInt(clue.number) : clue.number;
+      const clueNumber =
+        typeof clue.number === "string" ? parseInt(clue.number) : clue.number;
       // Skip invalid clue numbers (NaN, 0, negative)
       if (!Number.isNaN(clueNumber) && clueNumber > 0) {
         clues.down.push({
           number: clueNumber,
-          text: clue.text || '',
+          text: clue.text || "",
         });
       }
     }

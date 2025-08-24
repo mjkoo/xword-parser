@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
-import { parseXd, type XdPuzzle, convertXdToUnified } from './xd';
+import { describe, it, expect } from "vitest";
+import { readFileSync, readdirSync } from "fs";
+import { join } from "path";
+import { parseXd, type XdPuzzle, convertXdToUnified } from "./xd";
 
-describe('parseXd', () => {
-  const testDataDir = join(process.cwd(), 'testdata', 'xd');
-  const xdFiles = readdirSync(testDataDir).filter((f) => f.endsWith('.xd'));
+describe("parseXd", () => {
+  const testDataDir = join(process.cwd(), "testdata", "xd");
+  const xdFiles = readdirSync(testDataDir).filter((f) => f.endsWith(".xd"));
 
-  it('should parse all XD test files without errors', () => {
+  it("should parse all XD test files without errors", () => {
     for (const file of xdFiles) {
       const filePath = join(testDataDir, file);
-      const content = readFileSync(filePath, 'utf-8');
+      const content = readFileSync(filePath, "utf-8");
 
       let puzzle: XdPuzzle;
       try {
@@ -32,63 +32,67 @@ describe('parseXd', () => {
     }
   });
 
-  it('should parse NYT 2010-09-08 puzzle correctly', () => {
-    const filePath = join(testDataDir, 'nyt2010-09-08.xd');
-    const content = readFileSync(filePath, 'utf-8');
+  it("should parse NYT 2010-09-08 puzzle correctly", () => {
+    const filePath = join(testDataDir, "nyt2010-09-08.xd");
+    const content = readFileSync(filePath, "utf-8");
     const puzzle = parseXd(content);
 
-    expect(puzzle.metadata.title).toBe('New York Times, Wednesday, September 8, 2010');
-    expect(puzzle.metadata.author).toBe('Tracy Gray');
-    expect(puzzle.metadata.editor).toBe('Will Shortz');
-    expect(puzzle.metadata.date).toBe('2010-09-08');
-    expect(puzzle.metadata.rebus).toBe('1=ZZ');
+    expect(puzzle.metadata.title).toBe(
+      "New York Times, Wednesday, September 8, 2010",
+    );
+    expect(puzzle.metadata.author).toBe("Tracy Gray");
+    expect(puzzle.metadata.editor).toBe("Will Shortz");
+    expect(puzzle.metadata.date).toBe("2010-09-08");
+    expect(puzzle.metadata.rebus).toBe("1=ZZ");
 
     expect(puzzle.grid).toHaveLength(15);
     expect(puzzle.grid[0]).toHaveLength(15);
-    expect(puzzle.grid[0]?.[0]).toBe('M');
-    expect(puzzle.grid[0]?.[1]).toBe('E');
-    expect(puzzle.grid[0]?.[2]).toBe('G');
-    expect(puzzle.grid[0]?.[3]).toBe('A');
-    expect(puzzle.grid[0]?.[4]).toBe('#');
+    expect(puzzle.grid[0]?.[0]).toBe("M");
+    expect(puzzle.grid[0]?.[1]).toBe("E");
+    expect(puzzle.grid[0]?.[2]).toBe("G");
+    expect(puzzle.grid[0]?.[3]).toBe("A");
+    expect(puzzle.grid[0]?.[4]).toBe("#");
 
     expect(puzzle.across.length).toBeGreaterThan(0);
     expect(puzzle.down.length).toBeGreaterThan(0);
 
     const firstAcross = puzzle.across[0];
-    expect(firstAcross?.number).toBe('1');
-    expect(firstAcross?.clue).toBe('Prefix with bucks');
-    expect(firstAcross?.answer).toBe('MEGA');
+    expect(firstAcross?.number).toBe("1");
+    expect(firstAcross?.clue).toBe("Prefix with bucks");
+    expect(firstAcross?.answer).toBe("MEGA");
   });
 
-  it('should parse LA Times 2020-04-25 puzzle correctly', () => {
-    const filePath = join(testDataDir, 'lat2020-04-25.xd');
-    const content = readFileSync(filePath, 'utf-8');
+  it("should parse LA Times 2020-04-25 puzzle correctly", () => {
+    const filePath = join(testDataDir, "lat2020-04-25.xd");
+    const content = readFileSync(filePath, "utf-8");
     const puzzle = parseXd(content);
 
-    expect(puzzle.metadata.title).toBe('LA Times, Sat, Apr 25, 2020');
-    expect(puzzle.metadata.author).toBe('C.C. Burnikel / Ed. Rich Norris');
-    expect(puzzle.metadata.copyright).toBe('© 2020 Tribune Content Agency, LLC');
-    expect(puzzle.metadata.date).toBe('2020-04-25');
+    expect(puzzle.metadata.title).toBe("LA Times, Sat, Apr 25, 2020");
+    expect(puzzle.metadata.author).toBe("C.C. Burnikel / Ed. Rich Norris");
+    expect(puzzle.metadata.copyright).toBe(
+      "© 2020 Tribune Content Agency, LLC",
+    );
+    expect(puzzle.metadata.date).toBe("2020-04-25");
 
     // Check that date is promoted to unified format
     const unified = convertXdToUnified(puzzle);
-    expect(unified.date).toBe('2020-04-25');
+    expect(unified.date).toBe("2020-04-25");
 
     expect(puzzle.grid).toHaveLength(15);
     expect(puzzle.grid[0]).toHaveLength(15);
 
     const firstAcross = puzzle.across[0];
-    expect(firstAcross?.number).toBe('1');
+    expect(firstAcross?.number).toBe("1");
     expect(firstAcross?.clue).toBe('"Stop kidding yourself"');
-    expect(firstAcross?.answer).toBe('LETSBEREAL');
+    expect(firstAcross?.answer).toBe("LETSBEREAL");
 
     const firstDown = puzzle.down[0];
-    expect(firstDown?.number).toBe('1');
+    expect(firstDown?.number).toBe("1");
     expect(firstDown?.clue).toBe("It's thrown at rodeos");
-    expect(firstDown?.answer).toBe('LARIAT');
+    expect(firstDown?.answer).toBe("LARIAT");
   });
 
-  it('should handle puzzles with notes section', () => {
+  it("should handle puzzles with notes section", () => {
     const testContent = `Title: Test Puzzle
 Author: Test Author
 
@@ -106,28 +110,30 @@ It spans multiple lines.`;
     const puzzle = parseXd(testContent);
 
     expect(puzzle.notes).toBeDefined();
-    expect(puzzle.notes).toContain('This is a note about the puzzle');
-    expect(puzzle.notes).toContain('It spans multiple lines');
+    expect(puzzle.notes).toContain("This is a note about the puzzle");
+    expect(puzzle.notes).toContain("It spans multiple lines");
   });
 
-  it('should handle rebus cells in grid', () => {
-    const filePath = join(testDataDir, 'nyt2010-09-08.xd');
-    const content = readFileSync(filePath, 'utf-8');
+  it("should handle rebus cells in grid", () => {
+    const filePath = join(testDataDir, "nyt2010-09-08.xd");
+    const content = readFileSync(filePath, "utf-8");
     const puzzle = parseXd(content);
 
-    expect(puzzle.grid[2]?.[2]).toBe('1');
-    expect(puzzle.grid[2]?.[7]).toBe('1');
+    expect(puzzle.grid[2]?.[2]).toBe("1");
+    expect(puzzle.grid[2]?.[7]).toBe("1");
 
-    expect(puzzle.metadata.rebus).toBe('1=ZZ');
+    expect(puzzle.metadata.rebus).toBe("1=ZZ");
   });
 
-  it('should throw error for invalid XD format', () => {
-    const invalidContent = 'This is not a valid XD file';
+  it("should throw error for invalid XD format", () => {
+    const invalidContent = "This is not a valid XD file";
 
-    expect(() => parseXd(invalidContent)).toThrow('Invalid XD file: no grid section found');
+    expect(() => parseXd(invalidContent)).toThrow(
+      "Invalid XD file: no grid section found",
+    );
   });
 
-  it('should handle various metadata fields', () => {
+  it("should handle various metadata fields", () => {
     const testContent = `Title: Test
 Author: Author Name
 Editor: Editor Name
@@ -143,15 +149,15 @@ A1. Clue ~ ABC`;
 
     const puzzle = parseXd(testContent);
 
-    expect(puzzle.metadata.title).toBe('Test');
-    expect(puzzle.metadata.author).toBe('Author Name');
-    expect(puzzle.metadata.editor).toBe('Editor Name');
-    expect(puzzle.metadata.copyright).toBe('© 2024');
-    expect(puzzle.metadata.date).toBe('2024-01-01');
-    expect(puzzle.metadata.customField).toBe('Custom Value');
+    expect(puzzle.metadata.title).toBe("Test");
+    expect(puzzle.metadata.author).toBe("Author Name");
+    expect(puzzle.metadata.editor).toBe("Editor Name");
+    expect(puzzle.metadata.copyright).toBe("© 2024");
+    expect(puzzle.metadata.date).toBe("2024-01-01");
+    expect(puzzle.metadata.customField).toBe("Custom Value");
   });
 
-  it('should parse grid with various cell types', () => {
+  it("should parse grid with various cell types", () => {
     const testContent = `Title: Test
 
 ABC#.
@@ -162,34 +168,34 @@ A1. Test ~ ABC`;
 
     const puzzle = parseXd(testContent);
 
-    expect(puzzle.grid[0]?.[0]).toBe('A');
-    expect(puzzle.grid[0]?.[1]).toBe('B');
-    expect(puzzle.grid[0]?.[2]).toBe('C');
-    expect(puzzle.grid[0]?.[3]).toBe('#');
-    expect(puzzle.grid[0]?.[4]).toBe('.');
+    expect(puzzle.grid[0]?.[0]).toBe("A");
+    expect(puzzle.grid[0]?.[1]).toBe("B");
+    expect(puzzle.grid[0]?.[2]).toBe("C");
+    expect(puzzle.grid[0]?.[3]).toBe("#");
+    expect(puzzle.grid[0]?.[4]).toBe(".");
 
-    expect(puzzle.grid[1]?.[0]).toBe('1');
-    expect(puzzle.grid[1]?.[1]).toBe('2');
-    expect(puzzle.grid[1]?.[2]).toBe('x');
-    expect(puzzle.grid[1]?.[3]).toBe('y');
-    expect(puzzle.grid[1]?.[4]).toBe('z');
+    expect(puzzle.grid[1]?.[0]).toBe("1");
+    expect(puzzle.grid[1]?.[1]).toBe("2");
+    expect(puzzle.grid[1]?.[2]).toBe("x");
+    expect(puzzle.grid[1]?.[3]).toBe("y");
+    expect(puzzle.grid[1]?.[4]).toBe("z");
 
-    expect(puzzle.grid[2]?.[0]).toBe('_');
+    expect(puzzle.grid[2]?.[0]).toBe("_");
   });
 
-  describe('Edge Cases', () => {
-    it('should handle 99x99 XD puzzle', () => {
+  describe("Edge Cases", () => {
+    it("should handle 99x99 XD puzzle", () => {
       const lines = [
-        'Title: Large Puzzle',
-        'Author: Test',
-        '',
-        ...Array(99).fill('.'.repeat(99)),
-        '',
-        'A1. Test clue ~ TEST',
-        'D1. Test clue ~ TEST',
+        "Title: Large Puzzle",
+        "Author: Test",
+        "",
+        ...Array(99).fill(".".repeat(99)),
+        "",
+        "A1. Test clue ~ TEST",
+        "D1. Test clue ~ TEST",
       ];
 
-      const result = parseXd(lines.join('\n'));
+      const result = parseXd(lines.join("\n"));
       expect(result.grid.length).toBe(99);
       expect(result.grid[0]?.length).toBe(99);
 
@@ -198,7 +204,7 @@ A1. Test ~ ABC`;
       expect(unified.grid.cells[0]?.length).toBe(99);
     });
 
-    it('should handle unicode in XD format', () => {
+    it("should handle unicode in XD format", () => {
       const xd = `Title: Unicode Test 🎯
 Author: José García
 Copyright: © 2024
@@ -214,18 +220,18 @@ A7. Chinese 你好 ~ GHI
 Test with émojis and spëcial chars`;
 
       const result = parseXd(xd);
-      expect(result.metadata.title).toBe('Unicode Test 🎯');
-      expect(result.metadata.author).toBe('José García');
-      expect(result.metadata.copyright).toBe('© 2024');
-      expect(result.notes).toBe('Test with émojis and spëcial chars');
+      expect(result.metadata.title).toBe("Unicode Test 🎯");
+      expect(result.metadata.author).toBe("José García");
+      expect(result.metadata.copyright).toBe("© 2024");
+      expect(result.notes).toBe("Test with émojis and spëcial chars");
 
       const unified = convertXdToUnified(result);
-      expect(unified.clues.across[0]?.text).toBe('Clue with emoji 🎉');
-      expect(unified.clues.across[1]?.text).toBe('Greek letters αβγ');
-      expect(unified.clues.across[2]?.text).toBe('Chinese 你好');
+      expect(unified.clues.across[0]?.text).toBe("Clue with emoji 🎉");
+      expect(unified.clues.across[1]?.text).toBe("Greek letters αβγ");
+      expect(unified.clues.across[2]?.text).toBe("Chinese 你好");
     });
 
-    it('should handle grid with all black squares', () => {
+    it("should handle grid with all black squares", () => {
       const xd = `Title: All Black
 Author: Test
 
@@ -238,12 +244,14 @@ Author: Test
       const result = parseXd(xd);
       const unified = convertXdToUnified(result);
 
-      expect(unified.grid.cells.every((row) => row.every((cell) => cell.isBlack))).toBe(true);
+      expect(
+        unified.grid.cells.every((row) => row.every((cell) => cell.isBlack)),
+      ).toBe(true);
       expect(unified.clues.across).toEqual([]);
       expect(unified.clues.down).toEqual([]);
     });
 
-    it('should handle puzzle with no clues', () => {
+    it("should handle puzzle with no clues", () => {
       const xd = `Title: No Clues
 Author: Test
 
@@ -258,22 +266,24 @@ FGH
 
       expect(unified.clues.across).toEqual([]);
       expect(unified.clues.down).toEqual([]);
-      expect(unified.grid.cells[0]?.[0]?.solution).toBe('A');
-      expect(unified.grid.cells[0]?.[1]?.solution).toBe('B');
+      expect(unified.grid.cells[0]?.[0]?.solution).toBe("A");
+      expect(unified.grid.cells[0]?.[1]?.solution).toBe("B");
     });
   });
 
-  describe('error handling', () => {
-    it('should throw error when no grid section found', () => {
+  describe("error handling", () => {
+    it("should throw error when no grid section found", () => {
       const xdContent = `Title: No Grid Test
 Author: Test
 
 A1. Test clue. ~ TEST
 `;
-      expect(() => parseXd(xdContent)).toThrow('Invalid XD file: no grid section found');
+      expect(() => parseXd(xdContent)).toThrow(
+        "Invalid XD file: no grid section found",
+      );
     });
 
-    it('should throw error for grid with inconsistent row widths', () => {
+    it("should throw error for grid with inconsistent row widths", () => {
       const xdContent = `Title: Inconsistent Grid Test
 Author: Test
 
@@ -283,10 +293,12 @@ FGH
 
 A1. Test clue. ~ TEST
 `;
-      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+      expect(() => parseXd(xdContent)).toThrow(
+        "Grid row 1 has inconsistent width",
+      );
     });
 
-    it('should throw error for another type of inconsistent grid', () => {
+    it("should throw error for another type of inconsistent grid", () => {
       // Test with empty middle row
       const xdContent = `Title: Missing Row Test  
 Author: Test
@@ -297,10 +309,12 @@ FGH
 
 A1. Test clue. ~ TEST
 `;
-      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+      expect(() => parseXd(xdContent)).toThrow(
+        "Grid row 1 has inconsistent width",
+      );
     });
 
-    it('should throw error for grid with all rows of different lengths', () => {
+    it("should throw error for grid with all rows of different lengths", () => {
       const xdContent = `Title: All Different Widths
 Author: Test
 
@@ -311,12 +325,14 @@ GHIJ
 
 A1. Test clue. ~ TEST
 `;
-      expect(() => parseXd(xdContent)).toThrow('Grid row 1 has inconsistent width');
+      expect(() => parseXd(xdContent)).toThrow(
+        "Grid row 1 has inconsistent width",
+      );
     });
 
-    it('should throw error when grid dimensions exceed max size', () => {
+    it("should throw error when grid dimensions exceed max size", () => {
       // Create a grid that's too large (default max is 100x100)
-      const rows = Array(101).fill('A'.repeat(101)).join('\n');
+      const rows = Array(101).fill("A".repeat(101)).join("\n");
       const xdContent = `Title: Too Large Grid
 Author: Test
 
@@ -324,10 +340,10 @@ ${rows}
 
 A1. Test clue. ~ TEST
 `;
-      expect(() => parseXd(xdContent)).toThrow('Grid dimensions too large');
+      expect(() => parseXd(xdContent)).toThrow("Grid dimensions too large");
     });
 
-    it('should respect custom maxGridSize option', () => {
+    it("should respect custom maxGridSize option", () => {
       const xdContent = `Title: Small Grid Test
 Author: Test
 
@@ -338,29 +354,35 @@ GHI
 A1. Test clue. ~ TEST
 `;
       // Should throw with small max size
-      expect(() => parseXd(xdContent, { maxGridSize: { width: 2, height: 2 } })).toThrow(
-        'Grid dimensions too large: 3x3. Maximum supported size is 2x2',
+      expect(() =>
+        parseXd(xdContent, { maxGridSize: { width: 2, height: 2 } }),
+      ).toThrow(
+        "Grid dimensions too large: 3x3. Maximum supported size is 2x2",
       );
 
       // Should pass with larger max size
-      const puzzle = parseXd(xdContent, { maxGridSize: { width: 10, height: 10 } });
+      const puzzle = parseXd(xdContent, {
+        maxGridSize: { width: 10, height: 10 },
+      });
       expect(puzzle.grid).toHaveLength(3);
     });
 
-    it('should handle convertXdToUnified with edge cases', () => {
+    it("should handle convertXdToUnified with edge cases", () => {
       // This tests the defensive check in convertXdToUnified
       // Though this should never happen in practice as parseXd validates the grid
       const invalidPuzzle: any = {
-        metadata: { title: 'Test' },
+        metadata: { title: "Test" },
         grid: [], // Empty grid
         across: [],
         down: [],
       };
 
-      expect(() => convertXdToUnified(invalidPuzzle)).toThrow('Invalid state: grid is empty');
+      expect(() => convertXdToUnified(invalidPuzzle)).toThrow(
+        "Invalid state: grid is empty",
+      );
     });
 
-    it('should include additional properties in unified conversion', () => {
+    it("should include additional properties in unified conversion", () => {
       const xdContent = `Title: Test Puzzle
 Author: Test Author
 Editor: Test Editor
@@ -378,8 +400,8 @@ A1. Test clue. ~ TEST
 
       // Check that additional properties are included
       expect(unified.additionalProperties).toBeDefined();
-      expect(unified.additionalProperties?.editor).toBe('Test Editor');
-      expect(unified.additionalProperties?.notepad).toBe('Some notes here');
+      expect(unified.additionalProperties?.editor).toBe("Test Editor");
+      expect(unified.additionalProperties?.notepad).toBe("Some notes here");
     });
   });
 });

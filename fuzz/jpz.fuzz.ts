@@ -1,16 +1,16 @@
-import '@jazzer.js/jest-runner';
-import { parseJpz, convertJpzToUnified, type JpzPuzzle } from '../src/jpz';
-import type { Puzzle } from '../src/types';
+import "@jazzer.js/jest-runner";
+import { parseJpz, convertJpzToUnified, type JpzPuzzle } from "../src/jpz";
+import type { Puzzle } from "../src/types";
 import {
   JpzParseError,
   UnsupportedPuzzleTypeError,
   InvalidFileError,
   ParseError,
-} from '../src/errors';
+} from "../src/errors";
 
-describe('JPZ Fuzzer', () => {
-  it.fuzz('validates error handling and data integrity', (data: Buffer) => {
-    const input = data.toString('utf-8');
+describe("JPZ Fuzzer", () => {
+  it.fuzz("validates error handling and data integrity", (data: Buffer) => {
+    const input = data.toString("utf-8");
 
     let parsed: JpzPuzzle | undefined;
     let parseError: unknown = null;
@@ -31,8 +31,8 @@ describe('JPZ Fuzzer', () => {
 
       if (parseError instanceof ParseError) {
         expect(parseError.code).toBeDefined();
-        expect(typeof parseError.code).toBe('string');
-        expect(typeof parseError.message).toBe('string');
+        expect(typeof parseError.code).toBe("string");
+        expect(typeof parseError.message).toBe("string");
         expect(parseError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -43,7 +43,7 @@ describe('JPZ Fuzzer', () => {
     if (!parsed) return;
 
     expect(parsed.metadata).toBeDefined();
-    expect(typeof parsed.metadata).toBe('object');
+    expect(typeof parsed.metadata).toBe("object");
 
     expect(parsed.width).toBeGreaterThan(0);
     expect(parsed.height).toBeGreaterThan(0);
@@ -59,16 +59,16 @@ describe('JPZ Fuzzer', () => {
         const cell = gridRow[col]!; // Parser guarantees all cells exist
         // JpzCell properties are all optional except x,y which we're not checking here
         if (cell.solution !== undefined) {
-          expect(typeof cell.solution).toBe('string');
+          expect(typeof cell.solution).toBe("string");
         }
         if (cell.number !== undefined) {
-          expect(typeof cell.number).toBe('number');
+          expect(typeof cell.number).toBe("number");
         }
         if (cell.type !== undefined) {
-          expect(cell.type === 'block' || cell.type === 'cell').toBe(true);
+          expect(cell.type === "block" || cell.type === "cell").toBe(true);
         }
         if (cell.isCircled !== undefined) {
-          expect(typeof cell.isCircled).toBe('boolean');
+          expect(typeof cell.isCircled).toBe("boolean");
         }
       }
     }
@@ -76,15 +76,19 @@ describe('JPZ Fuzzer', () => {
     expect(parsed.across).toBeDefined();
     expect(Array.isArray(parsed.across)).toBe(true);
     for (const clue of parsed.across) {
-      expect(typeof clue.number === 'string' || typeof clue.number === 'number').toBe(true);
-      expect(typeof clue.text).toBe('string');
+      expect(
+        typeof clue.number === "string" || typeof clue.number === "number",
+      ).toBe(true);
+      expect(typeof clue.text).toBe("string");
     }
 
     expect(parsed.down).toBeDefined();
     expect(Array.isArray(parsed.down)).toBe(true);
     for (const clue of parsed.down) {
-      expect(typeof clue.number === 'string' || typeof clue.number === 'number').toBe(true);
-      expect(typeof clue.text).toBe('string');
+      expect(
+        typeof clue.number === "string" || typeof clue.number === "number",
+      ).toBe(true);
+      expect(typeof clue.text).toBe("string");
     }
 
     let unified: Puzzle | undefined;
@@ -106,8 +110,8 @@ describe('JPZ Fuzzer', () => {
 
       if (conversionError instanceof ParseError) {
         expect(conversionError.code).toBeDefined();
-        expect(typeof conversionError.code).toBe('string');
-        expect(typeof conversionError.message).toBe('string');
+        expect(typeof conversionError.code).toBe("string");
+        expect(typeof conversionError.message).toBe("string");
         expect(conversionError.message.length).toBeGreaterThan(0);
       }
       return;
@@ -118,7 +122,7 @@ describe('JPZ Fuzzer', () => {
 
     expect(unified.grid).toBeDefined();
     expect(unified.clues).toBeDefined();
-    expect(typeof unified.grid).toBe('object');
+    expect(typeof unified.grid).toBe("object");
     expect(unified.grid.width).toBe(parsed.width);
     expect(unified.grid.height).toBe(parsed.height);
     expect(Array.isArray(unified.grid.cells)).toBe(true);
@@ -129,27 +133,35 @@ describe('JPZ Fuzzer', () => {
       expect(cellRow.length).toBe(parsed.width);
       for (let col = 0; col < parsed.width; col++) {
         const cell = cellRow[col]!; // Converter guarantees all cells exist
-        expect(typeof cell.isBlack).toBe('boolean');
-        expect(cell.number === undefined || typeof cell.number === 'number').toBe(true);
-        expect(cell.solution === undefined || typeof cell.solution === 'string').toBe(true);
-        expect(cell.isCircled === undefined || typeof cell.isCircled === 'boolean').toBe(true);
-        expect(cell.hasRebus === undefined || typeof cell.hasRebus === 'boolean').toBe(true);
+        expect(typeof cell.isBlack).toBe("boolean");
+        expect(
+          cell.number === undefined || typeof cell.number === "number",
+        ).toBe(true);
+        expect(
+          cell.solution === undefined || typeof cell.solution === "string",
+        ).toBe(true);
+        expect(
+          cell.isCircled === undefined || typeof cell.isCircled === "boolean",
+        ).toBe(true);
+        expect(
+          cell.hasRebus === undefined || typeof cell.hasRebus === "boolean",
+        ).toBe(true);
       }
     }
 
-    expect(typeof unified.clues).toBe('object');
+    expect(typeof unified.clues).toBe("object");
 
     if (unified.title !== undefined) {
-      expect(typeof unified.title).toBe('string');
+      expect(typeof unified.title).toBe("string");
     }
     if (unified.author !== undefined) {
-      expect(typeof unified.author).toBe('string');
+      expect(typeof unified.author).toBe("string");
     }
     if (unified.copyright !== undefined) {
-      expect(typeof unified.copyright).toBe('string');
+      expect(typeof unified.copyright).toBe("string");
     }
     if (unified.notes !== undefined) {
-      expect(typeof unified.notes).toBe('string');
+      expect(typeof unified.notes).toBe("string");
     }
   });
 });
