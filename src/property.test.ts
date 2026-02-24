@@ -119,6 +119,7 @@ describe("Property-based tests", () => {
           if (!isExpectedError) {
             throw new Error(
               `Unexpected error type: ${error.constructor.name} - ${error.message}`,
+              { cause: e },
             );
           }
         }
@@ -358,6 +359,7 @@ describe("Property-based tests", () => {
           if (!isExpectedError) {
             throw new Error(
               `Unexpected error type: ${error.constructor.name} - ${error.message}`,
+              { cause: e },
             );
           }
         }
@@ -577,6 +579,7 @@ describe("Property-based tests", () => {
         if (!isExpectedError) {
           throw new Error(
             `Unexpected error type: ${error.constructor.name} - ${error.message}`,
+            { cause: e },
           );
         }
       }
@@ -687,6 +690,7 @@ describe("Property-based tests", () => {
           if (isLowLevelError) {
             throw new Error(
               `Low-level error leaked: ${error.name} - ${error.message}`,
+              { cause: e },
             );
           }
 
@@ -771,6 +775,7 @@ describe("Property-based tests", () => {
           if (!isExpectedError) {
             throw new Error(
               `Unexpected error type: ${error.constructor.name} - ${error.message}`,
+              { cause: e },
             );
           }
           expect(error.message).toMatch(/version|kind|JSON|puzzle|format/i);
@@ -804,6 +809,7 @@ describe("Property-based tests", () => {
           if (!isExpectedError) {
             throw new Error(
               `Unexpected error type: ${error.constructor.name} - ${error.message}`,
+              { cause: e },
             );
           }
           expect(error.message).toMatch(/XML|JPZ|crossword|format/i);
@@ -1111,6 +1117,7 @@ describe("Property-based tests", () => {
             if (!isExpectedError) {
               throw new Error(
                 `${parser.name} threw unexpected error type: ${error.constructor.name} - ${error.message}`,
+                { cause: e },
               );
             }
           }
@@ -1147,6 +1154,7 @@ describe("Property-based tests", () => {
             if (!isExpectedError) {
               throw new Error(
                 `${parser.name} threw unexpected error type: ${error.constructor.name} - ${error.message}`,
+                { cause: e },
               );
             }
           }

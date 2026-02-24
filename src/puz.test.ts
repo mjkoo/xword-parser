@@ -20,6 +20,7 @@ describe("parsePuz", () => {
       } catch (error) {
         throw new Error(
           `Failed to parse ${file}: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
         );
       }
 
