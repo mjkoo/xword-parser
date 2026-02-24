@@ -62,7 +62,7 @@ jobs:
         timeout-minutes: 30
       - name: Create Pull Request with new regression files
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true' && steps.check_crashes.outputs.has_crashes == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "test: add fuzzer regression test files"
