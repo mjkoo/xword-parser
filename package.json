@@ -43,6 +43,7 @@
     "fuzz:seed": "node scripts/seed-corpus.js",
     "fuzz:concurrent": "node scripts/run-fuzzers.js --concurrent",
     "fuzz:quick": "node scripts/run-fuzzers.js --duration 60",
+    "fuzz:benchmark": "node scripts/fuzz-benchmark.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,yml,yaml}\"",
