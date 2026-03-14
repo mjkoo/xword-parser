@@ -46,14 +46,5 @@ jobs:
           flags: unit-tests
           name: unit-tests
           fail_ci_if_error: true
-      - name: Run fuzz tests
-        run: npm run test:fuzz
-      - name: Upload fuzz test coverage to Codecov
-        if: matrix.node-version == '24.x'
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage-fuzz/lcov.info
-          flags: fuzz-tests
-          name: fuzz-tests
-          fail_ci_if_error: true
+      - name: Run fuzz regression tests
+        run: npx vitiate regression

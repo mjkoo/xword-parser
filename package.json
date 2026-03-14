@@ -35,15 +35,12 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=./test-results.xml",
-    "test:fuzz": "jest --config jest.config.fuzz.js",
+    "test:fuzz": "npx vitiate regression",
     "bench": "vitest bench",
     "bench:ci": "vitest bench --run --outputJson bench-results.json",
     "bench:compare": "node scripts/compare-benchmarks.js",
-    "fuzz": "node scripts/run-fuzzers.js",
-    "fuzz:seed": "node scripts/seed-corpus.js",
-    "fuzz:concurrent": "node scripts/run-fuzzers.js --concurrent",
-    "fuzz:quick": "node scripts/run-fuzzers.js --duration 60",
-    "fuzz:benchmark": "node scripts/fuzz-benchmark.js",
+    "fuzz": "npx vitiate fuzz",
+    "fuzz:quick": "npx vitiate fuzz --fuzz-time 60",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,yml,yaml}\"",
@@ -89,20 +86,18 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@fast-check/vitest": "^0.3.0",
-    "@jazzer.js/jest-runner": "^2.1.0",
-    "@types/jest": "^30.0.0",
     "@types/node": "^25.4.0",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "@vitiate/core": "file:../vitiate/vitiate-core",
+    "@vitiate/fuzzed-data-provider": "file:../vitiate/vitiate-fuzzed-data-provider",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
-    "jest": "^30.3.0",
     "lefthook": "^2.1.2",
     "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
-    "ts-jest": "^29.4.6",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18",
@@ -113,13 +108,8 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "fast-xml-parser": "^5.5.3"
-  },
-  "overrides": {
-    "@jazzer.js/jest-runner": {
-      "@types/jest": "$@types/jest",
-      "jest": "$jest"
-    }
+    "fast-xml-parser": "^5.5.3",
+    "vitiate": "file:../vitiate/vitiate"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

@@ -428,7 +428,9 @@ export function parseIpuz(
   if (
     !data.kind ||
     !Array.isArray(data.kind) ||
-    !data.kind.some((k: string) => k.includes("crossword"))
+    !data.kind.some(
+      (k: unknown) => typeof k === "string" && k.includes("crossword"),
+    )
   ) {
     throw new UnsupportedPuzzleTypeError("Non-crossword");
   }
