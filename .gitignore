@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+.swc/
 
 # Logs
 *.log
@@ -21,8 +22,12 @@ benchmark-report.md
 test-results.xml
 
 # Test data (contains copyrighted puzzle files)
-testdata/
+/testdata/
 .cifuzz-corpus/
+.vitiate/corpus/
+# Ignore seed puzzle files copied by scripts/seed-vitiate.sh (keep .formats)
+.vitiate/testdata/**/seeds/*
+!.vitiate/testdata/**/seeds/.formats
 
 # IDE
 .vscode/

@@ -41,25 +41,36 @@ jobs:
       - name: Install dependencies
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
         run: npm install
-      - name: Clone test data
+      - name: Clone test data and seed fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
         run: |
           git clone https://x-access-token:${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
-      - name: Initialize fuzzer directories
+          ./scripts/seed-vitiate.sh
+      - name: Restore corpus cache
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: |
-          echo "Initializing fuzzer directories with a quick run..."
-          npm run fuzz:concurrent -- --duration 5
-        continue-on-error: true
-        timeout-minutes: 1
-      - name: Seed fuzzer corpus
-        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: npm run fuzz:seed
+        uses: actions/cache@v4
+        with:
+          path: .vitiate/corpus/
+          key: vitiate-corpus-${{ github.sha }}
+          restore-keys: |
+            vitiate-corpus-
       - name: Run fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: npm run fuzz:concurrent
+        run: npx vitiate fuzz --fuzz-time 1500
         continue-on-error: true
         timeout-minutes: 30
+      - name: Check for crash files
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
+        id: check_crashes
+        run: |
+          if find .vitiate/testdata -name "crash-*" -newer .git/HEAD | grep -q .; then
+            echo "has_crashes=true" >> $GITHUB_OUTPUT
+            echo "New crash files found:"
+            find .vitiate/testdata -name "crash-*" -newer .git/HEAD
+          else
+            echo "has_crashes=false" >> $GITHUB_OUTPUT
+            echo "No new crash files found"
+          fi
       - name: Create Pull Request with new regression files
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true' && steps.check_crashes.outputs.has_crashes == 'true'
         uses: peter-evans/create-pull-request@v8
@@ -70,16 +81,10 @@ jobs:
           body: |
             This PR was automatically created by the nightly fuzzing workflow.
 
-            New crash/timeout files were discovered during fuzzing and have been added as regression tests.
-
-            ## Files added:
-            ```
-            ${{ steps.check_crashes.outputs.new_files || 'See commit for details' }}
-            ```
+            New crash files were discovered during fuzzing and have been added as regression tests.
 
             Please review these files to understand the issues they represent and consider adding fixes.
           branch: fuzzer-regression-tests-${{ github.run_number }}
           delete-branch: true
           add-paths: |-
-            fuzz/**/*crash-*
-            fuzz/**/*timeout-*
+            .vitiate/testdata/**/crashes/crash-*

@@ -1,35 +1,15 @@
 # Fuzzing Tests
 
-This directory contains fuzz tests for the xword-parser library using [Jazzer.js](https://github.com/CodeIntelligenceTesting/jazzer.js).
-
-## What is Fuzzing?
-
-Fuzzing is an automated testing technique that generates random, invalid, or unexpected inputs to find bugs and vulnerabilities in code. The fuzzer monitors for crashes, assertion failures, and other unexpected behaviors.
-
-## Setting Up Corpus Data
-
-Seed the fuzzer corpus with test files for more effective fuzzing:
-
-```bash
-npm run fuzz:seed
-```
-
-This command:
-
-- Automatically discovers all fuzzer corpus directories
-- Copies relevant test files from `testdata/` to each fuzzer's corpus
-- Format-specific fuzzers (ipuz, puz, jpz, xd) get only their matching format
-- Generic fuzzers (parse) get all available test files
-- Creates corpus directories if they don't exist
+This directory contains fuzz tests for the xword-parser library using [Vitiate](https://github.com/mjkoo/vitiate), a coverage-guided fuzzing tool built as a Vitest plugin.
 
 ## Running Fuzz Tests
 
 ### Regression Mode (Quick Validation)
 
-Run previously discovered test cases to ensure issues remain fixed:
+Replay corpus entries and crash regressions to ensure issues remain fixed:
 
 ```bash
-npm run test:fuzz
+npx vitiate regression
 ```
 
 ### Fuzzing Mode (Bug Discovery)
@@ -37,87 +17,72 @@ npm run test:fuzz
 Actively generate and test new inputs to discover bugs:
 
 ```bash
-# Run all fuzzers sequentially for 5 minutes each (default)
-npm run fuzz
+# Run all fuzzers (default duration)
+npx vitiate fuzz
 
-# Run all fuzzers concurrently for 5 minutes each
-npm run fuzz:concurrent
+# Run for 60 seconds
+npx vitiate fuzz --fuzz-time 60
 
-# Quick test - run for 1 minute each
-npm run fuzz:quick
+# Limit to N executions
+npx vitiate fuzz --fuzz-execs 100000
+
+# Stop after finding 3 crashes
+npx vitiate fuzz --max-crashes 3
 ```
 
-### Custom Duration and Timeout
-
-You can also run the fuzzer script directly with custom options:
+### Corpus Management
 
 ```bash
-node scripts/run-fuzzers.js --duration 600  # 10 minutes each
-node scripts/run-fuzzers.js --concurrent --duration 120  # 2 minutes each, concurrent
+# Initialize seed directories for all fuzz tests
+npx vitiate init
 
-# Adjust jazzer.js execution timeout (default: 30000ms)
-node scripts/run-fuzzers.js --jazzer-timeout 60000  # 60 second timeout per test
+# Minimize corpus (remove redundant entries)
+npx vitiate optimize
 ```
 
-#### Timeout Configuration
+## Directory Structure
 
-The fuzzer uses two different timeouts:
-
-- **Duration timeout**: How long to run each fuzzer (default: 300 seconds)
-- **Jazzer.js timeout**: Maximum time for a single test execution (default: 30000ms)
-
-If you see timeout findings in your fuzzer output, you can increase the jazzer.js timeout:
-
-```bash
-# Use a more relaxed timeout for complex inputs
-export JAZZER_TIMEOUT=60000
-npm run fuzz
-
-# Or use the command line option
-node scripts/run-fuzzers.js --jazzer-timeout 60000
-```
+- `*.fuzz.ts` — Fuzz test harnesses (one per format + auto-detection)
+- `../.vitiate/testdata/<hashdir>/seeds/` — Seed inputs (checked in)
+- `../.vitiate/testdata/<hashdir>/crashes/` — Crash regressions (checked in)
+- `../.vitiate/corpus/` — Discovered inputs (gitignored, rebuilt by fuzzer)
 
 ## What the Fuzzers Test
 
 ### Format-Specific Fuzzers
 
-Each format has its own fuzzer that validates:
+Each format has its own fuzzer (`puz.fuzz.ts`, `ipuz.fuzz.ts`, `jpz.fuzz.ts`, `xd.fuzz.ts`) that validates:
 
-1. **Error Handling** - Only expected error types are thrown
-2. **Data Integrity** - Parsed data maintains consistent structure
-3. **Type Safety** - All properties have correct types
-4. **No Crashes** - Parser handles malformed input gracefully
+1. **Error Handling** — Only expected error types are thrown
+2. **Data Integrity** — Parsed data maintains consistent structure
+3. **Type Safety** — All properties have correct types
+4. **No Crashes** — Parser handles malformed input gracefully
 
 ### Auto-Detection Fuzzer (`parse.fuzz.ts`)
 
 Tests the main `parse()` function's auto-detection logic:
 
-1. **Format Detection** - Tests with various input types and filename hints
-2. **Encoding Options** - Validates different character encodings
-3. **Error Consistency** - Ensures consistent error types across all code paths
-4. **Unified Output** - Verifies all formats convert to valid unified structure
+1. **Format Detection** — Tests with various input types and filename hints
+2. **Encoding Options** — Validates different character encodings
+3. **Error Consistency** — Ensures consistent error types across all code paths
+4. **Unified Output** — Verifies all formats convert to valid unified structure
 
-## Fuzzer Output
+## Writing Fuzz Tests
 
-- **Regression mode**: Quick pass/fail for known test cases
-- **Fuzzing mode**:
-  - Shows coverage statistics and execution speed
-  - Saves interesting inputs to `.cifuzz-corpus/` for future runs
-  - Reports crashes in `.cifuzz-findings/` directory
-  - Generates logs in `fuzz-*.log` files when using the runner script
+Fuzz tests use the `fuzz()` function from `@vitiate/core`:
 
-## Interpreting Results
+```typescript
+import { fuzz } from "@vitiate/core";
+import { expect } from "vitest";
 
-- `cov`: Code coverage (higher is better)
-- `ft`: Features/edges covered (higher is better)
-- `corp`: Corpus size (number of interesting test cases found)
-- `exec/s`: Executions per second (higher means faster testing)
-- `NEW`: Found a new code path
-- `pulse`: Periodic status update
+fuzz("my fuzz test", (data: Buffer) => {
+  // Parse the input
+  const result = myParser(data.toString("utf-8"));
 
-## Files
+  // Validate invariants
+  expect(result.width).toBeTypeOf("number");
+  expect(result.width).toBeGreaterThan(0);
+});
+```
 
-- `*.fuzz.ts` - Fuzz test files for each format
-- `run-fuzzers.js` - Node.js script to run fuzzers with timeouts
-- `globals.d.ts` - TypeScript type definitions for Jazzer.js
-- `../jest.config.fuzz.js` - Jest configuration for fuzz tests
+Since fuzz tests run inside Vitest, you can use `expect` from `vitest` directly for assertions.

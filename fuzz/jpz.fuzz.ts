@@ -1,4 +1,5 @@
-import "@jazzer.js/jest-runner";
+import { fuzz } from "@vitiate/core";
+import { expect } from "vitest";
 import { parseJpz, convertJpzToUnified, type JpzPuzzle } from "../src/jpz";
 import type { Puzzle } from "../src/types";
 import {
@@ -8,160 +9,163 @@ import {
   ParseError,
 } from "../src/errors";
 
-describe("JPZ Fuzzer", () => {
-  it.fuzz("validates error handling and data integrity", (data: Buffer) => {
-    const input = data.toString("utf-8");
+fuzz("validates error handling and data integrity", (data: Buffer) => {
+  const input = data.toString("utf-8");
 
-    let parsed: JpzPuzzle | undefined;
-    let parseError: unknown = null;
+  let parsed: JpzPuzzle | undefined;
+  let parseError: unknown = null;
 
-    try {
-      parsed = parseJpz(input);
-    } catch (error) {
-      parseError = error;
-    }
+  try {
+    parsed = parseJpz(input);
+  } catch (error) {
+    parseError = error;
+  }
 
-    if (parseError) {
-      expect(parseError).toBeInstanceOf(ParseError);
-      expect(
+  if (parseError) {
+    if (!(parseError instanceof ParseError)) throw parseError as Error;
+    if (
+      !(
         parseError instanceof JpzParseError ||
-          parseError instanceof UnsupportedPuzzleTypeError ||
-          parseError instanceof InvalidFileError,
-      ).toBe(true);
+        parseError instanceof UnsupportedPuzzleTypeError ||
+        parseError instanceof InvalidFileError
+      )
+    ) {
+      throw new Error(
+        `Unexpected error type: ${(parseError as Error).constructor.name}`,
+      );
+    }
 
-      if (parseError instanceof ParseError) {
-        expect(parseError.code).toBeDefined();
-        expect(typeof parseError.code).toBe("string");
-        expect(typeof parseError.message).toBe("string");
-        expect(parseError.message.length).toBeGreaterThan(0);
+    expect(parseError.code).toBeTypeOf("string");
+    expect(parseError.message).toBeTypeOf("string");
+    expect(parseError.message.length).toBeGreaterThan(0);
+    return;
+  }
+
+  expect(parsed).toBeDefined();
+  if (!parsed) return;
+
+  expect(parsed.metadata).toBeDefined();
+  expect(parsed.metadata).toBeTypeOf("object");
+
+  expect(parsed.width).toBeGreaterThan(0);
+  expect(parsed.height).toBeGreaterThan(0);
+
+  expect(parsed.grid).toBeDefined();
+  expect(Array.isArray(parsed.grid)).toBe(true);
+  expect(parsed.grid).toHaveLength(parsed.height);
+
+  for (let row = 0; row < parsed.height; row++) {
+    const gridRow = parsed.grid[row]!;
+    expect(gridRow).toHaveLength(parsed.width);
+    for (let col = 0; col < parsed.width; col++) {
+      const cell = gridRow[col]!;
+      if (cell.solution !== undefined) {
+        expect(cell.solution).toBeTypeOf("string");
       }
-      return;
-    }
-
-    // If parsing succeeded, validate the parsed data
-    expect(parsed).toBeDefined();
-    if (!parsed) return;
-
-    expect(parsed.metadata).toBeDefined();
-    expect(typeof parsed.metadata).toBe("object");
-
-    expect(parsed.width).toBeGreaterThan(0);
-    expect(parsed.height).toBeGreaterThan(0);
-
-    expect(parsed.grid).toBeDefined();
-    expect(Array.isArray(parsed.grid)).toBe(true);
-    expect(parsed.grid.length).toBe(parsed.height);
-
-    for (let row = 0; row < parsed.height; row++) {
-      const gridRow = parsed.grid[row]!; // Parser guarantees grid dimensions
-      expect(gridRow.length).toBe(parsed.width);
-      for (let col = 0; col < parsed.width; col++) {
-        const cell = gridRow[col]!; // Parser guarantees all cells exist
-        // JpzCell properties are all optional except x,y which we're not checking here
-        if (cell.solution !== undefined) {
-          expect(typeof cell.solution).toBe("string");
-        }
-        if (cell.number !== undefined) {
-          expect(typeof cell.number).toBe("number");
-        }
-        if (cell.type !== undefined) {
-          expect(cell.type === "block" || cell.type === "cell").toBe(true);
-        }
-        if (cell.isCircled !== undefined) {
-          expect(typeof cell.isCircled).toBe("boolean");
-        }
+      if (cell.number !== undefined) {
+        expect(cell.number).toBeTypeOf("number");
+      }
+      if (cell.type !== undefined) {
+        expect(["block", "cell"]).toContain(cell.type);
+      }
+      if (cell.isCircled !== undefined) {
+        expect(cell.isCircled).toBeTypeOf("boolean");
       }
     }
+  }
 
-    expect(parsed.across).toBeDefined();
-    expect(Array.isArray(parsed.across)).toBe(true);
-    for (const clue of parsed.across) {
-      expect(
-        typeof clue.number === "string" || typeof clue.number === "number",
-      ).toBe(true);
-      expect(typeof clue.text).toBe("string");
-    }
+  expect(parsed.across).toBeDefined();
+  expect(Array.isArray(parsed.across)).toBe(true);
+  for (const clue of parsed.across) {
+    expect(
+      typeof clue.number === "string" || typeof clue.number === "number",
+    ).toBe(true);
+    expect(clue.text).toBeTypeOf("string");
+  }
 
-    expect(parsed.down).toBeDefined();
-    expect(Array.isArray(parsed.down)).toBe(true);
-    for (const clue of parsed.down) {
-      expect(
-        typeof clue.number === "string" || typeof clue.number === "number",
-      ).toBe(true);
-      expect(typeof clue.text).toBe("string");
-    }
+  expect(parsed.down).toBeDefined();
+  expect(Array.isArray(parsed.down)).toBe(true);
+  for (const clue of parsed.down) {
+    expect(
+      typeof clue.number === "string" || typeof clue.number === "number",
+    ).toBe(true);
+    expect(clue.text).toBeTypeOf("string");
+  }
 
-    let unified: Puzzle | undefined;
-    let conversionError: unknown = null;
+  let unified: Puzzle | undefined;
+  let conversionError: unknown = null;
 
-    try {
-      unified = convertJpzToUnified(parsed);
-    } catch (error) {
-      conversionError = error;
-    }
+  try {
+    unified = convertJpzToUnified(parsed);
+  } catch (error) {
+    conversionError = error;
+  }
 
-    if (conversionError) {
-      expect(conversionError).toBeInstanceOf(ParseError);
-      expect(
+  if (conversionError) {
+    if (!(conversionError instanceof ParseError))
+      throw conversionError as Error;
+    if (
+      !(
         conversionError instanceof JpzParseError ||
-          conversionError instanceof UnsupportedPuzzleTypeError ||
-          conversionError instanceof InvalidFileError,
-      ).toBe(true);
+        conversionError instanceof UnsupportedPuzzleTypeError ||
+        conversionError instanceof InvalidFileError
+      )
+    ) {
+      throw new Error(
+        `Unexpected error type: ${(conversionError as Error).constructor.name}`,
+      );
+    }
 
-      if (conversionError instanceof ParseError) {
-        expect(conversionError.code).toBeDefined();
-        expect(typeof conversionError.code).toBe("string");
-        expect(typeof conversionError.message).toBe("string");
-        expect(conversionError.message.length).toBeGreaterThan(0);
+    expect(conversionError.code).toBeTypeOf("string");
+    expect(conversionError.message).toBeTypeOf("string");
+    expect(conversionError.message.length).toBeGreaterThan(0);
+    return;
+  }
+
+  expect(unified).toBeDefined();
+  if (!unified) return;
+
+  expect(unified.grid).toBeDefined();
+  expect(unified.clues).toBeDefined();
+  expect(unified.grid).toBeTypeOf("object");
+  expect(unified.grid.width).toBe(parsed.width);
+  expect(unified.grid.height).toBe(parsed.height);
+  expect(Array.isArray(unified.grid.cells)).toBe(true);
+  expect(unified.grid.cells).toHaveLength(parsed.height);
+
+  for (let row = 0; row < parsed.height; row++) {
+    const cellRow = unified.grid.cells[row]!;
+    expect(cellRow).toHaveLength(parsed.width);
+    for (let col = 0; col < parsed.width; col++) {
+      const cell = cellRow[col]!;
+      expect(cell.isBlack).toBeTypeOf("boolean");
+      if (cell.number !== undefined) {
+        expect(cell.number).toBeTypeOf("number");
       }
-      return;
-    }
-
-    expect(unified).toBeDefined();
-    if (!unified) return;
-
-    expect(unified.grid).toBeDefined();
-    expect(unified.clues).toBeDefined();
-    expect(typeof unified.grid).toBe("object");
-    expect(unified.grid.width).toBe(parsed.width);
-    expect(unified.grid.height).toBe(parsed.height);
-    expect(Array.isArray(unified.grid.cells)).toBe(true);
-    expect(unified.grid.cells.length).toBe(parsed.height);
-
-    for (let row = 0; row < parsed.height; row++) {
-      const cellRow = unified.grid.cells[row]!; // Converter guarantees grid dimensions
-      expect(cellRow.length).toBe(parsed.width);
-      for (let col = 0; col < parsed.width; col++) {
-        const cell = cellRow[col]!; // Converter guarantees all cells exist
-        expect(typeof cell.isBlack).toBe("boolean");
-        expect(
-          cell.number === undefined || typeof cell.number === "number",
-        ).toBe(true);
-        expect(
-          cell.solution === undefined || typeof cell.solution === "string",
-        ).toBe(true);
-        expect(
-          cell.isCircled === undefined || typeof cell.isCircled === "boolean",
-        ).toBe(true);
-        expect(
-          cell.hasRebus === undefined || typeof cell.hasRebus === "boolean",
-        ).toBe(true);
+      if (cell.solution !== undefined) {
+        expect(cell.solution).toBeTypeOf("string");
+      }
+      if (cell.isCircled !== undefined) {
+        expect(cell.isCircled).toBeTypeOf("boolean");
+      }
+      if (cell.hasRebus !== undefined) {
+        expect(cell.hasRebus).toBeTypeOf("boolean");
       }
     }
+  }
 
-    expect(typeof unified.clues).toBe("object");
+  expect(unified.clues).toBeTypeOf("object");
 
-    if (unified.title !== undefined) {
-      expect(typeof unified.title).toBe("string");
-    }
-    if (unified.author !== undefined) {
-      expect(typeof unified.author).toBe("string");
-    }
-    if (unified.copyright !== undefined) {
-      expect(typeof unified.copyright).toBe("string");
-    }
-    if (unified.notes !== undefined) {
-      expect(typeof unified.notes).toBe("string");
-    }
-  });
+  if (unified.title !== undefined) {
+    expect(unified.title).toBeTypeOf("string");
+  }
+  if (unified.author !== undefined) {
+    expect(unified.author).toBeTypeOf("string");
+  }
+  if (unified.copyright !== undefined) {
+    expect(unified.copyright).toBeTypeOf("string");
+  }
+  if (unified.notes !== undefined) {
+    expect(unified.notes).toBeTypeOf("string");
+  }
 });
