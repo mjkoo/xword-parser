@@ -112,7 +112,7 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "fast-xml-parser": "^5.5.3"
+    "fast-xml-parser": "^5.5.5"
   },
   "overrides": {
     "@jazzer.js/jest-runner": {
