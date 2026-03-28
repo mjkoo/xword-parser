@@ -33,7 +33,7 @@ jobs:
         run: |
           echo "Skipping fuzzing as main branch hasn't been updated recently"
           exit 0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
       - name: Use Node.js 20.x
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
