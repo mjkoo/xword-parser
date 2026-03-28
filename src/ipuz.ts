@@ -14,6 +14,24 @@ import type {
 import { ErrorCode } from "./types";
 import { MAX_GRID_WIDTH, MAX_GRID_HEIGHT } from "./constants";
 
+function parseString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function parseBoolean(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function parseRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function parseArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? value : undefined;
+}
+
 export enum CellType {
   NORMAL = "normal",
   BLOCK = "block",
@@ -425,6 +443,13 @@ export function parseIpuz(
     );
   }
 
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    throw new IpuzParseError(
+      "Invalid iPUZ data: expected a JSON object",
+      ErrorCode.IPUZ_INVALID_JSON,
+    );
+  }
+
   if (
     !data.kind ||
     !Array.isArray(data.kind) ||
@@ -494,7 +519,7 @@ export function parseIpuz(
   }
 
   const puzzle: IpuzPuzzle = {
-    version: data.version || "",
+    version: parseString(data.version) ?? "",
     kind: data.kind || [],
     dimensions: data.dimensions,
     puzzle: [],
@@ -502,75 +527,43 @@ export function parseIpuz(
     extensions: {},
   };
 
-  const simpleFields = [
-    "title",
-    "author",
-    "copyright",
-    "publisher",
-    "publication",
-    "url",
-    "intro",
-    "explanation",
-    "annotation",
-    "notes",
-    "difficulty",
-    "origin",
-    "date",
-    "empty",
-    "charset",
-    "block",
-    "answer",
-  ] as const;
+  // String metadata fields
+  puzzle.title = parseString(data.title);
+  puzzle.author = parseString(data.author);
+  puzzle.copyright = parseString(data.copyright);
+  puzzle.publisher = parseString(data.publisher);
+  puzzle.publication = parseString(data.publication);
+  puzzle.url = parseString(data.url);
+  puzzle.intro = parseString(data.intro);
+  puzzle.explanation = parseString(data.explanation);
+  puzzle.annotation = parseString(data.annotation);
+  puzzle.notes = parseString(data.notes);
+  puzzle.difficulty = parseString(data.difficulty);
+  puzzle.origin = parseString(data.origin);
+  puzzle.date = parseString(data.date);
+  puzzle.empty = parseString(data.empty);
+  puzzle.charset = parseString(data.charset);
+  puzzle.block = parseString(data.block);
+  puzzle.answer = parseString(data.answer);
 
-  for (const field of simpleFields) {
-    if (field in data && data[field] !== undefined) {
-      // Use type assertion for known fields
-      (puzzle as unknown as Record<string, unknown>)[field] = data[field];
-    }
-  }
+  // Fields that need renaming from spec format to camelCase
+  puzzle.uniqueId = parseString(data.uniqueid);
+  puzzle.showEnumerations = parseBoolean(data.showenumerations);
+  puzzle.cluePlacement = parseString(data.clueplacement);
 
-  // Handle fields that need renaming from spec format to camelCase
-  if ("uniqueid" in data && data.uniqueid !== undefined) {
-    puzzle.uniqueId = data.uniqueid;
-  }
-  if ("showenumerations" in data && data.showenumerations !== undefined) {
-    puzzle.showEnumerations = data.showenumerations;
-  }
-  if ("clueplacement" in data && data.clueplacement !== undefined) {
-    puzzle.cluePlacement = data.clueplacement;
-  }
-
-  if ("answers" in data && data.answers) {
-    puzzle.answers = data.answers;
-  }
-
-  if ("enumeration" in data && data.enumeration !== undefined) {
-    puzzle.enumeration = data.enumeration;
-  }
-
-  if ("enumerations" in data && data.enumerations) {
-    puzzle.enumerations = data.enumerations;
-  }
-
-  if ("volatile" in data && data.volatile) {
-    puzzle.volatile = data.volatile;
-  }
-
-  if ("checksum" in data && data.checksum) {
-    puzzle.checksum = data.checksum;
-  }
-
-  if ("zones" in data && data.zones) {
-    puzzle.zones = data.zones;
-  }
-
-  if ("styles" in data && data.styles) {
-    puzzle.styles = data.styles;
-  }
-
-  if ("misses" in data && data.misses) {
-    puzzle.misses = data.misses;
-  }
+  // Structured fields
+  puzzle.answers = parseRecord(data.answers) as string[] | undefined;
+  puzzle.enumeration = parseBoolean(data.enumeration);
+  puzzle.enumerations = parseRecord(data.enumerations) as string[] | undefined;
+  puzzle.volatile = parseRecord(data.volatile) as
+    | Record<string, boolean>
+    | undefined;
+  puzzle.checksum = parseArray(data.checksum) as string[] | undefined;
+  puzzle.zones = parseArray(data.zones) as
+    | Array<Record<string, unknown>>
+    | undefined;
+  puzzle.styles = parseRecord(data.styles);
+  puzzle.misses = parseRecord(data.misses);
 
   const solutionGrid = data.solution || [];
   if (solutionGrid.length > 0) {
