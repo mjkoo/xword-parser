@@ -27,7 +27,8 @@ import { readdir, readFile, stat, rm, mkdir, copyFile, writeFile, appendFile } f
 import { join, basename } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { existsSync } from "fs";
+import { existsSync, readFileSync, unlinkSync } from "fs";
+import { tmpdir } from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -100,20 +101,22 @@ async function findFiles(dir) {
 /**
  * Parse a vitiate periodic status line.
  *
- * Format: fuzz: elapsed: 42s, execs: 1234567 (29300/sec), corpus: 456 (12 new), edges: 1890
+ * Format: fuzz: elapsed: 42s, execs: 1234567 (29300/sec), cal: 500, corpus: 456 (12 new), edges: 1890, ft: 2500
  */
 function parseVitiateStatusLine(line) {
   const match = line.match(
-    /^fuzz: elapsed: (\d+)s, execs: (\d+) \((\d+)\/sec\), corpus: (\d+) \((\d+) new\), edges: (\d+)$/,
+    /^fuzz: elapsed: (\d+)s, execs: (\d+) \((\d+)\/sec\), cal: (\d+), corpus: (\d+) \((\d+) new\), edges: (\d+), ft: (\d+)$/,
   );
   if (match) {
     return {
       elapsedSec: parseInt(match[1]),
       totalExecs: parseInt(match[2]),
       execsPerSec: parseInt(match[3]),
-      corpusSize: parseInt(match[4]),
-      newCorpus: parseInt(match[5]),
-      edges: parseInt(match[6]),
+      calibrationExecs: parseInt(match[4]),
+      corpusSize: parseInt(match[5]),
+      newCorpus: parseInt(match[6]),
+      edges: parseInt(match[7]),
+      features: parseInt(match[8]),
     };
   }
   return null;
@@ -122,18 +125,20 @@ function parseVitiateStatusLine(line) {
 /**
  * Parse a vitiate summary line.
  *
- * Format: fuzz: done - execs: 5000000, corpus: 1200, edges: 3400, elapsed: 180.5s
+ * Format: fuzz: done - execs: 5000000, cal: 1000, corpus: 1200, edges: 3400, ft: 5000, elapsed: 180.5s
  */
 function parseVitiateDoneLine(line) {
   const match = line.match(
-    /fuzz: done - execs: (\d+), corpus: (\d+), edges: (\d+), elapsed: ([\d.]+)s/,
+    /fuzz: done - execs: (\d+), cal: (\d+), corpus: (\d+), edges: (\d+), ft: (\d+), elapsed: ([\d.]+)s/,
   );
   if (match) {
     return {
       totalExecs: parseInt(match[1]),
-      corpusSize: parseInt(match[2]),
-      edges: parseInt(match[3]),
-      elapsedSec: parseFloat(match[4]),
+      calibrationExecs: parseInt(match[2]),
+      corpusSize: parseInt(match[3]),
+      edges: parseInt(match[4]),
+      features: parseInt(match[5]),
+      elapsedSec: parseFloat(match[6]),
     };
   }
   return null;
@@ -205,10 +210,11 @@ async function fullCorpusReset() {
 
 async function runFuzzer(test, runIndex) {
   const startTime = Date.now();
+  const resultsFile = join(tmpdir(), `vitiate-bench-${test.shortName}-${runIndex}-${Date.now()}.json`);
 
   // Use spawnSync to avoid pipe draining race conditions — vitest's fork pool
   // may not flush the child's stderr before exiting when using async spawn.
-  // This matches how vitiate's own CLI invokes vitest (spawnSync + stdio inherit).
+  // VITIATE_RESULTS_FILE provides a reliable fallback for final stats.
   const result = spawnSync(
     "npx",
     ["vitest", "run", test.targetPath],
@@ -218,6 +224,7 @@ async function runFuzzer(test, runIndex) {
         ...process.env,
         VITIATE_FUZZ: "1",
         VITIATE_FUZZ_TIME: String(duration),
+        VITIATE_RESULTS_FILE: resultsFile,
         NO_COLOR: "1",
       },
       stdio: ["inherit", "pipe", "pipe"],
@@ -230,6 +237,7 @@ async function runFuzzer(test, runIndex) {
   const wallTime = (Date.now() - startTime) / 1000;
   const output = (result.stdout?.toString() ?? "") + "\n" + (result.stderr?.toString() ?? "");
 
+  // Parse periodic status lines from stderr for time-series data
   let sampleCount = 0;
   let lastSample = null;
   let doneSummary = null;
@@ -265,12 +273,28 @@ async function runFuzzer(test, runIndex) {
     }
   }
 
+  // Read the results file as authoritative source (bypasses stderr flush race)
+  let resultsData = null;
+  try {
+    resultsData = JSON.parse(readFileSync(resultsFile, "utf-8"));
+    unlinkSync(resultsFile);
+  } catch {
+    // Results file may not exist if fuzzer crashed early
+  }
+
   const sorted = [...execRates].sort((a, b) => a - b);
 
-  // Derive startup latency: wall time minus vitiate's reported fuzz elapsed time
-  const fuzzElapsed = doneSummary?.elapsedSec ?? null;
-  const startupLatency = fuzzElapsed !== null
-    ? Math.round((wallTime - fuzzElapsed) * 10) / 10
+  // Prefer results file, fall back to stderr parsing
+  const finalExecs = resultsData?.totalExecs ?? doneSummary?.totalExecs ?? lastSample?.totalExecs ?? null;
+  const finalEdges = resultsData?.coverageEdges ?? doneSummary?.edges ?? lastSample?.edges ?? null;
+  const finalFeatures = resultsData?.coverageFeatures ?? doneSummary?.features ?? lastSample?.features ?? null;
+  const finalCorpusSize = resultsData?.corpusSize ?? doneSummary?.corpusSize ?? lastSample?.corpusSize ?? null;
+  const finalCalibrationExecs = resultsData?.calibrationExecs ?? doneSummary?.calibrationExecs ?? null;
+  const fuzzElapsedMs = resultsData?.elapsedMs ?? null;
+  const fuzzElapsedSec = fuzzElapsedMs !== null ? fuzzElapsedMs / 1000 : doneSummary?.elapsedSec ?? null;
+
+  const startupLatency = fuzzElapsedSec !== null
+    ? Math.round((wallTime - fuzzElapsedSec) * 10) / 10
     : null;
 
   const summary = {
@@ -281,16 +305,18 @@ async function runFuzzer(test, runIndex) {
     exitCode: result.status,
     startupLatencySec: startupLatency,
     sampleCount,
-    crashes,
+    crashes: resultsData?.crashCount ?? crashes,
     execsPerSec: {
       min: sorted.length ? sorted[0] : null,
       max: sorted.length ? sorted[sorted.length - 1] : null,
       median: sorted.length ? sorted[Math.floor(sorted.length / 2)] : null,
       last: sorted.length ? sorted[sorted.length - 1] : null,
     },
-    finalExecs: doneSummary?.totalExecs ?? lastSample?.totalExecs ?? null,
-    finalEdges: doneSummary?.edges ?? lastSample?.edges ?? null,
-    finalCorpusSize: doneSummary?.corpusSize ?? lastSample?.corpusSize ?? null,
+    finalExecs,
+    finalCalibrationExecs,
+    finalEdges,
+    finalFeatures,
+    finalCorpusSize,
   };
 
   await emit(summary);
@@ -403,7 +429,10 @@ async function main() {
       const result = await runFuzzer(test, i);
 
       const med = result.execsPerSec.median;
-      log(`  [${test.shortName}] exec/s: ${med ?? "?"} | edges: ${result.finalEdges ?? "?"} | corpus: ${result.finalCorpusSize ?? "?"}`);
+      log(`  [${test.shortName}] exec/s: ${med ?? "?"} | edges: ${result.finalEdges ?? "?"} | ft: ${result.finalFeatures ?? "?"} | corpus: ${result.finalCorpusSize ?? "?"}`);
+      if (result.finalCalibrationExecs) {
+        log(`  [${test.shortName}] cal: ${result.finalCalibrationExecs} (${Math.round((result.finalCalibrationExecs / (result.finalExecs || 1)) * 100)}% of execs)`);
+      }
       if (result.startupLatencySec !== null) {
         log(`  [${test.shortName}] startup: ${result.startupLatencySec}s`);
       }

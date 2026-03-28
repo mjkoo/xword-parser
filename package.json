@@ -109,7 +109,8 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "fast-xml-parser": "^5.5.3",
-    "vitiate": "file:../vitiate/vitiate"
+    "vitiate": "file:../vitiate/vitiate",
+    "vitiate-root": "file:../vitiate"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

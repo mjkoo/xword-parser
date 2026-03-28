@@ -6,7 +6,7 @@ export default defineConfig({
     vitiatePlugin({
       instrument: {
         include: ["src/**/*.ts"],
-        exclude: ["**/node_modules/**", "**/*.test.ts", "**/*.bench.ts"],
+        exclude: ["**/*.test.ts", "**/*.bench.ts"],
       },
       fuzz: {
         maxLen: 8192,
