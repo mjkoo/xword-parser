@@ -35,6 +35,12 @@ jobs:
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm install --frozen-lockfile
+      - name: Type check
+        if: ${{ steps.release.outputs.release_created }}
+        run: pnpm run typecheck
+      - name: Run tests
+        if: ${{ steps.release.outputs.release_created }}
+        run: pnpm run test
       - name: Build
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm run build
