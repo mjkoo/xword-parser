@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/mjkoo/xword-parser/compare/v1.1.0...v1.1.0) (2026-03-28)
+
+
+### Miscellaneous Chores
+
+* migrate to tsdown ([0385e09](https://github.com/mjkoo/xword-parser/commit/0385e096d91d68e91484c0ef3dc5eb8360a5fab2))
+
 ## [1.1.0](https://github.com/mjkoo/xword-parser/compare/v1.0.5...v1.1.0) (2026-03-28)
 
 
