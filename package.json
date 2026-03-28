@@ -47,7 +47,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,yml,yaml}\"",
     "typecheck": "tsc --noEmit",
     "analyze": "tsup --metafile && pnpm exec esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
-    "audit": "pnpm audit --omit dev",
+    "audit": "pnpm audit --prod",
     "prepack": "pnpm run lint:check && pnpm run typecheck && pnpm run build",
     "prepare": "lefthook install"
   },
