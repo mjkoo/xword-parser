@@ -21,18 +21,18 @@ try {
   // Run benchmarks on current branch
   console.log(`Running benchmarks on ${currentBranch}...`);
   execSync(`git checkout ${currentBranch}`, { stdio: 'inherit' });
-  execSync('npm ci', { stdio: 'inherit' });
-  execSync('npm run build', { stdio: 'inherit' });
-  execSync('npm run bench:ci', { stdio: 'inherit' });
+  execSync('pnpm install --frozen-lockfile', { stdio: 'inherit' });
+  execSync('pnpm run build', { stdio: 'inherit' });
+  execSync('pnpm run bench:ci', { stdio: 'inherit' });
 
   const currentResults = JSON.parse(fs.readFileSync('bench-results.json', 'utf8'));
 
   // Run benchmarks on base branch
   console.log(`\nRunning benchmarks on ${baseBranch}...`);
   execSync(`git checkout ${baseBranch}`, { stdio: 'inherit' });
-  execSync('npm ci', { stdio: 'inherit' });
-  execSync('npm run build', { stdio: 'inherit' });
-  execSync('npm run bench:ci', { stdio: 'inherit' });
+  execSync('pnpm install --frozen-lockfile', { stdio: 'inherit' });
+  execSync('pnpm run build', { stdio: 'inherit' });
+  execSync('pnpm run bench:ci', { stdio: 'inherit' });
 
   const baseResults = JSON.parse(fs.readFileSync('bench-results.json', 'utf8'));
 

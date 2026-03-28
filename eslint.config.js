@@ -23,7 +23,7 @@ export default [
       '*.config.mjs',
       '*.config.cjs',
       'jest.config.fuzz.js',
-      'scripts/**/*.js',
+      'scripts/**/*.{js,mjs}',
     ],
   },
 

@@ -35,19 +35,19 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=./test-results.xml",
-    "test:fuzz": "npx vitiate regression",
+    "test:fuzz": "pnpm exec vitiate regression",
     "bench": "vitest bench",
     "bench:ci": "vitest bench --run --outputJson bench-results.json",
     "bench:compare": "node scripts/compare-benchmarks.js",
-    "fuzz": "npx vitiate fuzz",
-    "fuzz:quick": "npx vitiate fuzz --fuzz-time 60",
+    "fuzz": "pnpm exec vitiate fuzz",
+    "fuzz:quick": "pnpm exec vitiate fuzz --fuzz-time 60",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,yml,yaml}\"",
     "typecheck": "tsc --noEmit",
-    "analyze": "tsup --metafile && npx esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
-    "audit": "npm audit --omit=dev",
-    "prepack": "npm run lint && npm run typecheck && npm run build",
+    "analyze": "tsup --metafile && pnpm exec esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
+    "audit": "pnpm audit --omit dev",
+    "prepack": "pnpm run lint && pnpm run typecheck && pnpm run build",
     "prepare": "lefthook install"
   },
   "keywords": [
@@ -90,8 +90,8 @@
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
     "@vitest/coverage-v8": "^4.0.18",
-    "@vitiate/core": "file:../vitiate/vitiate-core",
-    "@vitiate/fuzzed-data-provider": "file:../vitiate/vitiate-fuzzed-data-provider",
+    "@vitiate/core": "link:../vitiate/vitiate-core",
+    "@vitiate/fuzzed-data-provider": "link:../vitiate/vitiate-fuzzed-data-provider",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
@@ -109,20 +109,27 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "fast-xml-parser": "^5.5.3",
-    "vitiate": "file:../vitiate/vitiate",
-    "vitiate-root": "file:../vitiate"
+    "vitiate": "link:../vitiate/vitiate",
+    "vitiate-root": "link:../vitiate"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --check",
       "eslint",
-      "bash -c 'npm run typecheck'"
+      "bash -c 'pnpm run typecheck'"
     ],
     "*.{json,yml,yaml}": [
       "prettier --check"
     ],
     "src/**/*.ts": [
-      "bash -c 'npm test'"
+      "bash -c 'pnpm test'"
+    ]
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lefthook"
     ]
   }
 }

@@ -9,7 +9,7 @@ This directory contains fuzz tests for the xword-parser library using [Vitiate](
 Replay corpus entries and crash regressions to ensure issues remain fixed:
 
 ```bash
-npx vitiate regression
+pnpm exec vitiate regression
 ```
 
 ### Fuzzing Mode (Bug Discovery)
@@ -18,26 +18,26 @@ Actively generate and test new inputs to discover bugs:
 
 ```bash
 # Run all fuzzers (default duration)
-npx vitiate fuzz
+pnpm exec vitiate fuzz
 
 # Run for 60 seconds
-npx vitiate fuzz --fuzz-time 60
+pnpm exec vitiate fuzz --fuzz-time 60
 
 # Limit to N executions
-npx vitiate fuzz --fuzz-execs 100000
+pnpm exec vitiate fuzz --fuzz-execs 100000
 
 # Stop after finding 3 crashes
-npx vitiate fuzz --max-crashes 3
+pnpm exec vitiate fuzz --max-crashes 3
 ```
 
 ### Corpus Management
 
 ```bash
 # Initialize seed directories for all fuzz tests
-npx vitiate init
+pnpm exec vitiate init
 
 # Minimize corpus (remove redundant entries)
-npx vitiate optimize
+pnpm exec vitiate optimize
 ```
 
 ## Directory Structure

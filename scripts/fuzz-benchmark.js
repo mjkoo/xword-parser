@@ -216,8 +216,8 @@ async function runFuzzer(test, runIndex) {
   // may not flush the child's stderr before exiting when using async spawn.
   // VITIATE_RESULTS_FILE provides a reliable fallback for final stats.
   const result = spawnSync(
-    "npx",
-    ["vitest", "run", test.targetPath],
+    "pnpm",
+    ["exec", "vitest", "run", test.targetPath],
     {
       cwd: ROOT,
       env: {
@@ -326,7 +326,7 @@ async function runFuzzer(test, runIndex) {
 function measureRegression(runIndex) {
   return new Promise((resolve) => {
     const start = Date.now();
-    const child = spawn("npx", ["vitiate", "regression"], {
+    const child = spawn("pnpm", ["exec", "vitiate", "regression"], {
       cwd: ROOT,
       stdio: ["inherit", "pipe", "pipe"],
       shell: false,

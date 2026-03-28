@@ -6,7 +6,7 @@ DURATION="${2:-10}"
 VITIATE_FUZZ=1 VITIATE_FUZZ_TIME="$DURATION" \
   NODE_OPTIONS="--perf-basic-prof --interpreted-frames-native-stack" \
   perf record -g -F 997 -- \
-  npx vitest run "$TARGET"
+  pnpm exec vitest run "$TARGET"
 
 # Generate flamegraph
 perf script | inferno-collapse-perf | inferno-flamegraph > flamegraph.svg
