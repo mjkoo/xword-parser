@@ -41,13 +41,14 @@
     "bench:compare": "node scripts/compare-benchmarks.js",
     "fuzz": "pnpm exec vitiate fuzz",
     "fuzz:quick": "pnpm exec vitiate fuzz --fuzz-time 60",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,json,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,yml,yaml}\"",
     "typecheck": "tsc --noEmit",
     "analyze": "tsup --metafile && pnpm exec esbuild-visualizer --metadata ./dist/metafile-cjs.json --open",
     "audit": "pnpm audit --omit dev",
-    "prepack": "pnpm run lint && pnpm run typecheck && pnpm run build",
+    "prepack": "pnpm run lint:check && pnpm run typecheck && pnpm run build",
     "prepare": "lefthook install"
   },
   "keywords": [
@@ -84,6 +85,8 @@
   "homepage": "https://github.com/xwordly/xword-parser#readme",
   "type": "module",
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
     "@fast-check/vitest": "^0.3.0",
     "@types/node": "^25.4.0",
@@ -96,7 +99,6 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
     "lefthook": "^2.1.2",
-    "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
@@ -111,19 +113,6 @@
     "fast-xml-parser": "^5.5.3",
     "vitiate": "link:../vitiate/vitiate",
     "vitiate-root": "link:../vitiate"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --check",
-      "eslint",
-      "bash -c 'pnpm run typecheck'"
-    ],
-    "*.{json,yml,yaml}": [
-      "prettier --check"
-    ],
-    "src/**/*.ts": [
-      "bash -c 'pnpm test'"
-    ]
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "pnpm": {
