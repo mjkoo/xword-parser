@@ -306,16 +306,16 @@ The library is designed with the following principles:
 ### Building
 
 ```bash
-npm run build            # Build for production
-npm run dev              # Build with watch mode
+pnpm run build           # Build for production
+pnpm run dev             # Build with watch mode
 ```
 
 ### Testing
 
 ```bash
-npm test                 # Run tests once
-npm run test:watch       # Run tests in watch mode
-npm run test:coverage    # Generate coverage report
+pnpm test                # Run tests once
+pnpm run test:watch      # Run tests in watch mode
+pnpm run test:coverage   # Generate coverage report
 ```
 
 The test suite includes:
@@ -327,10 +327,10 @@ The test suite includes:
 ### Linting & Formatting
 
 ```bash
-npm run lint             # Check for linting errors
-npm run lint:fix         # Fix linting errors
-npm run format           # Format code with Prettier
-npm run typecheck        # Type-check without building
+pnpm run lint            # Check for linting errors
+pnpm run lint:fix        # Fix linting errors
+pnpm run format          # Format code with Prettier
+pnpm run typecheck       # Type-check without building
 ```
 
 ## Requirements

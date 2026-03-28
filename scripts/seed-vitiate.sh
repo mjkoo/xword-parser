@@ -24,7 +24,7 @@ fi
 VITIATE_TESTDATA=".vitiate/testdata"
 
 if [ ! -d "$VITIATE_TESTDATA" ]; then
-  echo "Error: $VITIATE_TESTDATA does not exist. Run 'npx vitiate fuzz --fuzz-time 0' first to initialize directories." >&2
+  echo "Error: $VITIATE_TESTDATA does not exist. Run 'pnpm exec vitiate fuzz --fuzz-time 0' first to initialize directories." >&2
   exit 1
 fi
 

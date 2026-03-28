@@ -8,8 +8,8 @@ mkdir -p "$PROF_DIR"
 PROF_DIR_ABS="$(cd "$PROF_DIR" && pwd)"
 VITIATE_FUZZ=1 VITIATE_FUZZ_TIME="$DURATION" \
   NODE_OPTIONS="--cpu-prof --cpu-prof-dir=$PROF_DIR_ABS" \
-  npx vitest run "$TARGET"
+  pnpm exec vitest run "$TARGET"
 
 echo "Profile written to $PROF_DIR/"
 echo "Open in Chrome DevTools (F12 → Performance → Load profile)"
-echo "Or use: npx speedscope $PROF_DIR/*.cpuprofile"
+echo "Or use: pnpm exec speedscope $PROF_DIR/*.cpuprofile"

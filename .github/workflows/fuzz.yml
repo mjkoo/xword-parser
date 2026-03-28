@@ -33,14 +33,17 @@ jobs:
         run: |
           echo "Skipping fuzzing as main branch hasn't been updated recently"
           exit 0
+      - uses: pnpm/action-setup@v4
+        if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
       - name: Use Node.js 20.x
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 20.x
+          cache: "pnpm"
       - name: Install dependencies
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: npm install
+        run: pnpm install
       - name: Clone test data and seed fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
         run: |
@@ -56,7 +59,7 @@ jobs:
             vitiate-corpus-
       - name: Run fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: npx vitiate fuzz --fuzz-time 1500
+        run: pnpm exec vitiate fuzz --fuzz-time 1500
         continue-on-error: true
         timeout-minutes: 30
       - name: Check for crash files

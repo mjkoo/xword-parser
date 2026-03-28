@@ -4,10 +4,10 @@
  * Replay a fuzz corpus through xword-parser and measure V8 coverage.
  *
  * Usage:
- *   npx c8 --src src --all node scripts/replay-corpus-coverage.mjs \
+ *   pnpm exec c8 --src src --all node scripts/replay-corpus-coverage.mjs \
  *     --format ipuz --corpus .vitiate/corpus/<hash>/
  *
- *   npx c8 --src src --all node scripts/replay-corpus-coverage.mjs \
+ *   pnpm exec c8 --src src --all node scripts/replay-corpus-coverage.mjs \
  *     --format ipuz --corpus .fuzz-corpus-bench/ipuz/
  *
  * Formats: ipuz, puz, jpz, xd, parse
