@@ -43,7 +43,7 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Clone test data and seed fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
         run: |

@@ -1,6 +1,22 @@
 colors: true
 skip_in_ci: true
+
 pre-commit:
+  parallel: true
   commands:
-    lint-staged:
-      run: pnpm exec lint-staged
+    format-check:
+      glob: "*.{ts,js,mjs,json,yml,yaml}"
+      run: pnpm run format:check
+
+    lint-check:
+      glob: "*.{ts,tsx}"
+      run: pnpm run lint:check
+
+    typecheck:
+      glob: "*.ts"
+      run: pnpm run typecheck
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

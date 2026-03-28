@@ -34,7 +34,7 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Build
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm run build
