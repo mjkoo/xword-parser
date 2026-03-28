@@ -4,6 +4,7 @@ import { parsePuz, convertPuzToUnified } from "./puz";
 import { parseJpz, convertJpzToUnified } from "./jpz";
 import { FormatDetectionError, ParseError } from "./errors";
 import { getOrderedFormatsToTry } from "./detect";
+import { validatePuzzle } from "./validate";
 import type { Puzzle, ParseOptions } from "./types";
 
 /**
@@ -52,12 +53,12 @@ export function parse(
               ? content
               : content.toString(options?.encoding || "utf-8");
           const puzzle = parseIpuz(textContent, options);
-          return convertIpuzToUnified(puzzle);
+          return validatePuzzle(convertIpuzToUnified(puzzle));
         }
         case "puz": {
           if (typeof content !== "string") {
             const puzzle = parsePuz(content, options);
-            return convertPuzToUnified(puzzle);
+            return validatePuzzle(convertPuzToUnified(puzzle));
           }
           break;
         }
@@ -67,7 +68,7 @@ export function parse(
               ? content
               : content.toString(options?.encoding || "utf-8");
           const puzzle = parseJpz(textContent, options);
-          return convertJpzToUnified(puzzle);
+          return validatePuzzle(convertJpzToUnified(puzzle));
         }
         case "xd": {
           const textContent =
@@ -75,7 +76,7 @@ export function parse(
               ? content
               : content.toString(options?.encoding || "utf-8");
           const puzzle = parseXd(textContent, options);
-          return convertXdToUnified(puzzle);
+          return validatePuzzle(convertXdToUnified(puzzle));
         }
       }
     } catch (e) {
@@ -126,3 +127,4 @@ export * from "./ipuz";
 export * from "./xd";
 export * from "./puz";
 export * from "./jpz";
+export { validatePuzzle } from "./validate";
