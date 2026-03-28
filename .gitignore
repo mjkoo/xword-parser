@@ -41,8 +41,3 @@ test-results.xml
 .env
 .env.local
 .env.*.local
-
-# Package manager
-pnpm-lock.yaml
-package-lock.json
-yarn.lock
