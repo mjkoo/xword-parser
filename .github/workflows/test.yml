@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Security audit
-        run: pnpm audit --audit-level moderate --omit dev
+        run: pnpm audit --audit-level moderate --prod
       - name: Clone test data
         run: |
           git clone https://${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
