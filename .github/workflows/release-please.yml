@@ -35,6 +35,10 @@ jobs:
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm install --frozen-lockfile
+      - name: Clone test data
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git clone https://${{ secrets.XWORD_PARSER_TESTDATA_PAT }}@github.com/mjkoo/xword-parser-testdata.git testdata
       - name: Type check
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm run typecheck
