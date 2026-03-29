@@ -59,7 +59,7 @@ jobs:
             vitiate-corpus-
       - name: Run fuzzers
         if: steps.check_recent_update.outputs.skip_fuzzing != 'true'
-        run: pnpm exec vitiate fuzz --fuzz-time 1500
+        run: pnpm exec vitiate fuzz --fuzz-time 600 -- --poolOptions.forks.maxForks=5
         continue-on-error: true
         timeout-minutes: 30
       - name: Check for crash files
