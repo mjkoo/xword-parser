@@ -93,7 +93,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "@vitiate/core": "^0.3.0",
     "@vitiate/fuzzed-data-provider": "^0.3.0",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
     "lefthook": "^2.1.4",
