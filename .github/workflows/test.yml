@@ -43,7 +43,7 @@ jobs:
           name: unit-test-results
       - name: Upload coverage to Codecov
         if: matrix.node-version == '24.x'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
